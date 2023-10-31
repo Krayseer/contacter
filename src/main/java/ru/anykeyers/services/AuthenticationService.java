@@ -24,8 +24,8 @@ public class AuthenticationService {
      */
     public void authenticate() {
         User user = consoleService.readUserFromConsole();
-        boolean authenticated = authenticationManager.login(user);
-        if (authenticated) {
+        authenticationManager.login(user);
+        if (isAuthenticated()) {
             System.out.println("Вы успешно авторизовались");
         } else {
             System.out.println("Пароль был введён неверно");
@@ -40,18 +40,18 @@ public class AuthenticationService {
     }
 
     /**
-     * Существует ли авторизованный пользователь
-     */
-    public boolean isAuthenticated() {
-        return authenticationManager.getCurrentUser() != null;
-    }
-
-    /**
      * Выйти из аккаунта
      */
     public void logoutUser() {
         authenticationManager.logout();
         System.out.println("Вы успешно вышли из аккаунта");
+    }
+
+    /**
+     * Существует ли авторизованный пользователь
+     */
+    private boolean isAuthenticated() {
+        return authenticationManager.getCurrentUser() != null;
     }
 
 }

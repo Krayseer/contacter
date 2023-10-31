@@ -45,6 +45,9 @@ public class CommandNames {
      */
     public static final String DELETE_GROUP = "/delete-group";
 
+    /**
+     * Выйти из аккаунта
+     */
     public static final String EXIT_APP = "/exit";
 
 }

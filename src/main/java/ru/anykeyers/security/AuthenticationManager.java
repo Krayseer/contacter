@@ -35,18 +35,14 @@ public class AuthenticationManager {
     /**
      * Пытается войти в систему с проверкой учетных данных и обновляет текущего пользователя.
      * @param user Объект `User` с именем пользователя и паролем для входа в систему.
-     * @return `true`, если вход успешен, `false` в противном случае.
      */
-    public boolean login(User user) {
+    public void login(User user) {
         if(!users.containsKey(user.getUsername())) {
             users.put(user.getUsername(), user.getPassword());
         }
         if (isValidUser(user)) {
             currentUser = user;
-            saveUsersToFile();
-            return true;
         }
-        return false;
     }
 
     /**
