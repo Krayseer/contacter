@@ -58,8 +58,8 @@ public class CommandProcessor {
             // TODO: 31.10.2023
         });
         commandHandlers.put(EXIT_APP, () -> {
-            System.exit(0);
             authenticationService.saveUsers();
+            System.exit(0);
         });
     }
 
