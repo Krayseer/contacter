@@ -11,9 +11,8 @@ public class ApplicationProperties {
 
     private final Properties properties;
 
-    public ApplicationProperties() {
+    public ApplicationProperties(String propertiesPath) {
         this.properties = new Properties();
-        String propertiesPath = "src/main/resources/application.properties";
         try (FileInputStream fileInputStream = new FileInputStream(propertiesPath)) {
             properties.load(fileInputStream);
         } catch (IOException e) {
@@ -21,6 +20,9 @@ public class ApplicationProperties {
         }
     }
 
+    /**
+     * Получить настройку из файла по ключу
+     */
     public String getSetting(String key) {
         return properties.getProperty(key);
     }

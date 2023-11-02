@@ -1,4 +1,4 @@
-package ru.anykeyers.security;
+package ru.anykeyers.domain;
 
 import java.util.Objects;
 

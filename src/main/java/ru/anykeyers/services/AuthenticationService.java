@@ -1,22 +1,26 @@
 package ru.anykeyers.services;
 
-import ru.anykeyers.ApplicationProperties;
-import ru.anykeyers.security.AuthenticationManager;
-import ru.anykeyers.security.User;
+import ru.anykeyers.repositories.UserRepository;
+import ru.anykeyers.domain.User;
 
 /**
  * Класс предоставляет сервис для аутентификации пользователей
  */
 public class AuthenticationService {
 
-    private final AuthenticationManager authenticationManager;
-
     private final ConsoleService consoleService;
 
+    private final UserRepository userRepository;
+
+    /**
+     * Текущий авторизованный пользователь.
+     */
+    private User currentUser;
+
     public AuthenticationService(ConsoleService consoleService,
-                                 ApplicationProperties applicationProperties) {
-        this.authenticationManager = new AuthenticationManager(applicationProperties);
+                                 UserRepository userRepository) {
         this.consoleService = consoleService;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -24,7 +28,13 @@ public class AuthenticationService {
      */
     public void authenticate() {
         User user = consoleService.readUserFromConsole();
-        authenticationManager.login(user);
+        if(!userRepository.existsByUsername(user.getUsername())) {
+            userRepository.save(user);
+        }
+        String userPassword = userRepository.getPasswordByUsername(user.getUsername());
+        if (userPassword != null && userPassword.equals(user.getPassword())) {
+            currentUser = user;
+        }
         if (isAuthenticated()) {
             System.out.println("Вы успешно авторизовались");
         } else {
@@ -33,25 +43,26 @@ public class AuthenticationService {
     }
 
     /**
-     * Сохранить добавленных пользователей в БД
+     * Получает текущего авторизованного пользователя.
+     * @return Объект `User`, представляющий текущего пользователя, или null, если ни один пользователь не авторизован.
      */
-    public void saveUsers() {
-        authenticationManager.saveUsersToFile();
+    public User getCurrentUser() {
+        return currentUser;
     }
 
     /**
      * Выйти из аккаунта
      */
     public void logoutUser() {
-        authenticationManager.logout();
+        currentUser = null;
         System.out.println("Вы успешно вышли из аккаунта");
     }
 
     /**
      * Существует ли авторизованный пользователь
      */
-    private boolean isAuthenticated() {
-        return authenticationManager.getCurrentUser() != null;
+    public boolean isAuthenticated() {
+        return currentUser != null;
     }
 
 }

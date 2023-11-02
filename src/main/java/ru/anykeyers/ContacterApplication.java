@@ -1,6 +1,7 @@
 package ru.anykeyers;
 
 import ru.anykeyers.commands.CommandProcessor;
+import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.services.AuthenticationService;
 import ru.anykeyers.services.ConsoleService;
 
@@ -14,10 +15,12 @@ public class ContacterApplication {
     private final CommandProcessor commandProcessor;
 
     public ContacterApplication() {
-        ApplicationProperties applicationProperties = new ApplicationProperties();
-        this.consoleService = new ConsoleService();
-        AuthenticationService authenticationService = new AuthenticationService(consoleService, applicationProperties);
-        this.commandProcessor = new CommandProcessor(authenticationService);
+        String propertiesFilePath = "src/main/resources/application.properties";
+        ApplicationProperties applicationProperties = new ApplicationProperties(propertiesFilePath);
+        UserRepository userRepository = new UserRepository(applicationProperties);
+        consoleService = new ConsoleService();
+        AuthenticationService authenticationService = new AuthenticationService(consoleService, userRepository);
+        commandProcessor = new CommandProcessor(authenticationService, userRepository, consoleService);
     }
 
     /**
@@ -27,7 +30,9 @@ public class ContacterApplication {
         System.out.println("Добро пожаловать в менеджер контаков!");
         while (true) {
             String command = consoleService.readCommand();
-            commandProcessor.processCommand(command);
+            if (command != null) {
+                commandProcessor.processCommand(command);
+            }
         }
     }
 
