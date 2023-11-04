@@ -3,36 +3,36 @@ package ru.anykeyers.services;
 import ru.anykeyers.commands.Command;
 import ru.anykeyers.domain.User;
 
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Scanner;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Класс предоставляет методы для взаимодействия с консолью
  */
 public class ConsoleService {
 
-    private final Scanner scanner;
-
-    public ConsoleService() {
-        this.scanner = new Scanner(System.in);
-    }
-
-    public ConsoleService(InputStream is) {
-        this.scanner = new Scanner(is);
-    }
-
     /**
      * Считывает данные пользователя из консоли, включая имя пользователя и пароль.
      * @return Объект `User` с введенными данными.
      */
     public User readUserFromConsole() {
-        System.out.println("Введите username: ");
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Введите имя пользователя: ");
         String username = scanner.nextLine();
+        while(username.length() == 0) {
+            System.out.println("Имя пользователя должно быть введено");
+            System.out.print("Введите имя пользователя: ");
+            username = scanner.nextLine();
+        }
+
         System.out.print("Введите пароль: ");
         String password = scanner.nextLine();
+        while(password.length() == 0) {
+            System.out.println("Пароль должен быть введён");
+            System.out.print("Введите пароль: ");
+            password = scanner.nextLine();
+        }
         return new User(username, password);
     }
 
@@ -41,17 +41,18 @@ public class ConsoleService {
      * @return Строка, представляющая введенную команду.
      */
     public String readCommand() {
-        Set<String> commands = Arrays.stream(Command.values()).map(Command::getCommandValue).collect(Collectors.toSet());
-        String command = scanner.nextLine();
-        if (!commands.contains(command)) {
-            System.out.println("Такой команды не существует, введите /help для просмтора возможных задач");
-            return null;
-        }
-        return command;
+        Scanner scanner = new Scanner(System.in);
+        return scanner.nextLine();
     }
 
+    /**
+     * Написать все зарегистрированные команды в приложении
+     */
     public void writeCommands() {
-        Arrays.stream(Command.values()).forEach(command -> System.out.printf("%s - %s%n", command.getCommandValue(), command.getDescription()));
+        Arrays.stream(Command.values()).forEach(command ->  {
+            String commandInfo = String.format("%s : %s", command.getCommandValue(), command.getDescription());
+            System.out.println(commandInfo);
+        });
     }
 
 }

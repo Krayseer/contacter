@@ -2,60 +2,67 @@ package ru.anykeyers;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
-import ru.anykeyers.commands.CommandHandler;
 import ru.anykeyers.commands.CommandProcessor;
 import ru.anykeyers.domain.User;
 import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.services.AuthenticationService;
-import ru.anykeyers.services.ConsoleService;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import java.io.ByteArrayOutputStream;
 
-@RunWith(MockitoJUnitRunner.class)
+import static org.junit.Assert.assertTrue;
+import static ru.anykeyers.utils.StreamUtils.setSystemOutputStream;
+import static ru.anykeyers.utils.StreamUtils.writeDataInSystemInputStream;
+
+/**
+ * Тесты для методов класса {@link CommandProcessor}
+ */
 public class CommandProcessorTest {
 
     private CommandProcessor commandProcessor;
-    private AuthenticationService authService;
-    private UserRepository userRepository;
-    private ConsoleService consoleService;
+
+    private AuthenticationService authenticationService;
+
+    private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
     @Before
     public void setup() {
-        authService = mock(AuthenticationService.class);
-        userRepository = mock(UserRepository.class);
-        consoleService = mock(ConsoleService.class);
-        commandProcessor = new CommandProcessor(authService, userRepository, consoleService);
+        String testPropertiesFilePath = "src/test/resources/application-test.properties";
+        ApplicationProperties applicationProperties = new ApplicationProperties(testPropertiesFilePath);
+
+        UserRepository userRepository = new UserRepository(applicationProperties);
+        authenticationService = new AuthenticationService(userRepository);
+        commandProcessor = new CommandProcessor(authenticationService, userRepository);
+
+        setSystemOutputStream(outputStream);
     }
 
+    /**
+     * Тест метода {@link CommandProcessor#processCommand(String)} с валидной(существующей) командой
+     */
     @Test
     public void processCommandTest_ValidCommand() {
-        String commandValue = "/login";
-        CommandHandler commandHandler = mock(CommandHandler.class);
+        String userInfo = "username\npassword\n";
+        writeDataInSystemInputStream(userInfo);
 
-        Mockito.lenient().when(consoleService.readUserFromConsole()).thenReturn(new User("username", "password"));
-        Mockito.lenient().when(userRepository.existsByUsername(anyString())).thenReturn(true);
-        Mockito.lenient().when(userRepository.getPasswordByUsername(anyString())).thenReturn("password");
-        Mockito.lenient().when(authService.isAuthenticated()).thenReturn(true);
+        String command = "/login";
+        commandProcessor.processCommand(command);
 
-        commandProcessor.processCommand(commandValue);
+        User expectedUser = new User("username", "password");
+        String expectedCommandHandleResult = "Вы успешно авторизовались";
+        assertTrue(authenticationService.isAuthenticated() && expectedUser.equals(authenticationService.getCurrentUser()));
+        assertTrue(outputStream.toString().contains(expectedCommandHandleResult));
     }
 
+    /**
+     * Тест метода {@link CommandProcessor#processCommand(String)} с несуществующей командой
+     */
     @Test
     public void processCommandTest_InvalidCommand() {
-        String commandValue = "/invalid";
-        CommandHandler commandHandler = mock(CommandHandler.class);
+        String command = "/invalid";
+        commandProcessor.processCommand(command);
 
-        Mockito.lenient().when(consoleService.readUserFromConsole()).thenReturn(new User("username", "password"));
-        Mockito.lenient().when(userRepository.existsByUsername(anyString())).thenReturn(false);
-        Mockito.lenient().when(userRepository.getPasswordByUsername(anyString())).thenReturn("password");
-        Mockito.lenient().when(authService.isAuthenticated()).thenReturn(false);
-
-        commandProcessor.processCommand(commandValue);
+        String expectedCommandHandleResult = "Такой команды не существует, введите /help для просмтора возможных задач";
+        assertTrue(outputStream.toString().contains(expectedCommandHandleResult));
     }
 
 }

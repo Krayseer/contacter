@@ -12,6 +12,9 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
+/**
+ * Тесты для методов класса {@link UserRepository}
+ */
 public class UserRepositoryTest {
 
     private UserRepository userRepository;
@@ -24,26 +27,9 @@ public class UserRepositoryTest {
         FileUtils.write(new File(userRepository.getDbFilePath()), "", "UTF-8");
     }
 
-    @Test
-    public void existsByUsernameTest() {
-        User newUser = new User("user1", "password1");
-
-        userRepository.save(newUser);
-
-        assertTrue(userRepository.existsByUsername("user1"));
-        assertFalse(userRepository.existsByUsername("nonexistent_user"));
-    }
-
-    @Test
-    public void getPasswordByUsernameTest() {
-        User user = new User("user", "password");
-
-        userRepository.save(user);
-
-        assertEquals("password", userRepository.getPasswordByUsername("user"));
-        assertNull(userRepository.getPasswordByUsername("nonexistent_user"));
-    }
-
+    /**
+     * Тест метода {@link UserRepository#save(User)}
+     */
     @Test
     public void saveUserTest() {
         User user = new User("new_user", "new_password");
@@ -54,6 +40,35 @@ public class UserRepositoryTest {
         assertEquals("new_password", userRepository.getPasswordByUsername("new_user"));
     }
 
+    /**
+     * Тест метода {@link UserRepository#getPasswordByUsername(String)}
+     */
+    @Test
+    public void getPasswordByUsernameTest() {
+        User user = new User("user", "password");
+
+        userRepository.save(user);
+
+        assertEquals("password", userRepository.getPasswordByUsername("user"));
+        assertNull(userRepository.getPasswordByUsername("nonexistent_user"));
+    }
+
+    /**
+     * Тест метода {@link UserRepository#existsByUsername(String)}
+     */
+    @Test
+    public void existsByUsernameTest() {
+        User newUser = new User("user1", "password1");
+
+        userRepository.save(newUser);
+
+        assertTrue(userRepository.existsByUsername("user1"));
+        assertFalse(userRepository.existsByUsername("nonexistent_user"));
+    }
+
+    /**
+     * Тест метода {@link UserRepository#saveAll()}
+     */
     @Test
     public void testSaveAll() throws IOException {
         User user1 = new User("user1", "password1");

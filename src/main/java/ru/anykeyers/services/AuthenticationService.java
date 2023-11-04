@@ -4,7 +4,7 @@ import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.domain.User;
 
 /**
- * Класс предоставляет сервис для аутентификации пользователей
+ * Класс представляет из себя сервис для аутентификации пользователей
  */
 public class AuthenticationService {
 
@@ -17,9 +17,8 @@ public class AuthenticationService {
      */
     private User currentUser;
 
-    public AuthenticationService(ConsoleService consoleService,
-                                 UserRepository userRepository) {
-        this.consoleService = consoleService;
+    public AuthenticationService(UserRepository userRepository) {
+        this.consoleService = new ConsoleService();
         this.userRepository = userRepository;
     }
 
@@ -34,8 +33,6 @@ public class AuthenticationService {
         String userPassword = userRepository.getPasswordByUsername(user.getUsername());
         if (userPassword != null && userPassword.equals(user.getPassword())) {
             currentUser = user;
-        }
-        if (isAuthenticated()) {
             System.out.println("Вы успешно авторизовались");
         } else {
             System.out.println("Пароль был введён неверно");
@@ -51,11 +48,15 @@ public class AuthenticationService {
     }
 
     /**
-     * Выйти из аккаунта
+     * Выход из аккаунта авторизованного пользователя
      */
     public void logoutUser() {
-        currentUser = null;
-        System.out.println("Вы успешно вышли из аккаунта");
+        if(currentUser != null) {
+            currentUser = null;
+            System.out.println("Вы успешно вышли из аккаунта");
+        } else {
+            System.out.println("Вы не авторизованы");
+        }
     }
 
     /**

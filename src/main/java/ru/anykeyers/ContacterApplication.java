@@ -19,8 +19,8 @@ public class ContacterApplication {
         ApplicationProperties applicationProperties = new ApplicationProperties(propertiesFilePath);
         UserRepository userRepository = new UserRepository(applicationProperties);
         consoleService = new ConsoleService();
-        AuthenticationService authenticationService = new AuthenticationService(consoleService, userRepository);
-        commandProcessor = new CommandProcessor(authenticationService, userRepository, consoleService);
+        AuthenticationService authenticationService = new AuthenticationService(userRepository);
+        commandProcessor = new CommandProcessor(authenticationService, userRepository);
     }
 
     /**
@@ -30,9 +30,7 @@ public class ContacterApplication {
         System.out.println("Добро пожаловать в менеджер контаков!");
         while (true) {
             String command = consoleService.readCommand();
-            if (command != null) {
-                commandProcessor.processCommand(command);
-            }
+            commandProcessor.processCommand(command);
         }
     }
 

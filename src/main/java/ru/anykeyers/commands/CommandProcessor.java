@@ -23,17 +23,19 @@ public class CommandProcessor {
     private final ConsoleService consoleService;
 
     public CommandProcessor(AuthenticationService authenticationService,
-                            UserRepository userRepository,
-                            ConsoleService consoleService) {
-        this.commandHandlers = new HashMap<>();
+                            UserRepository userRepository) {
         this.authenticationService = authenticationService;
         this.userRepository = userRepository;
-        this.consoleService = consoleService;
+
+        commandHandlers = new HashMap<>();
+        consoleService = new ConsoleService();
+
         registerCommands();
     }
 
     /**
      * Обрабатывает введенную команду, вызывая соответствующий обработчик команды, если он существует.
+     * Иначе выводится сообщение о том, что такой команды не существует
      * @param commandValue введенная пользователем команда.
      */
     public void processCommand(String commandValue) {
@@ -41,6 +43,8 @@ public class CommandProcessor {
         CommandHandler commandHandler = commandHandlers.get(command);
         if(commandHandler != null) {
             commandHandler.handleCommand();
+        } else {
+            System.out.println("Такой команды не существует, введите /help для просмтора возможных задач");
         }
     }
 

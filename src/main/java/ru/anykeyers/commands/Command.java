@@ -1,5 +1,8 @@
 package ru.anykeyers.commands;
 
+/**
+ * Перечисление команд, возможных в приложении
+ */
 public enum Command {
 
     LOG_IN("/login", "Авторизоваться"),

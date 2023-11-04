@@ -10,17 +10,23 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class UserRepository implements Repository {
+/**
+ * Класс для манипуляции данными с базой данных пользователей приложения
+ */
+public class UserRepository {
 
     /**
      * Карта для хранения учетных данных пользователей.
      */
     private final Map<String, String> users = new LinkedHashMap<>();
 
-    private final ApplicationProperties applicationProperties;
+    /**
+     * Путь до файловой БД
+     */
+    private final String dbFilePath;
 
     public UserRepository(ApplicationProperties applicationProperties) {
-        this.applicationProperties = applicationProperties;
+        this.dbFilePath = applicationProperties.getSetting("saved-users-file-path");
         initUsersFromFile();
     }
 
@@ -40,17 +46,17 @@ public class UserRepository implements Repository {
     }
 
     /**
-     * Сохранить пользователя в карту пользователей для сохранения в БД
+     * Сохранить пользователя в {@link #users}
      */
     public void save(User user) {
         users.put(user.getUsername(), user.getPassword());
     }
 
     /**
-     * Сохранить добавленных пользователей из карты в БД
+     * Сохранить все данные из {@link #users} в файловую БД
      */
     public void saveAll() {
-        File file = new File(getDbFilePath());
+        File file = new File(dbFilePath);
         try {
             StringBuilder dataForSave = new StringBuilder();
             for (Map.Entry<String, String> entry : users.entrySet()) {
@@ -63,26 +69,28 @@ public class UserRepository implements Repository {
         }
     }
 
+    /**
+     * Проинициализировать данные из файловой БД в {@link #users}
+     */
     private void initUsersFromFile() {
-        File file = new File(getDbFilePath());
+        File file = new File(dbFilePath);
         try {
             List<String> lines = FileUtils.readLines(file, "UTF-8");
-            for (String line : lines) {
-                String[] parts = line.split(":");
-                if (parts.length == 2) {
-                    String username = parts[0];
-                    String password = parts[1];
+            lines.forEach(line -> {
+                String[] userInfo = line.split(":");
+                if (userInfo.length == 2) {
+                    String username = userInfo[0];
+                    String password = userInfo[1];
                     users.put(username, password);
                 }
-            }
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    @Override
     public String getDbFilePath() {
-        return applicationProperties.getSetting("saved-users-file-path");
+        return dbFilePath;
     }
 
 }

@@ -4,63 +4,38 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.anykeyers.domain.User;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.PrintStream;
 
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNull;
-import static org.junit.Assert.assertTrue;
+import static ru.anykeyers.utils.StreamUtils.setSystemOutputStream;
+import static ru.anykeyers.utils.StreamUtils.writeDataInSystemInputStream;
 
+/**
+ * Тесты для методов класса {@link ConsoleService}
+ */
 public class ConsoleServiceTest {
 
-    private final ByteArrayOutputStream output = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-    private ConsoleService consoleService;
+    private final ConsoleService consoleService = new ConsoleService();
 
     @Before
     public void setUp() {
-        System.setOut(new PrintStream(output));
-    }
-
-    @Test
-    public void readUserFromConsoleTest() {
-        setConsoleArgs("user\npassword\n");
-
-        User user = consoleService.readUserFromConsole();
-
-        assertEquals("user", user.getUsername());
-        assertEquals("password", user.getPassword());
-    }
-
-    @Test
-    public void readCommandTest() {
-        setConsoleArgs("/login");
-
-        String command = consoleService.readCommand();
-
-        assertEquals("/login", command);
-    }
-
-    @Test
-    public void readInvalidCommandTest() {
-        setConsoleArgs("/nothing");
-
-        String command = consoleService.readCommand();
-
-        assertNull(command);
-        assertTrue(output.toString().contains("Такой команды не существует, введите /help для просмтора возможных задач"));
+        setSystemOutputStream(outputStream);
     }
 
     /**
-     * Инициировать запись в консоль данных
+     * Тест метода {@link ConsoleService#readUserFromConsole()}
      */
-    private void setConsoleArgs(String args) {
-        InputStream in = new ByteArrayInputStream(args.getBytes());
-        System.setIn(in);
-        consoleService = new ConsoleService(System.in);
+    @Test
+    public void readUserFromConsoleTest() {
+        String userInfo = "user\npassword\n";
+        writeDataInSystemInputStream(userInfo);
 
+        User user = consoleService.readUserFromConsole();
+
+        User expectedUser = new User("user", "password");
+        assertEquals(expectedUser, user);
     }
 
 }
