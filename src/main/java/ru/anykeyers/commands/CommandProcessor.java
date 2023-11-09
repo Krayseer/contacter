@@ -1,10 +1,12 @@
 package ru.anykeyers.commands;
 
+import ru.anykeyers.repositories.FileDBRepository;
 import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.services.AuthenticationService;
 import ru.anykeyers.services.ConsoleService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static ru.anykeyers.commands.Command.*;
@@ -14,13 +16,13 @@ import static ru.anykeyers.commands.Command.*;
  */
 public class CommandProcessor {
 
-    private final Map<Command, CommandHandler> commandHandlers;
-
     private final AuthenticationService authenticationService;
 
     private final UserRepository userRepository;
 
     private final ConsoleService consoleService;
+
+    private final Map<Command, CommandHandler> commandHandlers;
 
     public CommandProcessor(AuthenticationService authenticationService,
                             UserRepository userRepository) {
@@ -34,18 +36,23 @@ public class CommandProcessor {
     }
 
     /**
-     * Обрабатывает введенную команду, вызывая соответствующий обработчик команды, если он существует.
-     * Иначе выводится сообщение о том, что такой команды не существует
+     * Обрабатывает введенную команду, вызывая соответствующий обработчик команды.<br/>
+     * Перед обработкой команды происходит валидация для проверки, нужна ли авторизация для выполнения орбаботчика команды,
+     * и существует ли команда в списке зарегистрированных.
      * @param commandValue введенная пользователем команда.
      */
     public void processCommand(String commandValue) {
         Command command = Command.getCommandByValue(commandValue);
         CommandHandler commandHandler = commandHandlers.get(command);
-        if(commandHandler != null) {
-            commandHandler.handleCommand();
-        } else {
+        if(commandHandler == null) {
             System.out.println("Такой команды не существует, введите /help для просмтора возможных задач");
+            return;
         }
+        if(!isCommandValid(command)) {
+            System.out.println("Необходимо авторизоваться");
+            return;
+        }
+        commandHandler.handleCommand();
     }
 
     /**
@@ -74,9 +81,17 @@ public class CommandProcessor {
             // TODO: 31.10.2023
         });
         commandHandlers.put(EXIT_APP, () -> {
-            userRepository.saveAll();
+            List<FileDBRepository> repositories = List.of(userRepository);
+            repositories.forEach(FileDBRepository::saveAll);
             System.exit(0);
         });
+    }
+
+    /**
+     * Проверить команду на валидность
+     */
+    private boolean isCommandValid(Command command) {
+        return command != null && (!command.isNeedAuthenticate() || authenticationService.isAuthenticated());
     }
 
 }

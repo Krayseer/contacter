@@ -1,12 +1,15 @@
 package ru.anykeyers.services;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import ru.anykeyers.ApplicationProperties;
+import org.junit.rules.TemporaryFolder;
 import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.domain.User;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 
 import static org.junit.Assert.*;
 import static ru.anykeyers.utils.StreamUtils.setSystemOutputStream;
@@ -23,12 +26,13 @@ public class AuthenticationServiceTest {
 
     private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-    @Before
-    public void setup() {
-        String testPropertiesFilePath = "src/test/resources/application-test.properties";
-        ApplicationProperties applicationProperties = new ApplicationProperties(testPropertiesFilePath);
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-        userRepository = new UserRepository(applicationProperties);
+    @Before
+    public void setup() throws IOException {
+        File tempDbFile = temporaryFolder.newFile("tempDbFile.txt");
+        userRepository = new UserRepository(tempDbFile.getPath());
         authenticationService = new AuthenticationService(userRepository);
 
         setSystemOutputStream(outputStream);
@@ -94,10 +98,6 @@ public class AuthenticationServiceTest {
 
         User user = new User("username", "password");
         userRepository.save(user);
-
-        String expectedResultLogoutNullUser = "Вы не авторизованы";
-        authenticationService.logoutUser();
-        assertTrue(outputStream.toString().contains(expectedResultLogoutNullUser));
 
         authenticationService.authenticate();
         assertTrue(authenticationService.isAuthenticated());

@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * Класс для манипуляции данными с базой данных пользователей приложения
  */
-public class UserRepository {
+public class UserRepository implements FileDBRepository {
 
     /**
      * Карта для хранения учетных данных пользователей.
@@ -25,8 +25,8 @@ public class UserRepository {
      */
     private final String dbFilePath;
 
-    public UserRepository(ApplicationProperties applicationProperties) {
-        this.dbFilePath = applicationProperties.getSetting("saved-users-file-path");
+    public UserRepository(String dbFilePath) {
+        this.dbFilePath = dbFilePath;
         initUsersFromFile();
     }
 
@@ -41,7 +41,7 @@ public class UserRepository {
     /**
      * Получить пароль по username
      */
-    public String getPasswordByUsername(String username) {
+    public String findPasswordByUsername(String username) {
         return users.get(username);
     }
 
@@ -52,9 +52,7 @@ public class UserRepository {
         users.put(user.getUsername(), user.getPassword());
     }
 
-    /**
-     * Сохранить все данные из {@link #users} в файловую БД
-     */
+    @Override
     public void saveAll() {
         File file = new File(dbFilePath);
         try {

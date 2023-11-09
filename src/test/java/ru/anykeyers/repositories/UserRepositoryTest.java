@@ -2,8 +2,9 @@ package ru.anykeyers.repositories;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import ru.anykeyers.ApplicationProperties;
+import org.junit.rules.TemporaryFolder;
 import ru.anykeyers.domain.User;
 
 import java.io.File;
@@ -19,12 +20,13 @@ public class UserRepositoryTest {
 
     private UserRepository userRepository;
 
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
     @Before
     public void setUp() throws IOException {
-        String testPropertiesFilePath = "src/test/resources/application-test.properties";
-        ApplicationProperties applicationProperties = new ApplicationProperties(testPropertiesFilePath);
-        userRepository = new UserRepository(applicationProperties);
-        FileUtils.write(new File(userRepository.getDbFilePath()), "", "UTF-8");
+        File tempDbFile = temporaryFolder.newFile("tempDbFile.txt");
+        userRepository = new UserRepository(tempDbFile.getPath());
     }
 
     /**
@@ -37,11 +39,11 @@ public class UserRepositoryTest {
         userRepository.save(user);
 
         assertTrue(userRepository.existsByUsername("new_user"));
-        assertEquals("new_password", userRepository.getPasswordByUsername("new_user"));
+        assertEquals("new_password", userRepository.findPasswordByUsername("new_user"));
     }
 
     /**
-     * Тест метода {@link UserRepository#getPasswordByUsername(String)}
+     * Тест метода {@link UserRepository#findPasswordByUsername(String)}
      */
     @Test
     public void getPasswordByUsernameTest() {
@@ -49,8 +51,8 @@ public class UserRepositoryTest {
 
         userRepository.save(user);
 
-        assertEquals("password", userRepository.getPasswordByUsername("user"));
-        assertNull(userRepository.getPasswordByUsername("nonexistent_user"));
+        assertEquals("password", userRepository.findPasswordByUsername("user"));
+        assertNull(userRepository.findPasswordByUsername("nonexistent_user"));
     }
 
     /**

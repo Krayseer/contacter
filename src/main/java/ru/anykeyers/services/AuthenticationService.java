@@ -30,7 +30,7 @@ public class AuthenticationService {
         if(!userRepository.existsByUsername(user.getUsername())) {
             userRepository.save(user);
         }
-        String userPassword = userRepository.getPasswordByUsername(user.getUsername());
+        String userPassword = userRepository.findPasswordByUsername(user.getUsername());
         if (userPassword != null && userPassword.equals(user.getPassword())) {
             currentUser = user;
             System.out.println("Вы успешно авторизовались");
@@ -51,12 +51,8 @@ public class AuthenticationService {
      * Выход из аккаунта авторизованного пользователя
      */
     public void logoutUser() {
-        if(currentUser != null) {
-            currentUser = null;
-            System.out.println("Вы успешно вышли из аккаунта");
-        } else {
-            System.out.println("Вы не авторизованы");
-        }
+        currentUser = null;
+        System.out.println("Вы успешно вышли из аккаунта");
     }
 
     /**

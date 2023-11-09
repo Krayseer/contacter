@@ -1,13 +1,17 @@
 package ru.anykeyers;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import ru.anykeyers.commands.CommandProcessor;
 import ru.anykeyers.domain.User;
 import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.services.AuthenticationService;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
 import static ru.anykeyers.utils.StreamUtils.setSystemOutputStream;
@@ -24,12 +28,13 @@ public class CommandProcessorTest {
 
     private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-    @Before
-    public void setup() {
-        String testPropertiesFilePath = "src/test/resources/application-test.properties";
-        ApplicationProperties applicationProperties = new ApplicationProperties(testPropertiesFilePath);
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-        UserRepository userRepository = new UserRepository(applicationProperties);
+    @Before
+    public void setup() throws IOException {
+        File tempDbFile = temporaryFolder.newFile("tempDbFile.txt");
+        UserRepository userRepository = new UserRepository(tempDbFile.getPath());
         authenticationService = new AuthenticationService(userRepository);
         commandProcessor = new CommandProcessor(authenticationService, userRepository);
 

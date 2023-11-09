@@ -17,7 +17,7 @@ public class ContacterApplication {
     public ContacterApplication() {
         String propertiesFilePath = "src/main/resources/application.properties";
         ApplicationProperties applicationProperties = new ApplicationProperties(propertiesFilePath);
-        UserRepository userRepository = new UserRepository(applicationProperties);
+        UserRepository userRepository = new UserRepository(applicationProperties.getSetting("saved-users-file-path"));
         consoleService = new ConsoleService();
         AuthenticationService authenticationService = new AuthenticationService(userRepository);
         commandProcessor = new CommandProcessor(authenticationService, userRepository);
