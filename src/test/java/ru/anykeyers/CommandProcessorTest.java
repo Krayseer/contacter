@@ -6,8 +6,12 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import ru.anykeyers.commands.CommandProcessor;
 import ru.anykeyers.domain.User;
+import ru.anykeyers.repositories.ContactRepository;
+import ru.anykeyers.repositories.GroupRepository;
 import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.services.AuthenticationService;
+import ru.anykeyers.services.ContactService;
+import ru.anykeyers.services.GroupService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -35,8 +39,13 @@ public class CommandProcessorTest {
     public void setup() throws IOException {
         File tempDbFile = temporaryFolder.newFile("tempDbFile.txt");
         UserRepository userRepository = new UserRepository(tempDbFile.getPath());
+        ContactRepository contactRepository = new ContactRepository(tempDbFile.getPath());
+        GroupRepository groupRepository = new GroupRepository(tempDbFile.getPath());
         authenticationService = new AuthenticationService(userRepository);
-        commandProcessor = new CommandProcessor(authenticationService, userRepository);
+        ContactService contactService = new ContactService(contactRepository, authenticationService);
+        GroupService groupService = new GroupService(authenticationService, contactService, groupRepository);
+        commandProcessor = new CommandProcessor(authenticationService, contactService, groupService,
+                groupRepository, contactRepository, userRepository);
 
         setSystemOutputStream(outputStream);
     }
