@@ -1,7 +1,6 @@
 package ru.anykeyers.repositories;
 
 import org.apache.commons.io.FileUtils;
-import ru.anykeyers.ApplicationProperties;
 import ru.anykeyers.domain.User;
 
 import java.io.File;

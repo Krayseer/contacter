@@ -12,12 +12,24 @@ import java.util.*;
  */
 public class GroupService {
 
+    /**
+     * Константа, обозначающая выбор изменения имени группы
+     */
     private final int NEW_GROUP_NAME = 1;
 
+    /**
+     * Константа, обозначающая выбор добавления контакта в группу
+     */
     private final int ADD_CONTACT = 2;
 
+    /**
+     * Константа, обозначающая выбор удаления контакта из группы
+     */
     private final int DELETE_CONTACT = 3;
 
+    /**
+     * Константа, обозначающая неверный выбор
+     */
     private final int WRONG_COMMAND = 4;
 
     private final AuthenticationService authenticationService;

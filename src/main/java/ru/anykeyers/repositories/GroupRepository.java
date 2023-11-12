@@ -1,10 +1,9 @@
 package ru.anykeyers.repositories;
 
 import org.apache.commons.io.FileUtils;
-import ru.anykeyers.ApplicationProperties;
-import ru.anykeyers.domain.User;
 import ru.anykeyers.domain.Contact;
 import ru.anykeyers.domain.Group;
+import ru.anykeyers.domain.User;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -64,15 +63,18 @@ public class GroupRepository implements FileDBRepository {
      */
     @Override
     public void saveAll() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(groupFilePath))) {
+        File file = new File(groupFilePath);
+        try {
+            StringBuilder dataForSave = new StringBuilder();
             for (Map.Entry<String, Set<Group>> entry : usersGroups.entrySet()) {
                 String userName = entry.getKey();
                 Set<Group> userGroups = entry.getValue();
                 for (Group group : userGroups) {
                     String line = userName + ": " + group.toString();
-                    writer.write(line + "\n");
+                    dataForSave.append(line).append("\n");
                 }
             }
+            FileUtils.writeStringToFile(file, dataForSave.toString(), "UTF-8");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

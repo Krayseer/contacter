@@ -12,10 +12,19 @@ import java.util.*;
  */
 public class ContactService {
 
+    /**
+     * Константа, обозначающая выбор изменения имени контакта
+     */
     private final int NEW_NAME = 1;
 
+    /**
+     * Константа, обозначающая выбор изменения номера телефона контакта
+     */
     private final int NEW_PHONE_NUMBER = 2;
 
+    /**
+     * Константа, обозначающая неверный выбор
+     */
     private final int WRONG_COMMAND = 3;
 
     private final AuthenticationService authenticationService;

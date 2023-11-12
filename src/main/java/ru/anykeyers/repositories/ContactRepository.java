@@ -1,9 +1,8 @@
 package ru.anykeyers.repositories;
 
 import org.apache.commons.io.FileUtils;
-import ru.anykeyers.ApplicationProperties;
-import ru.anykeyers.domain.User;
 import ru.anykeyers.domain.Contact;
+import ru.anykeyers.domain.User;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -51,16 +50,19 @@ public class ContactRepository implements FileDBRepository {
      */
     @Override
     public void saveAll() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(contactFilePath))){
+        File file = new File(contactFilePath);
+        try {
+            StringBuilder dataForSave = new StringBuilder();
             for (Map.Entry<String, Set<Contact>> entry : usersContacts.entrySet()) {
                 String userName = entry.getKey();
                 Set<Contact> contactsList = entry.getValue();
                 for (Contact contact : contactsList) {
                     String contactInfo = contact.toString();
                     String line = userName + ": " + contactInfo;
-                    writer.write(line + "\n");
+                    dataForSave.append(line).append("\n");
                 }
             }
+            FileUtils.writeStringToFile(file, dataForSave.toString(), "UTF-8");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
