@@ -1,11 +1,14 @@
 package ru.anykeyers;
 
 import ru.anykeyers.commands.CommandProcessor;
+import ru.anykeyers.contexts.Messages;
+import ru.anykeyers.factories.ReceiverFactory;
+import ru.anykeyers.factories.RepositoryFactory;
+import ru.anykeyers.receivers.Receiver;
 import ru.anykeyers.repositories.ContactRepository;
 import ru.anykeyers.repositories.GroupRepository;
 import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.services.AuthenticationService;
-import ru.anykeyers.services.ConsoleService;
 import ru.anykeyers.services.ContactService;
 import ru.anykeyers.services.GroupService;
 
@@ -14,31 +17,39 @@ import ru.anykeyers.services.GroupService;
  */
 public class ContacterApplication {
 
-    private final ConsoleService consoleService;
+    private final Receiver receiver;
 
     private final CommandProcessor commandProcessor;
 
+    private final Messages messages;
+
     public ContacterApplication() {
-        String propertiesFilePath = "src/main/resources/application.properties";
-        ApplicationProperties applicationProperties = new ApplicationProperties(propertiesFilePath);
-        UserRepository userRepository = new UserRepository(applicationProperties.getSetting("saved-users-file-path"));
-        GroupRepository groupRepository = new GroupRepository(applicationProperties.getSetting("group-file-path"));
-        ContactRepository contactRepository = new ContactRepository(applicationProperties.getSetting("contacts-file-path"));
-        consoleService = new ConsoleService();
+        messages = new Messages();
+
+        ReceiverFactory receiverFactory = new ReceiverFactory();
+        RepositoryFactory repositoryFactory = new RepositoryFactory();
+
+        receiver = receiverFactory.createReceiver();
+        UserRepository userRepository = repositoryFactory.createUserRepository();
+        ContactRepository contactRepository = repositoryFactory.createContactRepository();
+        GroupRepository groupRepository = repositoryFactory.createGroupRepository();
+
         AuthenticationService authenticationService = new AuthenticationService(userRepository);
-        ContactService contactService = new ContactService(contactRepository, authenticationService);
-        GroupService groupService = new GroupService(authenticationService, contactService, groupRepository);
-        commandProcessor = new CommandProcessor(authenticationService, contactService, groupService, groupRepository, contactRepository, userRepository);
+        ContactService contactService = new ContactService(contactRepository);
+        GroupService groupService = new GroupService(groupRepository, contactRepository);
+
+        commandProcessor = new CommandProcessor(authenticationService, contactService, groupService);
     }
 
     /**
      * Запуск приложения
      */
     public void start() {
-        System.out.println("Добро пожаловать в менеджер контаков!");
+        receiver.sendMessage(messages.getMessageByKey("application.welcome"));
         while (true) {
-            String command = consoleService.readCommand();
-            commandProcessor.processCommand(command);
+            String command = receiver.readCommand();
+            String resultMessage = commandProcessor.processCommand(command);
+            receiver.sendMessage(resultMessage);
         }
     }
 

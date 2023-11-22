@@ -1,5 +1,6 @@
 package ru.anykeyers.services;
 
+import ru.anykeyers.contexts.Messages;
 import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.domain.User;
 
@@ -8,7 +9,7 @@ import ru.anykeyers.domain.User;
  */
 public class AuthenticationService {
 
-    private final ConsoleService consoleService;
+    private final Messages messages;
 
     private final UserRepository userRepository;
 
@@ -18,25 +19,20 @@ public class AuthenticationService {
     private User currentUser;
 
     public AuthenticationService(UserRepository userRepository) {
-        this.consoleService = new ConsoleService();
+        messages = new Messages();
         this.userRepository = userRepository;
     }
 
     /**
      * Авторизация пользователя с консоли
      */
-    public void authenticate() {
-        User user = consoleService.readUserFromConsole();
-        if(!userRepository.existsByUsername(user.getUsername())) {
+    public String authenticate(String username) {
+        User user = new User(username);
+        if (!userRepository.exists(user)) {
             userRepository.save(user);
         }
-        String userPassword = userRepository.findPasswordByUsername(user.getUsername());
-        if (userPassword != null && userPassword.equals(user.getPassword())) {
-            currentUser = user;
-            System.out.println("Вы успешно авторизовались");
-        } else {
-            System.out.println("Пароль был введён неверно");
-        }
+        currentUser = user;
+        return messages.getMessageByKey("auth.successful");
     }
 
     /**
@@ -50,9 +46,9 @@ public class AuthenticationService {
     /**
      * Выход из аккаунта авторизованного пользователя
      */
-    public void logoutUser() {
+    public String logoutUser() {
         currentUser = null;
-        System.out.println("Вы успешно вышли из аккаунта");
+        return messages.getMessageByKey("auth.successful-logout");
     }
 
     /**

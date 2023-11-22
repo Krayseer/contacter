@@ -8,6 +8,6 @@ public interface CommandHandler {
     /**
      * Обработать команду
      */
-    void handleCommand();
+    String handleCommand(String args);
 
 }

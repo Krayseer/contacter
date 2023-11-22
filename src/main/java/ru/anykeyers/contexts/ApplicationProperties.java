@@ -1,4 +1,4 @@
-package ru.anykeyers;
+package ru.anykeyers.contexts;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -11,9 +11,9 @@ public class ApplicationProperties {
 
     private final Properties properties;
 
-    public ApplicationProperties(String propertiesPath) {
+    public ApplicationProperties() {
         this.properties = new Properties();
-        try (FileInputStream fileInputStream = new FileInputStream(propertiesPath)) {
+        try (FileInputStream fileInputStream = new FileInputStream("src/main/resources/application.properties")) {
             properties.load(fileInputStream);
         } catch (IOException e) {
             e.printStackTrace();

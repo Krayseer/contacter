@@ -1,111 +1,70 @@
 package ru.anykeyers.services;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import ru.anykeyers.repositories.UserRepository;
+import ru.anykeyers.repositories.file.FileUserRepository;
 import ru.anykeyers.domain.User;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import static org.junit.Assert.*;
-import static ru.anykeyers.utils.StreamUtils.setSystemOutputStream;
-import static ru.anykeyers.utils.StreamUtils.writeDataInSystemInputStream;
 
 /**
  * Тесты для методов класса {@link AuthenticationService}
  */
 public class AuthenticationServiceTest {
 
-    private UserRepository userRepository;
-
     private AuthenticationService authenticationService;
 
-    private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    private UserRepository userRepository;
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private final User user = new User("username");
 
     @Before
     public void setup() throws IOException {
-        File tempDbFile = temporaryFolder.newFile("tempDbFile.txt");
-        userRepository = new UserRepository(tempDbFile.getPath());
+        File tempDbFile = Files.createTempFile("tempDbFile", ".txt").toFile();
+        userRepository = new FileUserRepository(tempDbFile.getPath());
         authenticationService = new AuthenticationService(userRepository);
-
-        setSystemOutputStream(outputStream);
     }
 
     /**
-     * Тест метода {@link AuthenticationService#authenticate()} с валидным введённым пользователем
+     * Тест метода {@link AuthenticationService#authenticate(String)}
      */
     @Test
-    public void authenticateWithValidUserTest() {
-        String userInfo = "user\npassword\n";
-        writeDataInSystemInputStream(userInfo);
-
-        authenticationService.authenticate();
+    public void testAuthenticateUser() {
+        String authResult = authenticationService.authenticate(user.getUsername());
 
         String expectedResult = "Вы успешно авторизовались";
+        assertTrue(userRepository.exists(user));
         assertTrue(authenticationService.isAuthenticated());
-        assertTrue(outputStream.toString().contains(expectedResult));
-    }
-
-    /**
-     * Тест метода {@link AuthenticationService#authenticate()} c невалидным введённым пользователем(с неверно введённым паролем)
-     */
-    @Test
-    public void authenticateWithInvalidUserTest() {
-        String invalidUserInfo = "username\nwrong_password\n";
-        writeDataInSystemInputStream(invalidUserInfo);
-
-        User validUser = new User("username", "password");
-        userRepository.save(validUser);
-
-        authenticationService.authenticate();
-
-        String expectedResult = "Пароль был введён неверно";
-        assertFalse(authenticationService.isAuthenticated());
-        assertTrue(outputStream.toString().contains(expectedResult));
+        assertEquals(expectedResult, authResult);
     }
 
     /**
      * Тест метода {@link AuthenticationService#getCurrentUser()}
      */
     @Test
-    public void getCurrentUserTest() {
-        String userInfo = "username\npassword\n";
-        writeDataInSystemInputStream(userInfo);
+    public void testGetCurrentUser() {
+        authenticationService.authenticate(user.getUsername());
 
-        assertNull(authenticationService.getCurrentUser());
-
-        authenticationService.authenticate();
-
-        User expectedUser = new User("username", "password");
         assertNotNull(authenticationService.getCurrentUser());
-        assertEquals(expectedUser, authenticationService.getCurrentUser());
+        assertEquals(user, authenticationService.getCurrentUser());
     }
 
     /**
      * Тест метода {@link AuthenticationService#logoutUser()}
      */
     @Test
-    public void logoutUserTest() {
-        String userInfo = "username\npassword\n";
-        writeDataInSystemInputStream(userInfo);
-
-        User user = new User("username", "password");
-        userRepository.save(user);
-
-        authenticationService.authenticate();
-        assertTrue(authenticationService.isAuthenticated());
+    public void testLogoutUser() {
+        authenticationService.authenticate(user.getUsername());
+        String logoutResult = authenticationService.logoutUser();
 
         String expectedResult = "Вы успешно вышли из аккаунта";
-        authenticationService.logoutUser();
         assertFalse(authenticationService.isAuthenticated());
-        assertTrue(outputStream.toString().contains(expectedResult));
+        assertEquals(expectedResult, logoutResult);
     }
 
 }
