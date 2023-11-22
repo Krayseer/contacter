@@ -5,6 +5,8 @@ import ru.anykeyers.contexts.Messages;
 import ru.anykeyers.repositories.ContactRepository;
 import ru.anykeyers.repositories.GroupRepository;
 import ru.anykeyers.repositories.UserRepository;
+import ru.anykeyers.repositories.file.FileContactRepository;
+import ru.anykeyers.repositories.file.FileGroupRepository;
 import ru.anykeyers.repositories.file.FileUserRepository;
 
 public class RepositoryFactory {
@@ -36,7 +38,7 @@ public class RepositoryFactory {
     public ContactRepository createContactRepository() {
         switch (STORAGE_TYPE) {
             case FILE:
-                return new ContactRepository(applicationProperties.getSetting("contacts-table"));
+                return new FileContactRepository(applicationProperties.getSetting("contacts-table"));
             default:
                 return null;
         }
@@ -45,7 +47,7 @@ public class RepositoryFactory {
     public GroupRepository createGroupRepository() {
         switch (STORAGE_TYPE) {
             case FILE:
-                return new GroupRepository(applicationProperties.getSetting("groups-table"));
+                return new FileGroupRepository(applicationProperties.getSetting("groups-table"));
             default:
                 return null;
         }

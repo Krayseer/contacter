@@ -1,12 +1,21 @@
 package ru.anykeyers.domain;
 
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Сущность группы
  */
 public class Group {
+
+    private String id;
+
+    /**
+     * Имя пользователя, которому принадлежит группа
+     */
+    private String username;
 
     /**
      * Название группы
@@ -16,49 +25,69 @@ public class Group {
     /**
      * Список контактов, добавленных в группу
      */
-    private List<Contact> members;
+    private Set<Contact> contacts;
 
-    public Group(String name, List<Contact> members) {
+    public Group(String username, String id, String name, Set<Contact> contacts) {
+        this.username = username;
         this.name = name;
-        this.members = members;
+        this.contacts = contacts;
+        this.id = id;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getName() {
         return name;
     }
 
-    public List<Contact> getMembers() {
-        return members;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder membersStr = new StringBuilder();
-        for (Contact member : members) {
-            membersStr.append(member.getFirstname()).append(" ").append(member.getLastname()).
-                    append(" ").append(member.getPhoneNumber()).append(",");
-        }
-        return name + ": " + membersStr;
+    public Set<Contact> getContacts() {
+        return contacts;
+    }
+
+    public void addContactInGroup(Contact contact) {
+        contacts.add(contact);
+    }
+
+    public void deleteContactFromGroup(Contact contact) {
+        contacts.remove(contact);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Group group = (Group) o;
-        return Objects.equals(name, group.name) && Objects.equals(members, group.members);
+        if (!(o instanceof Group group)) return false;
+        return Objects.equals(username, group.getUsername()) && Objects.equals(name, group.getName()) && Objects.equals(contacts, group.getContacts());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, members);
+        return Objects.hash(username, name, contacts);
     }
 
-    public void setName(String name) {
-        this.name = name;
+    @Override
+    public String toString() {
+        String contactsToString = contacts.stream()
+                .map(Contact::toString)
+                .collect(Collectors.joining(";"));
+        return String.format("%s:%s=%s", username, name, contactsToString);
     }
 
-    public void setMembers(List<Contact> members) {
-        this.members = members;
-    }
 }

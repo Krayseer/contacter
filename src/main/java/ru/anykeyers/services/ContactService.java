@@ -1,10 +1,11 @@
 package ru.anykeyers.services;
 
+import ru.anykeyers.contexts.Messages;
 import ru.anykeyers.domain.Contact;
 import ru.anykeyers.domain.User;
 import ru.anykeyers.repositories.ContactRepository;
 
-import java.util.*;
+import java.util.UUID;
 
 
 /**
@@ -12,111 +13,77 @@ import java.util.*;
  */
 public class ContactService {
 
-    /**
-     * Константа, обозначающая выбор изменения имени контакта
-     */
-    private final int NEW_NAME = 1;
-
-    /**
-     * Константа, обозначающая выбор изменения номера телефона контакта
-     */
-    private final int NEW_PHONE_NUMBER = 2;
-
-    /**
-     * Константа, обозначающая неверный выбор
-     */
-    private final int WRONG_COMMAND = 3;
+    private final Messages messages;
 
     private final ContactRepository contactRepository;
 
-    public ContactService (ContactRepository contactRepository) {
+    public ContactService(ContactRepository contactRepository) {
+        messages = new Messages();
         this.contactRepository = contactRepository;
     }
 
     /**
      * Добавляет контакт в список контактов пользователя
      */
-    public void addContact() {
-        // TODO: 22.11.2023 Переделать
-//        try (Scanner scanner = new Scanner(System.in)) {
-//            User user = authenticationService.getCurrentUser();
-//            Contact contact = consoleService.readContactFromConsole(scanner);
-//            Set<Contact> contacts = contactRepository.findContactsByUsername(user.getUsername());
-//            if (!contacts.contains(contact)) {
-//                contactRepository.save(user.getUsername(), contact);
-//                System.out.println("Пользователь успешно сохранен!");
-//            } else {
-//                System.out.println("Такой контакт уже существует");
-//            }
-//        }
+    public String addContact(User user, String contactName) {
+        boolean isContactExists = contactRepository.existsByUsernameAndName(user.getUsername(), contactName);
+        if (isContactExists) {
+            return messages.getMessageByKey("contact.already-exists", contactName);
+        }
+        Contact contact = new Contact(user.getUsername(), contactName);
+        contactRepository.saveOrUpdate(contact);
+        return messages.getMessageByKey("contact.successful-save", contactName);
     }
+
+    /**
+     * Изменить контакт
+     * @param user пользователь, которому нужно изменить контакт
+     * @param contactName имя контакта и обновленное значение, которое нужно применить одному из его полей
+     * @param fieldToEdit поле для изменения
+     * @return сообщение об успешном или неуспешном выполнении
+     */
+    public String editContact(User user, String contactName, Object newValue, Contact.Field fieldToEdit) {
+        Contact contactToEdit = contactRepository.findByUsernameAndName(user.getUsername(), contactName);
+        if (contactToEdit == null) {
+            return messages.getMessageByKey("contact.not-exists", contactName);
+        }
+
+        switch (fieldToEdit) {
+            case CONTACT_NAME -> {
+                String newName = (String) newValue;
+                contactToEdit.setName(newName);
+            }
+            case CONTACT_PHONE_NUMBER -> {
+                String newPhoneNumber = (String) newValue;
+                contactToEdit.setPhoneNumber(newPhoneNumber);
+            }
+            default -> messages.getMessageByKey("field.invalid");
+        }
+
+        contactRepository.saveOrUpdate(contactToEdit);
+        return messages.getMessageByKey("contact.successful-edit-name", contactName);
+    }
+
 
     /**
      * Удаляет контакт из списка контактов пользователя
      */
-    public void deleteContact() {
-        // TODO: 22.11.2023 Переделать
-//        try (Scanner scanner = new Scanner(System.in)) {
-//            User user = authenticationService.getCurrentUser();
-//            String nameContactToDelete = consoleService.deleteContactFromConsole(scanner);
-//            Contact contactToDelete = contactRepository.findContactByNameOrNumber(user, nameContactToDelete);
-//            if (contactToDelete != null) {
-//                contactRepository.removeContact(user, contactToDelete);
-//                System.out.println("Контакт удален");
-//            } else {
-//                System.out.println("Не удалось найти контакт");
-//            }
-//        }
+    public String deleteContact(User user, String value, Contact.Field field) {
+        String username = user.getUsername();
+        Contact contactToDelete = null;
 
+        switch (field) {
+            case CONTACT_NAME -> contactToDelete = contactRepository.findByUsernameAndName(username, value);
+            case CONTACT_PHONE_NUMBER -> contactToDelete = contactRepository.findByUsernameAndPhoneNumber(username, value);
+            default -> messages.getMessageByKey("field.invalid");
+        }
+
+        if (contactToDelete == null) {
+            return messages.getMessageByKey("contact.not-exists", value);
+        }
+
+        contactRepository.delete(contactToDelete);
+        return messages.getMessageByKey("contact.successful-delete", contactToDelete.getName());
     }
 
-    /**
-     * Изменяет контакт пользователя
-     */
-    public void editContact() {
-        // TODO: 22.11.2023 Переделать
-//        try (Scanner scanner = new Scanner(System.in)) {
-//            User user = authenticationService.getCurrentUser();
-//            String nameContactToEdit = consoleService.editContactFromConsole(scanner);
-//            Contact contactToEdit = contactRepository.findContactByNameOrNumber(user, nameContactToEdit);
-//            if (contactToEdit == null) {
-//                System.out.println("Не удалось найти контакт");
-//                return;
-//            }
-//
-//            int choice = consoleService.editInfo(scanner);
-//            switch (choice) {
-//                case NEW_NAME -> editContactName(scanner, contactToEdit);
-//                case NEW_PHONE_NUMBER -> editPhoneNumber(scanner, contactToEdit);
-//                case WRONG_COMMAND -> System.out.println("Введена некорректная команда");
-//            }
-//        }
-    }
-
-    /**
-     * Изменяет имя контакта
-     * @param contactToEdit контакт для изменения
-     */
-    private void editContactName(Scanner scanner, Contact contactToEdit) {
-        // TODO: 22.11.2023 Переделать
-//        String[] newContactName = consoleService.editName(scanner).split(" ");
-//        if (newContactName.length == 2) {
-//            contactToEdit.setFirstname(newContactName[0]);
-//            contactToEdit.setLastname(newContactName[1]);
-//            System.out.println("Имя контакта изменено");
-//        } else {
-//            System.out.println("Введено некорректное значение");
-//        }
-    }
-
-
-    /**
-     * Изменяет номер телефона контакта
-     * @param contactToEdit контакт для изменения
-     */
-    private void editPhoneNumber(Scanner scanner, Contact contactToEdit) {
-        // TODO: 22.11.2023 Переделать
-//        String newPhoneNumber = consoleService.editPhoneNumber(scanner);
-//        contactToEdit.setPhoneNumber(newPhoneNumber);
-    }
 }

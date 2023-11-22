@@ -1,5 +1,6 @@
 package ru.anykeyers.services;
 
+import ru.anykeyers.contexts.Messages;
 import ru.anykeyers.domain.Contact;
 import ru.anykeyers.domain.Group;
 import ru.anykeyers.domain.User;
@@ -7,144 +8,89 @@ import ru.anykeyers.repositories.ContactRepository;
 import ru.anykeyers.repositories.GroupRepository;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 
 /**
  * Класс, отвечающий за логику при работе с группами
  */
 public class GroupService {
 
-    /**
-     * Константа, обозначающая выбор изменения имени группы
-     */
-    private final int NEW_GROUP_NAME = 1;
-
-    /**
-     * Константа, обозначающая выбор добавления контакта в группу
-     */
-    private final int ADD_CONTACT = 2;
-
-    /**
-     * Константа, обозначающая выбор удаления контакта из группы
-     */
-    private final int DELETE_CONTACT = 3;
-
-    /**
-     * Константа, обозначающая неверный выбор
-     */
-    private final int WRONG_COMMAND = 4;
-
     private final GroupRepository groupRepository;
 
     private final ContactRepository contactRepository;
 
-    public GroupService (GroupRepository groupRepository,
-                         ContactRepository contactRepository) {
+    private final Messages messages;
+
+    public GroupService(GroupRepository groupRepository,
+                        ContactRepository contactRepository) {
         this.groupRepository = groupRepository;
         this.contactRepository = contactRepository;
+
+        messages = new Messages();
     }
 
     /**
      * Добавляет группу в список групп пользователя
      */
-    public void addGroup() {
-        // TODO: 22.11.2023 Переделать
-//        try (Scanner scanner = new Scanner(System.in)) {
-//            User user = authenticationService.getCurrentUser();
-//            Group group = consoleService.readGroupFromConsole(scanner);
-//            Set<Group> userGroups = groupRepository.findGroupsByUsername(user.getUsername());
-//            if (!userGroups.contains(group)) {
-//                groupRepository.save(user.getUsername(), group);
-//                System.out.println("Группа сохранена");
-//            } else {
-//                System.out.println("Такая группа уже существует");
-//            }
-//        }
+    public String addGroup(User user, String groupName) {
+        if (groupRepository.existsByUsernameAndName(user.getUsername(), groupName)) {
+            return messages.getMessageByKey("group.already-exists", groupName);
+        }
+        Group group = new Group(user.getUsername(), UUID.randomUUID().toString(), groupName, new HashSet<>());
+        groupRepository.saveOrUpdate(group);
+        return messages.getMessageByKey("group.successful-save", groupName);
+    }
+
+    public String editGroupName(User user, String groupName, String newGroupName) {
+        Group group = groupRepository.findByUsernameAndName(user.getUsername(), groupName);
+        if (group == null) {
+            return messages.getMessageByKey("group.not-exists", groupName);
+        }
+        group.setName(newGroupName);
+        groupRepository.saveOrUpdate(group);
+        return messages.getMessageByKey("group.successful-edit-name", groupName, newGroupName);
+    }
+
+    public String addContactInGroup(User user, String groupName, String contactName) {
+        return performContactOperation(user, groupName, contactName, Group::addContactInGroup, "group.successful-contact-add");
+    }
+
+    public String deleteContactFromGroup(User user, String groupName, String contactName) {
+        return performContactOperation(user, groupName, contactName, Group::deleteContactFromGroup, "group.successful-contact-delete");
+    }
+
+    public String deleteGroup(User user, String groupName) {
+        Group group = groupRepository.findByUsernameAndName(user.getUsername(), groupName);
+        if (group == null) {
+            return messages.getMessageByKey("group.not-exists", groupName);
+        }
+        groupRepository.delete(group);
+        return messages.getMessageByKey("group-successful-delete", groupName);
     }
 
     /**
-     * Удаляет группу из списка групп пользователя
+     * Обработка операции связанной с контактами
+     * @param user пользователь
+     * @param groupName название группы
+     * @param contactName имя контакта
+     * @param operation операция, которую нужно выполнить с контактом
+     * @param successMessageKey ключ сообщения успешного выполнения
+     * @return сообщение результата обработки
      */
-    public void deleteGroup() {
-        // TODO: 22.11.2023 Переделать
-//        try (Scanner scanner = new Scanner(System.in)) {
-//            User user = authenticationService.getCurrentUser();
-//            String nameGroupToDelete = consoleService.deleteGroupFromConsole(scanner);
-//            Group groupToDelete = groupRepository.findGroupByName(user, nameGroupToDelete);
-//            if (groupToDelete != null) {
-//                groupRepository.removeGroup(user, groupToDelete);
-//                System.out.println("Группа удалена");
-//            } else {
-//                System.out.println("Не удалось найти группу");
-//            }
-//        }
-    }
+    private String performContactOperation(User user, String groupName, String contactName, BiConsumer<Group, Contact> operation, String successMessageKey) {
+        Group group = groupRepository.findByUsernameAndName(user.getUsername(), groupName);
+        if (group == null) {
+            return messages.getMessageByKey("group.not-exists", groupName);
+        }
 
-    /**
-     * Изменяет группу в списке групп пользователя
-     */
-    public void editGroup() {
-        // TODO: 22.11.2023 Переделать
-//        try (Scanner scanner = new Scanner(System.in)){
-//            User user = authenticationService.getCurrentUser();
-//            String nameGroupToEdit = consoleService.editGroupFromConsole(scanner);
-//            Group groupToEdit = groupRepository.findGroupByName(user, nameGroupToEdit);
-//            if (groupToEdit == null) {
-//                System.out.println("Не удалось найти группу");
-//                return;
-//            }
-//
-//            int choice = consoleService.editGroupInfo(scanner);
-//            switch (choice) {
-//                case NEW_GROUP_NAME -> editGroupName(scanner, groupToEdit);
-//                case ADD_CONTACT -> addContactInGroup(scanner, user, groupToEdit);
-//                case DELETE_CONTACT -> deleteContactFromGroup(scanner, groupToEdit);
-//                case WRONG_COMMAND -> System.out.println("Введена неверная команда");
-//            }
-//        }
-    }
+        Contact contact = contactRepository.findByUsernameAndName(user.getUsername(), contactName);
+        if (contact == null) {
+            return messages.getMessageByKey("contact.not-exists", contactName);
+        }
 
-    /**
-     * Изменяет имя группы
-     * @param groupToEdit группа для изменения
-     */
-    private void editGroupName(Scanner scanner, Group groupToEdit) {
-        // TODO: 22.11.2023 Переделать
-//        String newGroupName = consoleService.editGroupName(scanner);
-//        groupToEdit.setName(newGroupName);
-//        System.out.println("Имя группы изменено");
-    }
-
-    /**
-     * Удаляет контакт из группы
-     * @param groupToEdit группа для изменения
-     */
-    private void deleteContactFromGroup(Scanner scanner, Group groupToEdit) {
-        // TODO: 22.11.2023 Переделать
-//        String contactName = consoleService.deleteContactFromGroup(scanner);
-//        Contact contactToDeleteFromGroup = groupRepository.findContactInGroup(groupToEdit, contactName);
-//        if (contactToDeleteFromGroup != null) {
-//            groupToEdit.getMembers().remove(contactToDeleteFromGroup);
-//            System.out.println("Контакт удален из группы");
-//        } else {
-//            System.out.println("Такой контакт не найден");
-//        }
-    }
-
-    /**
-     * Добавляет контакт в группу
-     * @param user текущий пользователь
-     * @param groupToEdit группа для изменения
-     */
-    private void addContactInGroup(Scanner scanner, User user, Group groupToEdit) {
-        // TODO: 22.11.2023 Переделать
-//        String contactName = consoleService.addContactInGroup(scanner);
-//        Contact contactToAddInGroup = contactService.findContact(user, contactName);
-//        if (contactToAddInGroup != null) {
-//            groupToEdit.getMembers().add(contactToAddInGroup);
-//            System.out.println("Контакт добавлен в группу");
-//        } else {
-//            System.out.println("Нет такого контакта в вашем списке контактов");
-//        }
+        operation.accept(group, contact);
+        groupRepository.saveOrUpdate(group);
+        return messages.getMessageByKey(successMessageKey, contactName, groupName);
     }
 
 }

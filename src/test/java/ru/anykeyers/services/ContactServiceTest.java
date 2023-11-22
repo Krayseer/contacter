@@ -1,111 +1,110 @@
-//package ru.anykeyers.services;
-//
-//import org.junit.After;
-//import org.junit.Before;
-//import org.junit.Rule;
-//import org.junit.Test;
-//import org.junit.rules.TemporaryFolder;
-//import ru.anykeyers.ApplicationProperties;
-//import ru.anykeyers.domain.Contact;
-//import ru.anykeyers.domain.User;
-//import ru.anykeyers.repositories.ContactRepository;
-//import ru.anykeyers.repositories.UserRepository;
-//
-//import java.io.ByteArrayOutputStream;
-//import java.io.File;
-//import java.util.Set;
-//
-//import static org.junit.Assert.*;
-//import static ru.anykeyers.utils.StreamUtils.setSystemOutputStream;
-//import static ru.anykeyers.utils.StreamUtils.writeDataInSystemInputStream;
-//
-//public class ContactServiceTest {
-//
-//    private ContactService contactService;
-//
-//    private ContactRepository contactRepository;
-//
-//    private AuthenticationService authenticationService;
-//
-//    private UserRepository userRepository;
-//
-//    @Rule
-//    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-//
-//    @Before
-//    public void setUp() throws Exception {
-//        File tempDbFile = temporaryFolder.newFile("tempDbFile.txt");
-//        contactRepository = new ContactRepository(tempDbFile.getPath());
-//        userRepository = new UserRepository(tempDbFile.getPath());
-//        authenticationService = new AuthenticationService(userRepository);
-//        contactService = new ContactService(contactRepository, authenticationService);
-//    }
-//
-//    /**
-//     * Тест метода {@link ContactService#findContact(User, String)}
-//     */
-//    @Test
-//    public void findContact() {
-//        User user = new User("nikita", "123");
-//        Contact userContact = new Contact("Ivan", "Ivanov", "79068065041");
-//        contactRepository.save(user.getUsername(), userContact);
-//
-//        String contactName = userContact.getFirstname() + " " + userContact.getLastname();
-//        Contact actualContact = contactService.findContact(user, contactName);
-//        Contact expectedContact = new Contact("Ivan", "Ivanov", "79068065041");
-//        assertEquals(expectedContact, actualContact);
-//    }
-//
-//    /**
-//     * Тест метода {@link ContactService#addContact()}
-//     */
-//    @Test
-//    public void addContact() {
-//        String userInfo = "nikita\n123\n";
-//        writeDataInSystemInputStream(userInfo);
-//        authenticationService.authenticate();
-//        String contactInfo = "Ivan\nIvanov\n79068065041";
-//        writeDataInSystemInputStream(contactInfo);
-//        contactService.addContact();
-//        Set<Contact> actualSet = contactRepository.findContactsByUsername("nikita");
-//        Set<Contact> expectedSet = Set.of(new Contact("Ivan", "Ivanov", "79068065041"));
-//        assertEquals(expectedSet, actualSet);
-//    }
-//
-//    /**
-//     * Тест метода {@link ContactService#deleteContact()}
-//     */
-//    @Test
-//    public void deleteContact() {
-//        String userInfo = "nikita\n123\n";
-//        writeDataInSystemInputStream(userInfo);
-//        authenticationService.authenticate();
-//        contactRepository.save("nikita", new Contact("Ivan", "Ivanov", "79068065041"));
-//        contactRepository.save("nikita", new Contact("Petya", "Petrov", "79068065042"));
-//        String deleteContact = "Ivan Ivanov\n";
-//        writeDataInSystemInputStream(deleteContact);
-//        contactService.deleteContact();
-//
-//        Set<Contact> expectedSet = Set.of(new Contact("Petya", "Petrov", "79068065042"));
-//        Set<Contact> actualSet = contactRepository.findContactsByUsername("nikita");
-//        assertEquals(expectedSet, actualSet);
-//    }
-//
-//    /**
-//     * Тест метода {@link ContactService#editContact()}
-//     */
-//    @Test
-//    public void editContact() {
-//        String userInfo = "nikita\n123\n";
-//        writeDataInSystemInputStream(userInfo);
-//        authenticationService.authenticate();
-//        contactRepository.save("nikita", new Contact("Ivan", "Ivanov", "79068065041"));
-//        String editContact = "Ivan Ivanov\n1\nPetya Petrov";
-//        writeDataInSystemInputStream(editContact);
-//        contactService.editContact();
-//
-//        Set<Contact> expectedSet = Set.of(new Contact("Petya", "Petrov", "79068065041"));
-//        Set<Contact> actualSet = contactRepository.findContactsByUsername("nikita");
-//        assertEquals(expectedSet, actualSet);
-//    }
-//}
+package ru.anykeyers.services;
+
+import org.junit.Before;
+import org.junit.Test;
+import ru.anykeyers.domain.Contact;
+import ru.anykeyers.domain.User;
+import ru.anykeyers.repositories.file.FileContactRepository;
+
+import java.io.File;
+import java.nio.file.Files;
+
+import static org.junit.Assert.*;
+
+/**
+ * Тесты для класса {@link ContactService}
+ */
+public class ContactServiceTest {
+
+    private ContactService contactService;
+
+    private FileContactRepository contactRepository;
+
+    private final User user = new User("username");
+
+    private final Contact contact = new Contact(user.getUsername(), "Ivan Ivanov");
+
+    @Before
+    public void setUp() throws Exception {
+        File tempDbFile = Files.createTempFile("tempDbFile", ".txt").toFile();
+        contactRepository = new FileContactRepository(tempDbFile.getPath());
+        contactService = new ContactService(contactRepository);
+    }
+
+    /**
+     * Тест метода {@link ContactService#addContact(User, String)}
+     */
+    @Test
+    public void testAddContact() {
+        String addContactResult = contactService.addContact(user, contact.getName());
+        String expectedResult = "Контакт 'Ivan Ivanov' сохранен";
+        assertEquals(expectedResult, addContactResult);
+
+        String repeatAddContact = contactService.addContact(user, contact.getName());
+        String expectedRepeatResult = String.format("Контакт '%s' уже существует", contact.getName());
+        assertEquals(expectedRepeatResult, repeatAddContact);
+    }
+
+    /**
+     * Тест метода {@link ContactService#editContact(User, String, Object, Contact.Field)}
+     */
+    @Test
+    public void testEditContact() {
+        contactService.addContact(user, contact.getName());
+        String nonExistsContactName = "non-exists";
+        String newName = "Petr Petrov";
+        String newPhoneNumber = "8999999999";
+
+        String actualNameEditResultNonExistsContact = contactService.editContact(
+                user, nonExistsContactName, newName, Contact.Field.CONTACT_NAME
+        );
+        String expectedNameEditResultNonExistsContact = String.format("Не удалось найти контакт '%s'", nonExistsContactName);
+        assertEquals(expectedNameEditResultNonExistsContact, actualNameEditResultNonExistsContact);
+
+        String actualNameEditResult = contactService.editContact(
+                user, contact.getName(), newName, Contact.Field.CONTACT_NAME
+        );
+        String expectedNameEditResult = "Контакт 'Ivan Ivanov' успешно изменен";
+        assertTrue(contactRepository.existsByUsernameAndName(user.getUsername(), newName));
+        assertEquals(expectedNameEditResult, actualNameEditResult);
+
+        String actualPhoneEditResult = contactService.editContact(
+                user, newName, newPhoneNumber, Contact.Field.CONTACT_PHONE_NUMBER
+        );
+        String expectedPhoneEditResult = "Контакт 'Petr Petrov' успешно изменен";
+        assertNotNull(contactRepository.findByUsernameAndPhoneNumber(user.getUsername(), newPhoneNumber));
+        assertEquals(expectedPhoneEditResult, actualPhoneEditResult);
+    }
+
+    /**
+     * Тест метода {@link ContactService#deleteContact(User, String, Contact.Field)}
+     */
+    @Test
+    public void testDeleteContact() {
+        String phoneNumber = "7999999999";
+        String nonExistsContactName = "non-exists";
+        String nonExistsContactPhone = "1111111111";
+
+        contactService.addContact(user, contact.getName());
+
+        String resultDeleteByNotRealName = contactService.deleteContact(user, nonExistsContactName, Contact.Field.CONTACT_NAME);
+        String expectedDeleteByNotRealNameResult = String.format("Не удалось найти контакт '%s'", nonExistsContactName);
+        assertEquals(expectedDeleteByNotRealNameResult, resultDeleteByNotRealName);
+
+        String resultDeleteByNotRealPhone = contactService.deleteContact(user, nonExistsContactPhone, Contact.Field.CONTACT_PHONE_NUMBER);
+        String expectedDeleteByNotRealPhoneResult = String.format("Не удалось найти контакт '%s'", nonExistsContactPhone);
+        assertEquals(expectedDeleteByNotRealPhoneResult, resultDeleteByNotRealPhone);
+
+        String resultDeleteByName = contactService.deleteContact(user, contact.getName(), Contact.Field.CONTACT_NAME);
+        String expectedDeleteByNameResult = String.format("Контакт '%s' успешно удален", contact.getName());
+        assertEquals(expectedDeleteByNameResult, resultDeleteByName);
+
+        contactService.addContact(user, contact.getName());
+        contactService.editContact(user, contact.getName(), phoneNumber, Contact.Field.CONTACT_PHONE_NUMBER);
+
+        String resultDeleteByPhone = contactService.deleteContact(user, phoneNumber, Contact.Field.CONTACT_PHONE_NUMBER);
+        String expectedDeleteByPhoneResult = String.format("Контакт '%s' успешно удален", contact.getName());
+        assertEquals(expectedDeleteByPhoneResult, resultDeleteByPhone);
+    }
+
+}

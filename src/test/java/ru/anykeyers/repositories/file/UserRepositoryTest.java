@@ -32,7 +32,7 @@ public class UserRepositoryTest {
      * Тест метода {@link UserRepository#save(User)}
      */
     @Test
-    public void saveUserTest() throws IOException {
+    public void testUserSave() throws IOException {
         User user1 = new User("user1");
         User user2 = new User("user2");
 

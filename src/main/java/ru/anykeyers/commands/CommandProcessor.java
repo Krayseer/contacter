@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static ru.anykeyers.commands.Command.*;
+import static ru.anykeyers.domain.Contact.Field.CONTACT_NAME;
+import static ru.anykeyers.domain.Contact.Field.CONTACT_PHONE_NUMBER;
 
 /**
  * Класс отвечает за обработку команд, вводимых пользователем, и управление соответствующими обработчиками команд
@@ -90,61 +92,76 @@ public class CommandProcessor {
         commandHandlers.put(LOG_OUT, (args) -> authenticationService.logoutUser());
     }
 
+
     private void registerContactCommands() {
-        commandHandlers.put(ADD_CONTACT, (contactString) -> {
-            // TODO: 22.11.2023
-            return null;
-        });
+        commandHandlers.put(ADD_CONTACT, (contactString) ->
+                contactService.addContact(authenticationService.getCurrentUser(), contactString)
+        );
         commandHandlers.put(EDIT_CONTACT_NAME, (nameAndNewContactName) -> {
-            // TODO: 22.11.2023
-            return null;
+            String[] arguments = getArguments(nameAndNewContactName);
+            String contactName = arguments[0];
+            String newName = arguments[1];
+            return contactService.editContact(
+                    authenticationService.getCurrentUser(), contactName, newName, CONTACT_NAME
+            );
         });
         commandHandlers.put(EDIT_CONTACT_PHONE, (nameAndNewContactPhoneNumber) -> {
-            // TODO: 22.11.2023
-            return null;
+            String[] arguments = getArguments(nameAndNewContactPhoneNumber);
+            String contactName = arguments[0];
+            String newPhoneNumber = arguments[1];
+            return contactService.editContact(
+                    authenticationService.getCurrentUser(), contactName, newPhoneNumber, CONTACT_PHONE_NUMBER
+            );
         });
-        commandHandlers.put(DELETE_CONTACT_BY_NAME, (contactName) -> {
-            // TODO: 22.11.2023
-            return null;
-        });
-        commandHandlers.put(DELETE_CONTACT_BY_PHONE, (contactPhone) -> {
-            // TODO: 22.11.2023
-            return null;
-        });
+        commandHandlers.put(DELETE_CONTACT_BY_NAME, (contactName) ->
+                contactService.deleteContact(authenticationService.getCurrentUser(), contactName, CONTACT_NAME)
+        );
+        commandHandlers.put(DELETE_CONTACT_BY_PHONE, (contactPhone) ->
+                contactService.deleteContact(authenticationService.getCurrentUser(), contactPhone, CONTACT_PHONE_NUMBER)
+        );
     }
 
     private void registerGroupCommands() {
-        commandHandlers.put(ADD_GROUP, (groupName) -> {
-            // TODO: 22.11.2023
-            return null;
-        });
+        commandHandlers.put(ADD_GROUP, (groupName) ->
+                groupService.addGroup(authenticationService.getCurrentUser(), groupName)
+        );
         commandHandlers.put(EDIT_GROUP_NAME, (nameAndNewGroupName) -> {
-            // TODO: 22.11.2023
-            return null;
+            String[] arguments = getArguments(nameAndNewGroupName);
+            String groupName = arguments[0];
+            String newGroupName = arguments[1];
+            return groupService.editGroupName(
+                    authenticationService.getCurrentUser(), groupName, newGroupName
+            );
         });
         commandHandlers.put(GROUP_ADD_CONTACT, (groupAndContactNames) -> {
-            // TODO: 22.11.2023
-            return null;
+            String[] arguments = getArguments(groupAndContactNames);
+            String groupName = arguments[0];
+            String contactName = arguments[1];
+            return groupService.addContactInGroup(authenticationService.getCurrentUser(), groupName, contactName);
         });
         commandHandlers.put(GROUP_DELETE_CONTACT, (groupNameAndContactNameToDelete) -> {
-            // TODO: 22.11.2023
-            return null;
+            String[] arguments = getArguments(groupNameAndContactNameToDelete);
+            String groupName = arguments[0];
+            String contactNameToDelete = arguments[1];
+            return groupService.deleteContactFromGroup(
+                    authenticationService.getCurrentUser(), groupName, contactNameToDelete
+            );
         });
-        commandHandlers.put(DELETE_GROUP, (groupNameToDelete) -> {
-            // TODO: 22.11.2023
-            return null;
-        });
+        commandHandlers.put(DELETE_GROUP, (groupNameToDelete) ->
+                groupService.deleteGroup(authenticationService.getCurrentUser(), groupNameToDelete)
+        );
     }
 
     private void registerCommonCommands() {
-        commandHandlers.put(HELP, (args) -> {
-            // TODO: 22.11.2023
-            return null;
-        });
+        commandHandlers.put(HELP, (args) -> Command.getAllCommands());
         commandHandlers.put(EXIT_APP, (args) -> {
             System.exit(0);
             return messages.getMessageByKey("application.exit");
         });
+    }
+
+    private String[] getArguments(String args) {
+        return args.trim().split(",\\s*");
     }
 
 }
