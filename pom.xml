@@ -15,7 +15,10 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <commons-io.version>2.15.0</commons-io.version>
+    <jackson-databind.version>2.16.0</jackson-databind.version>
+    <jaxb-runtime.version>4.0.4</jaxb-runtime.version>
     <junit.version>4.13.2</junit.version>
+    <open-csv.version>1.10.0</open-csv.version>
   </properties>
 
   <dependencies>
@@ -30,6 +33,24 @@
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson-databind.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <version>${jaxb-runtime.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-csv</artifactId>
+      <version>${open-csv.version}</version>
     </dependency>
   </dependencies>
 </project>

@@ -37,6 +37,8 @@ public class Contact {
      */
     private String block;
 
+    public Contact() { }
+
     public Contact(String username, String id, String name, int age, String gender, String block, String phoneNumber) {
         this.username = username;
         this.name = name;
