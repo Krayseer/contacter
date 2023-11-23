@@ -29,11 +29,14 @@ public class GroupRepositoryTest {
 
     private final User user = new User("user");
 
-    private final Contact firstContact = new Contact(user.getUsername(), "1","Ivan Ivanov", "79068065041");
+    private final Contact firstContact = new Contact(user.getUsername(), "1", "Ivan Ivanov", 30,
+            "Мужчина", "UNBLOCK", "79068065041");
 
-    private final Contact secondContact = new Contact(user.getUsername(), "2", "Petya Petrov", "79068065042");
+    private final Contact secondContact = new Contact(user.getUsername(), "2", "Petya Petrov", 33,
+            "Мужчина","UNBLOCK", "79068065042");
 
-    private final Contact thirdContact = new Contact(user.getUsername(), "3", "Nikita Lara", "79125152");
+    private final Contact thirdContact = new Contact(user.getUsername(), "3", "Nikita Lara", 18,
+            "Мужчина", "UNBLOCK", "79125152");
 
     private final Group firstUserGroup = new Group(user.getUsername(), "4", "Учеба", Set.of(firstContact, secondContact));
 
@@ -111,15 +114,15 @@ public class GroupRepositoryTest {
 
         List<String> lines = FileUtils.readLines(tempDbFile, "UTF-8");
         String expectedString1 = String.format("%s\n%s;%s",
-                "user:5,Друзья=3,Nikita Lara,79125152",
-                "user:4,Учеба=1,Ivan Ivanov,79068065041",
-                "2,Petya Petrov,79068065042"
+                "user:5,Друзья=3,Nikita Lara,18,Мужчина,UNBLOCK,79125152",
+                "user:4,Учеба=1,Ivan Ivanov,30,Мужчина,UNBLOCK,79068065041",
+                "2,Petya Petrov,33,Мужчина,UNBLOCK,79068065042"
         );
 
         String expectedString2 = String.format("%s\n%s;%s",
-                "user:5,Друзья=3,Nikita Lara,79125152",
-                "user:4,Учеба=2,Petya Petrov,79068065042",
-                "1,Ivan Ivanov,79068065041"
+                "user:5,Друзья=3,Nikita Lara,18,Мужчина,UNBLOCK,79125152",
+                "user:4,Учеба=2,Petya Petrov,33,Мужчина,UNBLOCK,79068065042",
+                "1,Ivan Ivanov,30,Мужчина,UNBLOCK,79068065041"
         );
 
         String actualString = String.join("\n", lines);

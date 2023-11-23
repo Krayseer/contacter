@@ -22,10 +22,28 @@ public class Contact {
      */
     private String phoneNumber;
 
-    public Contact(String username, String id, String name, String phoneNumber) {
+    /**
+     * Возраст
+     */
+    private int age;
+
+    /**
+     * Пол контакта
+     */
+    private String gender;
+
+    /**
+     * Блокировка контакта
+     */
+    private String block;
+
+    public Contact(String username, String id, String name, int age, String gender, String block, String phoneNumber) {
         this.username = username;
         this.name = name;
         this.phoneNumber = phoneNumber;
+        this.age = age;
+        this.gender = gender;
+        this.block = block;
         this.id = id;
     }
 
@@ -33,6 +51,9 @@ public class Contact {
         this.username = username;
         this.name = name;
         this.phoneNumber = "";
+        this.age = -1;
+        this.gender = "UNKNOWN";
+        this.block = "UNBLOCK";
         this.id = UUID.randomUUID().toString();
     }
 
@@ -68,6 +89,30 @@ public class Contact {
         this.phoneNumber = phoneNumber;
     }
 
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getBlock() {
+        return block;
+    }
+
+    public void setBlock(String block) {
+        this.block = block;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -82,7 +127,21 @@ public class Contact {
 
     @Override
     public String toString() {
-        return String.format("%s:%s,%s,%s", username, id.toString(), name, phoneNumber);
+        return String.format("%s:%s,%s,%d,%s,%s,%s", username, id, name, age, gender, block, phoneNumber);
+    }
+
+    public String getContactString(Contact contact) {
+        String contactAge = contact.getAge() < 0
+                ? "Возраст не определен"
+                : Integer.toString(contact.getAge());
+        String contactGender = (!contact.getGender().equals("Мужчина") && !contact.getGender().equals("Женщина"))
+                ? "Пол не определен"
+                : contact.getGender();
+        String contactNumber = contact.getPhoneNumber().equals("")
+                ? "Номер телефона не определен"
+                : contact.getPhoneNumber();
+        return String.format("Имя: %s, Возраст: %s, Пол: %s, Номер телефона: %s", contact.getName(),
+                contactAge, contactGender, contactNumber);
     }
 
     /**
@@ -97,7 +156,19 @@ public class Contact {
         /**
          * Номер контакта
          */
-        CONTACT_PHONE_NUMBER;
+        CONTACT_PHONE_NUMBER,
+        /**
+         * Возраст контакта
+         */
+        CONTACT_AGE,
+        /**
+         * Пол контакта
+         */
+        CONTACT_GENDER,
+        /**
+         * Блокировка контакта
+         */
+        CONTACT_BLOCK;
 
     }
 

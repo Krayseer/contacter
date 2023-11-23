@@ -11,6 +11,7 @@ import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.services.AuthenticationService;
 import ru.anykeyers.services.ContactService;
 import ru.anykeyers.services.GroupService;
+import ru.anykeyers.services.SortService;
 
 /**
  * Класс, позволяющий запустить приложение
@@ -37,8 +38,9 @@ public class ContacterApplication {
         AuthenticationService authenticationService = new AuthenticationService(userRepository);
         ContactService contactService = new ContactService(contactRepository);
         GroupService groupService = new GroupService(groupRepository, contactRepository);
+        SortService sortService = new SortService(contactRepository);
 
-        commandProcessor = new CommandProcessor(authenticationService, contactService, groupService);
+        commandProcessor = new CommandProcessor(authenticationService, contactService, groupService, sortService);
     }
 
     /**

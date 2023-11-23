@@ -115,8 +115,9 @@ public class FileGroupRepository implements GroupRepository {
                         ? Arrays.stream(contactsStrings.split(";"))
                             .map(contact -> {
                                 String[] contactInfo = contact.split(",");
-                                String phoneNumber = contactInfo.length > 2 ? contactInfo[2] : "";
-                                return new Contact(username, contactInfo[0], contactInfo[1], phoneNumber);
+                                String phoneNumber = contactInfo.length > 5 ? contactInfo[5] : "";
+                                return new Contact(username, contactInfo[0], contactInfo[1],
+                                        Integer.parseInt(contactInfo[2]), contactInfo[3], contactInfo[4], phoneNumber);
                             })
                             .collect(Collectors.toSet())
                         : new HashSet<>();

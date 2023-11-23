@@ -5,8 +5,6 @@ import ru.anykeyers.domain.Contact;
 import ru.anykeyers.domain.User;
 import ru.anykeyers.repositories.ContactRepository;
 
-import java.util.UUID;
-
 
 /**
  * Класс, отвечающий за логику при работе с контактами
@@ -57,6 +55,26 @@ public class ContactService {
                 String newPhoneNumber = (String) newValue;
                 contactToEdit.setPhoneNumber(newPhoneNumber);
             }
+            case CONTACT_AGE ->  {
+                try {
+                    int newAge = Integer.parseInt((String) newValue);
+                    if (newAge < 0) {
+                        throw new NumberFormatException();
+                    }
+                    contactToEdit.setAge(newAge);
+                } catch (NumberFormatException e) {
+                    return messages.getMessageByKey("contact.bad-age-value");
+                }
+
+            }
+            case CONTACT_GENDER -> {
+                String newGender = (String) newValue;
+                if (!newGender.equals("Мужчина") && !newGender.equals("Женщина")) {
+                    return messages.getMessageByKey("contact.bad-gender-value");
+                } else {
+                    contactToEdit.setGender(newGender);
+                }
+            }
             default -> messages.getMessageByKey("field.invalid");
         }
 
@@ -84,6 +102,38 @@ public class ContactService {
 
         contactRepository.delete(contactToDelete);
         return messages.getMessageByKey("contact.successful-delete", contactToDelete.getName());
+    }
+
+    /**
+     * Блокирует контакт пользователя
+     * @param user текущий пользователь
+     * @param contactName имя контакта
+     * @return строку о успехе/неуспехе операции
+     */
+    public String blockContact(User user, String contactName) {
+        Contact contactToBlock = contactRepository.findByUsernameAndName(user.getUsername(), contactName);
+        if (contactToBlock.getBlock().equals("BLOCK")) {
+            return messages.getMessageByKey("contact.already-block", contactName);
+        } else {
+            contactToBlock.setBlock("BLOCK");
+            return messages.getMessageByKey("contact.successful-block", contactName);
+        }
+    }
+
+    /**
+     * Разблокирует контакт пользователя
+     * @param user текущий пользователь
+     * @param contactName имя контакта
+     * @return строку о успехе/неуспехе операции
+     */
+    public String unblockContact(User user, String contactName) {
+        Contact contactToUnblock = contactRepository.findByUsernameAndName(user.getUsername(), contactName);
+        if (contactToUnblock.getBlock().equals("UNBLOCK")) {
+            return messages.getMessageByKey("contact.already-unblock", contactName);
+        } else {
+            contactToUnblock.setBlock("UNBLOCK");
+            return messages.getMessageByKey("contact.successful-unblock", contactName);
+        }
     }
 
 }

@@ -11,6 +11,7 @@ import ru.anykeyers.repositories.file.FileUserRepository;
 import ru.anykeyers.services.AuthenticationService;
 import ru.anykeyers.services.ContactService;
 import ru.anykeyers.services.GroupService;
+import ru.anykeyers.services.SortService;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +33,8 @@ abstract class BaseCommandProcessorTest {
 
     protected GroupService groupService;
 
+    protected SortService sortService;
+
     @Before
     public void setup() throws IOException {
         File tempDbFile = Files.createTempFile("tempDbFile", ".txt").toFile();
@@ -43,8 +46,9 @@ abstract class BaseCommandProcessorTest {
         authenticationService = new AuthenticationService(userRepository);
         contactService = new ContactService(contactRepository);
         groupService = new GroupService(groupRepository, contactRepository);
+        sortService = new SortService(contactRepository);
 
-        commandProcessor = new CommandProcessor(authenticationService, contactService, groupService);
+        commandProcessor = new CommandProcessor(authenticationService, contactService, groupService, sortService);
     }
 
     /**

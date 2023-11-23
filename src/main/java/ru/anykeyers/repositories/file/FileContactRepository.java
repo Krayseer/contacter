@@ -97,8 +97,9 @@ public class FileContactRepository implements ContactRepository {
                 String[] usernameAndContact = line.split(":");
                 String username = usernameAndContact[0];
                 String[] contactInfo = usernameAndContact[1].split(",");
-                String phoneNumber = contactInfo.length > 2 ? contactInfo[2] : "";
-                Contact contact = new Contact(username, contactInfo[0], contactInfo[1], phoneNumber);
+                String phoneNumber = contactInfo.length > 5 ? contactInfo[5] : "";
+                Contact contact = new Contact(username, contactInfo[0], contactInfo[1],
+                        Integer.parseInt(contactInfo[2]), contactInfo[3], contactInfo[4], phoneNumber);
                 if (!usersContacts.containsKey(username)) {
                     usersContacts.put(username, new HashSet<>());
                 }

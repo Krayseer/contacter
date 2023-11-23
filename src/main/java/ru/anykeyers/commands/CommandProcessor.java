@@ -1,16 +1,17 @@
 package ru.anykeyers.commands;
 
 import ru.anykeyers.contexts.Messages;
+import ru.anykeyers.dataOperations.kinds.SortingKind;
 import ru.anykeyers.services.AuthenticationService;
 import ru.anykeyers.services.ContactService;
 import ru.anykeyers.services.GroupService;
+import ru.anykeyers.services.SortService;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static ru.anykeyers.commands.Command.*;
-import static ru.anykeyers.domain.Contact.Field.CONTACT_NAME;
-import static ru.anykeyers.domain.Contact.Field.CONTACT_PHONE_NUMBER;
+import static ru.anykeyers.domain.Contact.Field.*;
 
 /**
  * Класс отвечает за обработку команд, вводимых пользователем, и управление соответствующими обработчиками команд
@@ -23,16 +24,20 @@ public class CommandProcessor {
 
     private final GroupService groupService;
 
+    private final SortService sortService;
+
     private final Map<Command, CommandHandler> commandHandlers;
 
     private final Messages messages;
 
     public CommandProcessor(AuthenticationService authenticationService,
                             ContactService contactService,
-                            GroupService groupService) {
+                            GroupService groupService,
+                            SortService sortService) {
         this.authenticationService = authenticationService;
         this.contactService = contactService;
         this.groupService = groupService;
+        this.sortService = sortService;
 
         messages = new Messages();
         commandHandlers = new HashMap<>();
@@ -113,6 +118,24 @@ public class CommandProcessor {
                     authenticationService.getCurrentUser(), contactName, newPhoneNumber, CONTACT_PHONE_NUMBER
             );
         });
+        commandHandlers.put(EDIT_CONTACT_AGE, (nameAndNewContactAge) -> {
+            String[] arguments = getArguments(nameAndNewContactAge);
+            String contactName = arguments[0];
+            String newAge = arguments[1];
+            return contactService.editContact(authenticationService.getCurrentUser(), contactName, newAge, CONTACT_AGE);
+        });
+        commandHandlers.put(EDIT_CONTACT_GENDER, (nameAndNewContactGender) -> {
+            String[] arguments = getArguments(nameAndNewContactGender);
+            String contactName = arguments[0];
+            String newGender = arguments[1];
+            return contactService.editContact(authenticationService.getCurrentUser(), contactName, newGender, CONTACT_GENDER);
+        });
+        commandHandlers.put(BLOCK_CONTACT, (contactName) ->
+                contactService.blockContact(authenticationService.getCurrentUser(), contactName)
+        );
+        commandHandlers.put(UNBLOCK_CONTACT, (contactName) ->
+                contactService.unblockContact(authenticationService.getCurrentUser(), contactName)
+        );
         commandHandlers.put(DELETE_CONTACT_BY_NAME, (contactName) ->
                 contactService.deleteContact(authenticationService.getCurrentUser(), contactName, CONTACT_NAME)
         );
@@ -151,6 +174,52 @@ public class CommandProcessor {
                 groupService.deleteGroup(authenticationService.getCurrentUser(), groupNameToDelete)
         );
     }
+
+    /**
+     * Регистрирует команды для поиска
+     */
+    private void registerSearchCommands() {
+        commandHandlers.put(SEARCH_CONTACT_BY_NAME, (contactName) -> {
+            // TODO: 23.11.2023 ДОДЕЛАТЬ
+            return null;
+        });
+        commandHandlers.put(SEARCH_CONTACT_BY_PHONE, (contactPhone) -> {
+            // TODO: 23.11.2023 ДОДЕЛАТЬ
+            return null;
+        });
+    }
+
+    /**
+     * Регистрирует команды для фильтрации
+     */
+    private void registerFilterCommands() {
+        commandHandlers.put(FILTER_CONTACT_BY_GENDER, (gender) -> {
+            // TODO: 23.11.2023 ДОДЕЛАТЬ
+            return null;
+        });
+        commandHandlers.put(FILTER_CONTACT_BY_AGE, (expressionAndAge) -> {
+            // TODO: 23.11.2023 ДОДЕЛАТЬ
+            return null;
+        });
+        commandHandlers.put(FILTER_CONTACT_BY_BLOCK, (args) -> {
+            // TODO: 23.11.2023 ДОДЕЛАТЬ
+            return null;
+        });
+        commandHandlers.put(FILTER_CONTACT_BY_UNBLOCK, (args) -> {
+            // TODO: 23.11.2023 ДОДЕЛАТЬ
+            return null;
+        });
+    }
+
+    private void registerSortCommands() {
+        commandHandlers.put(SORT_AGE, (ascOrDesc) ->
+                sortService.sortContacts(authenticationService.getCurrentUser(), ascOrDesc, SortingKind.AGE)
+        );
+        commandHandlers.put(SORT_NAME, (ascOrDesc) ->
+                sortService.sortContacts(authenticationService.getCurrentUser(), ascOrDesc, SortingKind.NAME)
+        );
+    }
+
 
     private void registerCommonCommands() {
         commandHandlers.put(HELP, (args) -> Command.getAllCommands());

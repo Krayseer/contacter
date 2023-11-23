@@ -25,9 +25,11 @@ public class ContactRepositoryTest {
 
     private final User user = new User("user");
 
-    private final Contact firstUserContact = new Contact(user.getUsername(), "1", "Ivan Ivanov", "79068065041");
+    private final Contact firstUserContact = new Contact(user.getUsername(), "1", "Ivan Ivanov", 30,
+            "Мужчина", "UNBLOCK", "79068065041");
 
-    private final Contact secondUserContact = new Contact(user.getUsername(), "2", "Petya Petrov", "79068065042");
+    private final Contact secondUserContact = new Contact(user.getUsername(), "2", "Petya Petrov", 33,
+            "Мужчина","UNBLOCK", "79068065042");
 
     @Before
     public void setUp() throws Exception {
@@ -100,7 +102,7 @@ public class ContactRepositoryTest {
         assertEquals(expectedContacts, actualContacts);
 
         List<String> lines = FileUtils.readLines(tempDbFile, "UTF-8");
-        assertEquals(List.of("user:1,Ivan Ivanov,79068065041"), lines);
+        assertEquals(List.of("user:1,Ivan Ivanov,30,Мужчина,UNBLOCK,79068065041"), lines);
     }
 
     /**
