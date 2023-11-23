@@ -1,6 +1,10 @@
 package ru.anykeyers.factories;
 
 import ru.anykeyers.parsers.Parseable;
+import ru.anykeyers.parsers.csv.CsvParser;
+import ru.anykeyers.parsers.json.JsonParser;
+import ru.anykeyers.parsers.txt.TxtParser;
+import ru.anykeyers.parsers.xml.XmlParser;
 import ru.anykeyers.repositories.ContactRepository;
 
 /**
@@ -21,11 +25,10 @@ public class ParserFactory {
      */
     public Parseable createParser(Format format) {
         return switch (format) {
-            // TODO: 23.11.2023 Реализация парсеров
-            case TXT -> null;
-            case XML -> null;
-            case CSV -> null;
-            case JSON -> null;
+            case TXT -> new TxtParser(contactRepository);
+            case XML -> new XmlParser(contactRepository);
+            case CSV -> new CsvParser(contactRepository);
+            case JSON -> new JsonParser(contactRepository);
         };
     }
 
