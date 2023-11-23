@@ -8,10 +8,7 @@ import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.repositories.file.FileContactRepository;
 import ru.anykeyers.repositories.file.FileGroupRepository;
 import ru.anykeyers.repositories.file.FileUserRepository;
-import ru.anykeyers.services.AuthenticationService;
-import ru.anykeyers.services.ContactService;
-import ru.anykeyers.services.GroupService;
-import ru.anykeyers.services.SortService;
+import ru.anykeyers.services.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,9 +43,12 @@ abstract class BaseCommandProcessorTest {
         authenticationService = new AuthenticationService(userRepository);
         contactService = new ContactService(contactRepository);
         groupService = new GroupService(groupRepository, contactRepository);
-        sortService = new SortService(contactRepository);
+        SearchService contactSearch = new SearchService(contactRepository);
+        FilterService filterService = new FilterService(contactRepository);
+        SortService sortService = new SortService(contactRepository);
 
-        commandProcessor = new CommandProcessor(authenticationService, contactService, groupService, sortService);
+        commandProcessor = new CommandProcessor(authenticationService, contactService, groupService, contactSearch,
+                                                filterService, sortService);
     }
 
     /**

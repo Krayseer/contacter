@@ -6,6 +6,10 @@ import ru.anykeyers.services.AuthenticationService;
 import ru.anykeyers.services.ContactService;
 import ru.anykeyers.services.GroupService;
 import ru.anykeyers.services.SortService;
+import ru.anykeyers.dataOperations.kinds.FilteringKind;
+import ru.anykeyers.dataOperations.kinds.SearchingKind;
+import ru.anykeyers.dataOperations.kinds.SortingKind;
+import ru.anykeyers.services.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +28,10 @@ public class CommandProcessor {
 
     private final GroupService groupService;
 
+    private final SearchService contactSearch;
+
+    private final FilterService filterService;
+
     private final SortService sortService;
 
     private final Map<Command, CommandHandler> commandHandlers;
@@ -33,10 +41,14 @@ public class CommandProcessor {
     public CommandProcessor(AuthenticationService authenticationService,
                             ContactService contactService,
                             GroupService groupService,
+                            SearchService contactSearch,
+                            FilterService filterService,
                             SortService sortService) {
         this.authenticationService = authenticationService;
         this.contactService = contactService;
         this.groupService = groupService;
+        this.contactSearch = contactSearch;
+        this.filterService = filterService;
         this.sortService = sortService;
 
         messages = new Messages();
@@ -90,6 +102,9 @@ public class CommandProcessor {
         registerAuthenticationCommands();
         registerContactCommands();
         registerGroupCommands();
+        registerSearchCommands();
+        registerFilterCommands();
+        registerSortCommands();
     }
 
     private void registerAuthenticationCommands() {
@@ -131,7 +146,7 @@ public class CommandProcessor {
             return contactService.editContact(authenticationService.getCurrentUser(), contactName, newGender, CONTACT_GENDER);
         });
         commandHandlers.put(BLOCK_CONTACT, (contactName) ->
-                contactService.blockContact(authenticationService.getCurrentUser(), contactName)
+           contactService.blockContact(authenticationService.getCurrentUser(), contactName)
         );
         commandHandlers.put(UNBLOCK_CONTACT, (contactName) ->
                 contactService.unblockContact(authenticationService.getCurrentUser(), contactName)
@@ -179,38 +194,35 @@ public class CommandProcessor {
      * Регистрирует команды для поиска
      */
     private void registerSearchCommands() {
-        commandHandlers.put(SEARCH_CONTACT_BY_NAME, (contactName) -> {
-            // TODO: 23.11.2023 ДОДЕЛАТЬ
-            return null;
-        });
-        commandHandlers.put(SEARCH_CONTACT_BY_PHONE, (contactPhone) -> {
-            // TODO: 23.11.2023 ДОДЕЛАТЬ
-            return null;
-        });
+        commandHandlers.put(SEARCH_CONTACT_BY_NAME, (contactName) ->
+                contactSearch.searchContact(authenticationService.getCurrentUser(), contactName, SearchingKind.NAME)
+        );
+        commandHandlers.put(SEARCH_CONTACT_BY_PHONE, (contactPhone) ->
+                contactSearch.searchContact(authenticationService.getCurrentUser(), contactPhone, SearchingKind.PHONE_NUMBER)
+        );
     }
 
     /**
      * Регистрирует команды для фильтрации
      */
     private void registerFilterCommands() {
-        commandHandlers.put(FILTER_CONTACT_BY_GENDER, (gender) -> {
-            // TODO: 23.11.2023 ДОДЕЛАТЬ
-            return null;
-        });
-        commandHandlers.put(FILTER_CONTACT_BY_AGE, (expressionAndAge) -> {
-            // TODO: 23.11.2023 ДОДЕЛАТЬ
-            return null;
-        });
-        commandHandlers.put(FILTER_CONTACT_BY_BLOCK, (args) -> {
-            // TODO: 23.11.2023 ДОДЕЛАТЬ
-            return null;
-        });
-        commandHandlers.put(FILTER_CONTACT_BY_UNBLOCK, (args) -> {
-            // TODO: 23.11.2023 ДОДЕЛАТЬ
-            return null;
-        });
+        commandHandlers.put(FILTER_CONTACT_BY_GENDER, (gender) ->
+                filterService.filterContacts(authenticationService.getCurrentUser(), gender, FilteringKind.GENDER)
+        );
+        commandHandlers.put(FILTER_CONTACT_BY_AGE, (expressionAndAge) ->
+                filterService.filterContacts(authenticationService.getCurrentUser(), expressionAndAge, FilteringKind.AGE)
+        );
+        commandHandlers.put(FILTER_CONTACT_BY_BLOCK, (args) ->
+                filterService.filterContacts(authenticationService.getCurrentUser(), null, FilteringKind.BLOCK)
+        );
+        commandHandlers.put(FILTER_CONTACT_BY_UNBLOCK, (args) ->
+                filterService.filterContacts(authenticationService.getCurrentUser(), null, FilteringKind.UNBLOCK)
+        );
     }
 
+    /**
+     * Регистрирует команды для сортировки
+     */
     private void registerSortCommands() {
         commandHandlers.put(SORT_AGE, (ascOrDesc) ->
                 sortService.sortContacts(authenticationService.getCurrentUser(), ascOrDesc, SortingKind.AGE)
@@ -219,7 +231,6 @@ public class CommandProcessor {
                 sortService.sortContacts(authenticationService.getCurrentUser(), ascOrDesc, SortingKind.NAME)
         );
     }
-
 
     private void registerCommonCommands() {
         commandHandlers.put(HELP, (args) -> Command.getAllCommands());

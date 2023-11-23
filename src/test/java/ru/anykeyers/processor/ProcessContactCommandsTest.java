@@ -120,4 +120,95 @@ public class ProcessContactCommandsTest extends BaseCommandProcessorTest {
         assertEquals(expectedDeleteContactProcessCommandResult, processCommand(commandToProcess));
     }
 
+    /**
+     * Тест команды /edit-contact-gender
+     */
+    @Test
+    public void testProcessEditContactGenderCommand() {
+        String command = "/edit-contact-gender";
+
+        testOnCommandNeedAuthenticate(command);
+        authenticationService.authenticate(user.getUsername());
+
+        String expectedInvalidMessage = "Необходимо ввести параметры [<имя контакта>, <новый пол>]";
+        testCommandWithInvalidArguments(command, expectedInvalidMessage, 0);
+        testCommandWithInvalidArguments(command, expectedInvalidMessage, 3);
+
+        contactService.addContact(user, contactName);
+        String gender = "Егор Егоров,Мужчина";
+        contactService.editContact(user, contactName, "Мужской", Contact.Field.CONTACT_GENDER);
+
+        String commandToProcess = String.format("%s %s", command, gender);
+        String expectedDeleteContactProcessCommandResult = "Контакт 'Егор Егоров' успешно изменен";
+        assertEquals(expectedDeleteContactProcessCommandResult, processCommand(commandToProcess));
+    }
+
+    /**
+     * Тест команды /edit-contact-age
+     */
+    @Test
+    public void testProcessEditContactAgeCommand() {
+        String command = "/edit-contact-age";
+
+        testOnCommandNeedAuthenticate(command);
+        authenticationService.authenticate(user.getUsername());
+
+        String expectedInvalidMessage = "Необходимо ввести параметры [<имя контакта>, <новый возраст>]";
+        testCommandWithInvalidArguments(command, expectedInvalidMessage, 0);
+        testCommandWithInvalidArguments(command, expectedInvalidMessage, 3);
+
+        contactService.addContact(user, contactName);
+        String gender = "Егор Егоров,20";
+        contactService.editContact(user, contactName, "20", Contact.Field.CONTACT_GENDER);
+
+        String commandToProcess = String.format("%s %s", command, gender);
+        String expectedDeleteContactProcessCommandResult = "Контакт 'Егор Егоров' успешно изменен";
+        assertEquals(expectedDeleteContactProcessCommandResult, processCommand(commandToProcess));
+    }
+
+    /**
+     * Тест команды /block-contact
+     */
+    @Test
+    public void testProcessBlockContactCommand() {
+        String command = "/block-contact";
+
+        testOnCommandNeedAuthenticate(command);
+        authenticationService.authenticate(user.getUsername());
+
+        String expectedInvalidMessage = "Необходимо ввести параметры [<имя контакта>]";
+        testCommandWithInvalidArguments(command, expectedInvalidMessage, 0);
+        testCommandWithInvalidArguments(command, expectedInvalidMessage, 2);
+
+        contactService.addContact(user, contactName);
+        String gender = "Егор Егоров";
+
+        String commandToProcess = String.format("%s %s", command, gender);
+        String expectedDeleteContactProcessCommandResult = "Контакт 'Егор Егоров' успешно заблокирован";
+        assertEquals(expectedDeleteContactProcessCommandResult, processCommand(commandToProcess));
+    }
+
+    /**
+     * Тест команды /unblock-contact
+     */
+    @Test
+    public void testProcessUnblockContactCommand() {
+        String command = "/unblock-contact";
+
+        testOnCommandNeedAuthenticate(command);
+        authenticationService.authenticate(user.getUsername());
+
+        String expectedInvalidMessage = "Необходимо ввести параметры [<имя контакта>]";
+        testCommandWithInvalidArguments(command, expectedInvalidMessage, 0);
+        testCommandWithInvalidArguments(command, expectedInvalidMessage, 2);
+
+        contactService.addContact(user, contactName);
+        String gender = "Егор Егоров";
+        contactService.blockContact(user, contactName);
+
+        String commandToProcess = String.format("%s %s", command, gender);
+        String expectedDeleteContactProcessCommandResult = "Контакт 'Егор Егоров' успешно разблокирован";
+        assertEquals(expectedDeleteContactProcessCommandResult, processCommand(commandToProcess));
+    }
+
 }
