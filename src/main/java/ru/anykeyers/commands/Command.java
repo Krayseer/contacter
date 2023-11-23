@@ -35,6 +35,9 @@ public enum Command {
     GROUP_DELETE_CONTACT("/group-delete-contact", new Parameters("<название группы>", "<имя контакта>"), "Удалить пользователя из группы", true),
     DELETE_GROUP("/delete-group", new Parameters("<название группы>"), "Удалить группу", true),
 
+    IMPORT("/import", new Parameters("<путь до файла импорта>"), "Импортировать контакты из файла", true),
+    EXPORT("/export", new Parameters("<путь до файла экспорта>"), "Экспортировать контакты в файл", true),
+
     HELP("/help", null, "Показать возможные комманды", false),
     EXIT_APP("/exit", null, "Выйти из приложения", false);
 

@@ -9,6 +9,10 @@ import ru.anykeyers.repositories.ContactRepository;
 import ru.anykeyers.repositories.GroupRepository;
 import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.services.*;
+import ru.anykeyers.services.AuthenticationService;
+import ru.anykeyers.services.ContactService;
+import ru.anykeyers.services.GroupService;
+import ru.anykeyers.services.ImportExportService;
 
 /**
  * Класс, позволяющий запустить приложение
@@ -38,9 +42,10 @@ public class ContacterApplication {
         SearchService contactSearch = new SearchService(contactRepository);
         FilterService filterService = new FilterService(contactRepository);
         SortService sortService = new SortService(contactRepository);
+        ImportExportService importExportService = new ImportExportService(contactRepository);
 
         commandProcessor = new CommandProcessor(authenticationService, contactService,
-                groupService, contactSearch, filterService, sortService);
+                groupService, contactSearch, filterService, sortService, importExportService);
     }
 
     /**

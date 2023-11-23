@@ -10,6 +10,7 @@ import ru.anykeyers.dataOperations.kinds.FilteringKind;
 import ru.anykeyers.dataOperations.kinds.SearchingKind;
 import ru.anykeyers.dataOperations.kinds.SortingKind;
 import ru.anykeyers.services.*;
+import ru.anykeyers.services.ImportExportService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +29,8 @@ public class CommandProcessor {
 
     private final GroupService groupService;
 
+    private final ImportExportService importExportService;
+
     private final SearchService contactSearch;
 
     private final FilterService filterService;
@@ -43,13 +46,15 @@ public class CommandProcessor {
                             GroupService groupService,
                             SearchService contactSearch,
                             FilterService filterService,
-                            SortService sortService) {
+                            SortService sortService,
+                            ImportExportService importExportService) {
         this.authenticationService = authenticationService;
         this.contactService = contactService;
         this.groupService = groupService;
         this.contactSearch = contactSearch;
         this.filterService = filterService;
         this.sortService = sortService;
+        this.importExportService = importExportService;
 
         messages = new Messages();
         commandHandlers = new HashMap<>();
@@ -105,14 +110,20 @@ public class CommandProcessor {
         registerSearchCommands();
         registerFilterCommands();
         registerSortCommands();
+        registerImportExportCommands();
     }
 
+    /**
+     * Регистрация команд, связанных с авторизацией
+     */
     private void registerAuthenticationCommands() {
         commandHandlers.put(LOG_IN, authenticationService::authenticate);
         commandHandlers.put(LOG_OUT, (args) -> authenticationService.logoutUser());
     }
 
-
+    /**
+     * Регистрация команд, связанных с обработкой контактов
+     */
     private void registerContactCommands() {
         commandHandlers.put(ADD_CONTACT, (contactString) ->
                 contactService.addContact(authenticationService.getCurrentUser(), contactString)
@@ -159,6 +170,9 @@ public class CommandProcessor {
         );
     }
 
+    /**
+     * Регистрация команд, связанных с обработкой групп
+     */
     private void registerGroupCommands() {
         commandHandlers.put(ADD_GROUP, (groupName) ->
                 groupService.addGroup(authenticationService.getCurrentUser(), groupName)
@@ -190,6 +204,20 @@ public class CommandProcessor {
         );
     }
 
+    /**
+     * Регистрация команд импорта/экспорта контактов
+     */
+    private void registerImportExportCommands() {
+        commandHandlers.put(IMPORT, (importPath) ->
+                importExportService.importData(authenticationService.getCurrentUser(), importPath));
+        commandHandlers.put(EXPORT, (exportPath) ->
+                importExportService.exportData(authenticationService.getCurrentUser(), exportPath));
+
+    }
+
+    /**
+     * Регистрация общих команд
+     */
     /**
      * Регистрирует команды для поиска
      */
@@ -240,6 +268,9 @@ public class CommandProcessor {
         });
     }
 
+    /**
+     * Получить аргументы из принимаемой строки, через запятую
+     */
     private String[] getArguments(String args) {
         return args.trim().split(",\\s*");
     }
