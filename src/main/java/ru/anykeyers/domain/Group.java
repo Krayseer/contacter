@@ -2,8 +2,6 @@ package ru.anykeyers.domain;
 
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Сущность группы
@@ -28,10 +26,10 @@ public class Group {
     private Set<Contact> contacts;
 
     public Group(String username, String id, String name, Set<Contact> contacts) {
+        this.id = id;
         this.username = username;
         this.name = name;
         this.contacts = contacts;
-        this.id = id;
     }
 
     public String getId() {
@@ -70,6 +68,10 @@ public class Group {
         contacts.remove(contact);
     }
 
+    public String getInfo() {
+        return String.format("Название: %s. Количество участников: %s.", name, contacts.size());
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -80,14 +82,6 @@ public class Group {
     @Override
     public int hashCode() {
         return Objects.hash(username, name, contacts);
-    }
-
-    @Override
-    public String toString() {
-        String contactsToString = contacts.stream()
-                .map(Contact::toString)
-                .collect(Collectors.joining(";"));
-        return String.format("%s:%s=%s", username, name, contactsToString);
     }
 
 }

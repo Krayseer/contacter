@@ -17,7 +17,7 @@ import static org.junit.Assert.*;
 /**
  * Тесты для класса {@link ContactRepository}
  */
-public class ContactRepositoryTest {
+public class FileContactRepositoryTest {
 
     private ContactRepository contactRepository;
 

@@ -6,22 +6,19 @@ import org.junit.Test;
 import ru.anykeyers.domain.Contact;
 import ru.anykeyers.domain.Group;
 import ru.anykeyers.domain.User;
-import ru.anykeyers.repositories.file.FileGroupRepository;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
 /**
  * Тесты для класса {@link FileGroupRepository}
  */
-public class GroupRepositoryTest {
+public class FileGroupRepositoryTest {
 
     private FileGroupRepository groupRepository;
 

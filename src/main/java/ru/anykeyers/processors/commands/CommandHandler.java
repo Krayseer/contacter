@@ -1,4 +1,6 @@
-package ru.anykeyers.commands;
+package ru.anykeyers.processors.commands;
+
+import ru.anykeyers.domain.User;
 
 /**
  * Интерфейс для обработчика команд
@@ -8,6 +10,6 @@ public interface CommandHandler {
     /**
      * Обработать команду
      */
-    String handleCommand(String args);
+    String handleCommand(User user);
 
 }

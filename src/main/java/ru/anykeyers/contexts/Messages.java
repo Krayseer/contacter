@@ -13,7 +13,8 @@ public class Messages {
 
     public Messages() {
         properties = new Properties();
-        try (FileInputStream fileInputStream = new FileInputStream("src/main/resources/messages.properties")) {
+        String pathToMessagesFile = "src/main/resources/messages.properties";
+        try (FileInputStream fileInputStream = new FileInputStream(pathToMessagesFile)) {
             properties.load(fileInputStream);
         } catch (IOException e) {
             throw new RuntimeException(e);

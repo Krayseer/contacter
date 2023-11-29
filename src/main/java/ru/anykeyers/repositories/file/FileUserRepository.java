@@ -1,60 +1,54 @@
 package ru.anykeyers.repositories.file;
 
-import org.apache.commons.io.FileUtils;
 import ru.anykeyers.domain.User;
+import ru.anykeyers.repositories.file.formatters.UserFormatter;
 import ru.anykeyers.repositories.UserRepository;
+import ru.anykeyers.repositories.file.data.ObjectData;
+import ru.anykeyers.repositories.file.data.UserData;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Реализация файловой базы данных
  */
-public class FileUserRepository implements UserRepository {
+public class FileUserRepository extends BaseFileRepository<User> implements UserRepository {
 
-    /**
-     * Файловая БД
-     */
-    private final File dbFile;
-
-    /**
-     * Множество, для хранения пользователей
-     */
-    private final Set<User> users = new HashSet<>();
-
-    public FileUserRepository(String dbFilePath) {
-        this.dbFile = new File(dbFilePath);
-        initUsersFromFile();
+    public FileUserRepository(String userFilePath) {
+        super(userFilePath);
+        formatter = new UserFormatter();
     }
 
     @Override
-    public boolean exists(User user) {
-        return users.contains(user);
-    }
-    @Override
-    public void save(User user) {
-        users.add(user);
-        try {
-            FileUtils.writeStringToFile(dbFile, user.toString(), "UTF-8", true);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public boolean existsByUsername(String username) {
+        return getInfosByUsername().containsKey(username);
     }
 
-    /**
-     * Проинициализировать данные из файловой БД в {@link #users}
-     */
-    private void initUsersFromFile() {
-        try {
-            List<String> usersLines = FileUtils.readLines(dbFile, "UTF-8");
-            usersLines.forEach(userInfo -> {
-                User user = new User(userInfo);
-                users.add(user);
-            });
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    @Override
+    public void saveOrUpdate(User user) {
+        Map<String, ObjectData<User>> infoByUsername = getInfosByUsername();
+        if (infoByUsername.get(user.getUsername()) == null) {
+            infoByUsername.put(user.getUsername(), new UserData());
         }
+        UserData userInfo = (UserData) infoByUsername.get(user.getUsername());
+        userInfo.addData(user);
+        updateFile(infoByUsername);
+    }
+
+    @Override
+    public User getUserByUsername(String username) {
+        if (!existsByUsername(username)) {
+            return null;
+        }
+        return (User) getInfosByUsername().get(username).getData();
+    }
+
+    private void updateFile(Map<String, ObjectData<User>> infoByUsername) {
+        List<String> resultLines = infoByUsername.values().stream()
+                .map(userInfo -> (User) userInfo.getData())
+                .map(formatter::format)
+                .collect(Collectors.toList());
+        saveOrUpdateFile(resultLines);
     }
 
 }

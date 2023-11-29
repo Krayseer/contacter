@@ -1,61 +1,43 @@
 package ru.anykeyers.services;
 
-import ru.anykeyers.contexts.Messages;
 import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.domain.User;
 
 /**
- * Класс представляет из себя сервис для аутентификации пользователей
+ * Сервис для аутентификации пользователей
  */
 public class AuthenticationService {
 
-    private final Messages messages;
-
     private final UserRepository userRepository;
 
-    /**
-     * Текущий авторизованный пользователь.
-     */
-    private User currentUser;
-
     public AuthenticationService(UserRepository userRepository) {
-        messages = new Messages();
         this.userRepository = userRepository;
     }
 
     /**
-     * Авторизация пользователя с консоли
+     * Получить экземпляр пользователя по имени пользователя
+     * @param username имя пользоватея
+     * @return экземпляр
      */
-    public String authenticate(String username) {
-        User user = new User(username);
-        if (!userRepository.exists(user)) {
-            userRepository.save(user);
-        }
-        currentUser = user;
-        return messages.getMessageByKey("auth.successful");
+    public User getUserByUsername(String username) {
+        return userRepository.getUserByUsername(username);
     }
 
     /**
-     * Получает текущего авторизованного пользователя.
-     * @return Объект `User`, представляющий текущего пользователя, или null, если ни один пользователь не авторизован.
+     * Сохранить или обновить пользователя в БД
+     * @param user пользователь
      */
-    public User getCurrentUser() {
-        return currentUser;
+    public void saveOrUpdateUser(User user) {
+        userRepository.saveOrUpdate(user);
     }
 
     /**
-     * Выход из аккаунта авторизованного пользователя
+     * Пользователь существует
+     * @param username имя пользователя
+     * @return {@code true}, если пользователь существует, иначе {@code false}
      */
-    public String logoutUser() {
-        currentUser = null;
-        return messages.getMessageByKey("auth.successful-logout");
-    }
-
-    /**
-     * Существует ли авторизованный пользователь
-     */
-    public boolean isAuthenticated() {
-        return currentUser != null;
+    public boolean existsUser(String username) {
+        return userRepository.existsByUsername(username);
     }
 
 }

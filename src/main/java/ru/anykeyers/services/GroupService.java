@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 
 /**
- * Класс, отвечающий за логику при работе с группами
+ * Сервис по работе с группами
  */
 public class GroupService {
 
@@ -25,12 +25,33 @@ public class GroupService {
                         ContactRepository contactRepository) {
         this.groupRepository = groupRepository;
         this.contactRepository = contactRepository;
-
         messages = new Messages();
     }
 
     /**
+     * Получить все группы пользователя
+     * @param username имя пользователя
+     * @return список групп
+     */
+    public Set<Group> getAllGroups(String username) {
+        return groupRepository.findByUsername(username);
+    }
+
+    /**
+     * Получить контакты группы
+     * @param username имя пользователя
+     * @param groupName название группы
+     * @return список контактов группы
+     */
+    public Set<Contact> getGroupContacts(String username, String groupName) {
+        return groupRepository.findByUsernameAndName(username, groupName).getContacts();
+    }
+
+    /**
      * Добавляет группу в список групп пользователя
+     * @param user пользователь
+     * @param groupName название группы
+     * @return результат добавления группы
      */
     public String addGroup(User user, String groupName) {
         if (groupRepository.existsByUsernameAndName(user.getUsername(), groupName)) {
@@ -41,56 +62,51 @@ public class GroupService {
         return messages.getMessageByKey("group.successful-save", groupName);
     }
 
-    public String editGroupName(User user, String groupName, String newGroupName) {
-        Group group = groupRepository.findByUsernameAndName(user.getUsername(), groupName);
-        if (group == null) {
-            return messages.getMessageByKey("group.not-exists", groupName);
+    /**
+     * Изменить состояние группы пользователя
+     * <ol>
+     *     <li>Изменить название группы</li>
+     *     <li>Добавить контакт в группу</li>
+     *     <li>Удалить контакт из группы</li>
+     * </ol>
+     * @param user пользователь
+     * @param newValue новое значение
+     * @return результат изменения состояния группы
+     */
+    public String editGroup(User user, String newValue) {
+        String groupNameToEdit = user.getGroupNameToEdit();
+        Group groupToEdit = groupRepository.findByUsernameAndName(user.getUsername(), groupNameToEdit);
+
+        switch (user.getState()) {
+            case EDIT_GROUP_NAME -> groupToEdit.setName(newValue);
+            case EDIT_GROUP_ADD_CONTACT -> {
+                Contact contact = contactRepository.findByUsernameAndName(user.getUsername(), newValue);
+                groupToEdit.addContactInGroup(contact);
+            }
+            case EDIT_GROUP_DELETE_CONTACT -> {
+                Contact contact = contactRepository.findByUsernameAndName(user.getUsername(), newValue);
+                groupToEdit.deleteContactFromGroup(contact);
+            }
+            default -> messages.getMessageByKey("field.invalid");
         }
-        group.setName(newGroupName);
-        groupRepository.saveOrUpdate(group);
-        return messages.getMessageByKey("group.successful-edit-name", groupName, newGroupName);
+
+        groupRepository.saveOrUpdate(groupToEdit);
+        return messages.getMessageByKey("group.successful-edit-name", groupNameToEdit);
     }
 
-    public String addContactInGroup(User user, String groupName, String contactName) {
-        return performContactOperation(user, groupName, contactName, Group::addContactInGroup, "group.successful-contact-add");
-    }
-
-    public String deleteContactFromGroup(User user, String groupName, String contactName) {
-        return performContactOperation(user, groupName, contactName, Group::deleteContactFromGroup, "group.successful-contact-delete");
-    }
-
+    /**
+     * Удалить группу пользователя
+     * @param user пользователь
+     * @param groupName название группы
+     * @return результат удаления группы
+     */
     public String deleteGroup(User user, String groupName) {
         Group group = groupRepository.findByUsernameAndName(user.getUsername(), groupName);
         if (group == null) {
             return messages.getMessageByKey("group.not-exists", groupName);
         }
         groupRepository.delete(group);
-        return messages.getMessageByKey("group-successful-delete", groupName);
-    }
-
-    /**
-     * Обработка операции связанной с контактами
-     * @param user пользователь
-     * @param groupName название группы
-     * @param contactName имя контакта
-     * @param operation операция, которую нужно выполнить с контактом
-     * @param successMessageKey ключ сообщения успешного выполнения
-     * @return сообщение результата обработки
-     */
-    private String performContactOperation(User user, String groupName, String contactName, BiConsumer<Group, Contact> operation, String successMessageKey) {
-        Group group = groupRepository.findByUsernameAndName(user.getUsername(), groupName);
-        if (group == null) {
-            return messages.getMessageByKey("group.not-exists", groupName);
-        }
-
-        Contact contact = contactRepository.findByUsernameAndName(user.getUsername(), contactName);
-        if (contact == null) {
-            return messages.getMessageByKey("contact.not-exists", contactName);
-        }
-
-        operation.accept(group, contact);
-        groupRepository.saveOrUpdate(group);
-        return messages.getMessageByKey(successMessageKey, contactName, groupName);
+        return messages.getMessageByKey("group.successful-delete", groupName);
     }
 
 }

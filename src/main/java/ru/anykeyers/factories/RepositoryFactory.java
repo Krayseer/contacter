@@ -9,6 +9,10 @@ import ru.anykeyers.repositories.file.FileContactRepository;
 import ru.anykeyers.repositories.file.FileGroupRepository;
 import ru.anykeyers.repositories.file.FileUserRepository;
 
+/**
+ * Фабрика для создания репозиториев<br/>
+ * Типы репозиториев устанавливаются в application.properties в ключе STORAGE_TYPE
+ */
 public class RepositoryFactory {
 
     private final ApplicationProperties applicationProperties;
@@ -18,18 +22,18 @@ public class RepositoryFactory {
     public RepositoryFactory() {
         Messages messages = new Messages();
         applicationProperties = new ApplicationProperties();
-        String storageSetting = applicationProperties.getSetting("storage.type");
+        String storageType = applicationProperties.getSetting("storage.type");
         try {
-           STORAGE_TYPE = StorageType.valueOf(storageSetting);
+           STORAGE_TYPE = StorageType.valueOf(storageType);
         } catch (RuntimeException e) {
-           throw new IllegalArgumentException(messages.getMessageByKey("storage.invalid-type", storageSetting));
+           throw new IllegalArgumentException(messages.getMessageByKey("storage.invalid-type", storageType));
         }
     }
 
     public UserRepository createUserRepository() {
         switch (STORAGE_TYPE) {
             case FILE:
-                return new FileUserRepository(applicationProperties.getSetting("users-table"));
+                return new FileUserRepository(applicationProperties.getSetting("file-users-table"));
             default:
                 return null;
         }
@@ -38,7 +42,7 @@ public class RepositoryFactory {
     public ContactRepository createContactRepository() {
         switch (STORAGE_TYPE) {
             case FILE:
-                return new FileContactRepository(applicationProperties.getSetting("contacts-table"));
+                return new FileContactRepository(applicationProperties.getSetting("file-contacts-table"));
             default:
                 return null;
         }
@@ -47,7 +51,7 @@ public class RepositoryFactory {
     public GroupRepository createGroupRepository() {
         switch (STORAGE_TYPE) {
             case FILE:
-                return new FileGroupRepository(applicationProperties.getSetting("groups-table"));
+                return new FileGroupRepository(applicationProperties.getSetting("file-groups-table"));
             default:
                 return null;
         }

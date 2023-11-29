@@ -1,142 +1,140 @@
 package ru.anykeyers.services;
 
-import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 import ru.anykeyers.domain.Contact;
 import ru.anykeyers.domain.Group;
 import ru.anykeyers.domain.User;
+import ru.anykeyers.processors.states.domain.State;
 import ru.anykeyers.repositories.ContactRepository;
 import ru.anykeyers.repositories.GroupRepository;
-import ru.anykeyers.repositories.file.FileContactRepository;
-import ru.anykeyers.repositories.file.FileGroupRepository;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
- * Тесты для класса {@link GroupRepository}
+ * Тесты для класса {@link GroupService}
  */
+@RunWith(MockitoJUnitRunner.class)
 public class GroupServiceTest {
 
-    private GroupService groupService;
-
+    @Mock
     private GroupRepository groupRepository;
 
-    private final User user = new User("username");
+    @Mock
+    private ContactRepository contactRepository;
 
-    private final Contact contact = new Contact(user.getUsername(), "Ivan Ivanov");
+    @InjectMocks
+    private GroupService groupService;
 
-    private final Contact secondContact = new Contact(user.getUsername(), "Petr Petrov");
+    /**
+     * Тестирование получения всех групп пользователя
+     */
+    @Test
+    public void testGetAllGroups() {
+        String username = "testUser";
+        Group group = new Group(username, UUID.randomUUID().toString(), "group1", new HashSet<>());
+        when(groupRepository.findByUsername(username)).thenReturn(Set.of(group));
 
-    private final String groupName = "Учеба";
+        Set<Group> result = groupService.getAllGroups(username);
 
-    @Before
-    public void setUp() throws IOException {
-        File tempDbFile = Files.createTempFile("tempDbFile", ".txt").toFile();
-        groupRepository = new FileGroupRepository(tempDbFile.getPath());
-        ContactRepository contactRepository = new FileContactRepository(tempDbFile.getPath());
-        groupService = new GroupService(groupRepository, contactRepository);
-
-        contactRepository.saveOrUpdate(contact);
-        contactRepository.saveOrUpdate(secondContact);
+        assertEquals(1, result.size());
+        verify(groupRepository, times(1)).findByUsername(username);
     }
 
     /**
-     * Тест метода {@link GroupService#addGroup(User, String)}
+     * Тестирование получения всех контактов в группе пользователя
+     */
+    @Test
+    public void testGetGroupContacts() {
+        String username = "testUser";
+        String groupName = "group1";
+        Group group = new Group(username, UUID.randomUUID().toString(), groupName, new HashSet<>());
+        when(groupRepository.findByUsernameAndName(username, groupName)).thenReturn(group);
+
+        Set<Contact> result = groupService.getGroupContacts(username, groupName);
+
+        assertTrue(result.isEmpty());
+        verify(groupRepository, times(1)).findByUsernameAndName(username, groupName);
+    }
+
+    /**
+     * Тестирование добавления группы пользователю
      */
     @Test
     public void testAddGroup() {
-        String addGroupResult = groupService.addGroup(user, groupName);
-        String exceptedAddGroupResult = String.format("Группа '%s' сохранена", groupName);
-        assertEquals(exceptedAddGroupResult, addGroupResult);
-        assertTrue(groupRepository.existsByUsernameAndName(user.getUsername(), groupName));
+        User user = new User("testUser");
+        String groupName = "newGroup";
+        when(groupRepository.existsByUsernameAndName(user.getUsername(), groupName)).thenReturn(false);
 
-        String repeatAddGroup = groupService.addGroup(user, groupName);
-        String expectedRepeatResult = String.format("Группа '%s' уже существует", groupName);
-        assertEquals(expectedRepeatResult, repeatAddGroup);
+        String result = groupService.addGroup(user, groupName);
+
+        assertEquals("Группа 'newGroup' сохранена", result);
+        verify(groupRepository, times(1)).saveOrUpdate(any(Group.class));
     }
 
     /**
-     * Тест метода {@link ContactService#editContact(User, String, Object, Contact.Field)}
+     * Тестирование изменения состояния группы
+     * <ol>
+     *     <li>Изменение название группы</li>
+     *     <li>Добавления контакта в группу</li>
+     *     <li>Удаление контакта из группы</li>
+     * </ol>
      */
     @Test
-    public void testEditGroupName() {
-        String newGroupName = "Практика";
-        String nonExistsGroupName = "non-exists";
-        groupService.addGroup(user, groupName);
+    public void testEditGroup() {
+        User user = new User("testUser");
+        Group group = new Group(user.getUsername(), UUID.randomUUID().toString(), "name", new HashSet<>());
+        Contact contact = new Contact(user.getUsername(), "testContact");
 
-        String editNonExistsGroupNameResult = groupService.editGroupName(user, nonExistsGroupName, newGroupName);
-        String expectedEditNonExistsGroupName = String.format("Не удалось найти группу '%s'", nonExistsGroupName);
-        assertEquals(expectedEditNonExistsGroupName, editNonExistsGroupNameResult);
+        user.setState(State.EDIT_GROUP_NAME);
+        user.setGroupNameToEdit(group.getName());
+        String newValue = "newName";
+        when(groupRepository.findByUsernameAndName(user.getUsername(), user.getGroupNameToEdit())).thenReturn(group);
+        String editNameResult = groupService.editGroup(user, newValue);
+        assertEquals("Группа 'name' успешно изменена", editNameResult);
+        assertEquals(newValue, group.getName());
+        verify(groupRepository, times(1)).saveOrUpdate(group);
 
-        String editGroupNameResult = groupService.editGroupName(user, groupName, newGroupName);
-        String expectedGroupNameResult = String.format("Группа '%s' успешно изменена", groupName);
-        assertEquals(expectedGroupNameResult, editGroupNameResult);
-        assertTrue(groupRepository.existsByUsernameAndName(user.getUsername(), newGroupName));
+        user.setState(State.EDIT_GROUP_ADD_CONTACT);
+        user.setGroupNameToEdit(group.getName());
+        when(groupRepository.findByUsernameAndName(user.getUsername(), user.getGroupNameToEdit())).thenReturn(group);
+        when(contactRepository.findByUsernameAndName(user.getUsername(), contact.getName())).thenReturn(contact);
+        String editGroupAddContact = groupService.editGroup(user, contact.getName());
+        assertEquals(1, group.getContacts().size());
+        assertEquals("Группа 'newName' успешно изменена", editGroupAddContact);
+        verify(groupRepository, times(2)).saveOrUpdate(group);
+
+        user.setState(State.EDIT_GROUP_DELETE_CONTACT);
+        user.setGroupNameToEdit(group.getName());
+        when(groupRepository.findByUsernameAndName(user.getUsername(), user.getGroupNameToEdit())).thenReturn(group);
+        when(contactRepository.findByUsernameAndName(user.getUsername(), contact.getName())).thenReturn(contact);
+        String editGroupDeleteContact = groupService.editGroup(user, contact.getName());
+        assertEquals(0, group.getContacts().size());
+        assertEquals("Группа 'newName' успешно изменена", editGroupDeleteContact);
+        verify(groupRepository, times(3)).saveOrUpdate(group);
     }
 
     /**
-     * Тест метода {@link GroupService#addContactInGroup(User, String, String)}
-     */
-    @Test
-    public void testAddContactInGroup() {
-        String nonExistsGroupName = "non-exists";
-        groupService.addGroup(user, groupName);
-
-        String addContactInNonExistsGroupResult = groupService.addContactInGroup(user, nonExistsGroupName, contact.getName());
-        String expectedAddContactInNonExistsGroupResult = String.format("Не удалось найти группу '%s'", nonExistsGroupName);
-        assertEquals(expectedAddContactInNonExistsGroupResult, addContactInNonExistsGroupResult);
-
-        String addContactInGroupResult = groupService.addContactInGroup(user, groupName, contact.getName());
-        String expectedAddContactInGroupResult = String.format("Контакт '%s' успешно добавлен в группу '%s'", contact.getName(), groupName);
-        assertEquals(expectedAddContactInGroupResult, addContactInGroupResult);
-        Group group = groupRepository.findByUsernameAndName(user.getUsername(), groupName);
-        assertEquals(contact, groupRepository.findContactInGroupByName(group, contact.getName()));
-    }
-
-    /**
-     * Тест метода {@link GroupService#deleteContactFromGroup(User, String, String)}
-     */
-    @Test
-    public void testDeleteContactFromGroup() {
-        String nonExistsGroupName = "non-exists";
-        groupService.addGroup(user, groupName);
-
-        String addContactInNonExistsGroupResult = groupService.deleteContactFromGroup(user, nonExistsGroupName, contact.getName());
-        String expectedAddContactInNonExistsGroupResult = String.format("Не удалось найти группу '%s'", nonExistsGroupName);
-        assertEquals(expectedAddContactInNonExistsGroupResult, addContactInNonExistsGroupResult);
-
-        groupService.addContactInGroup(user, groupName, contact.getName());
-        groupService.addContactInGroup(user, groupName, secondContact.getName());
-
-        String addContactInGroupResult = groupService.deleteContactFromGroup(user, groupName, contact.getName());
-        String expectedAddContactInGroupResult = String.format("Контакт '%s' успешно удален из группы '%s'", contact.getName(), groupName);
-        assertEquals(expectedAddContactInGroupResult, addContactInGroupResult);
-        Group group = groupRepository.findByUsernameAndName("username", groupName);
-        Group actualGroup = groupRepository.findByUsernameAndName("username", groupName);
-        assertEquals(Set.of(secondContact), actualGroup.getContacts());
-    }
-
-    /**
-     * Тест метода {@link GroupService#deleteGroup(User, String)}
+     * Тестирование удаления группы
      */
     @Test
     public void testDeleteGroup() {
-        String nonExistsGroupName = "non-exists";
-        groupService.addGroup(user, groupName);
+        User user = new User("testUser");
+        String groupName = "testGroup";
+        Group groupToDelete = new Group(user.getUsername(), UUID.randomUUID().toString(), groupName, new HashSet<>());
+        when(groupRepository.findByUsernameAndName(user.getUsername(), groupName)).thenReturn(groupToDelete);
 
-        String nonExistsDeleteGroupResult = groupService.deleteGroup(user, nonExistsGroupName);
-        String expectedNonExistsDeleteGroupResult = String.format("Не удалось найти группу '%s'", nonExistsGroupName);
-        assertEquals(expectedNonExistsDeleteGroupResult, nonExistsDeleteGroupResult);
+        String result = groupService.deleteGroup(user, groupName);
 
-        String deleteGroupResult = groupService.deleteGroup(user, groupName);
-        String expectedDeleteGroupResult = String.format("Группа '%s' успешно удалена", groupName);
-        assertEquals(expectedDeleteGroupResult, deleteGroupResult);
-        assertFalse(groupRepository.existsByUsernameAndName(user.getUsername(), groupName));
+        assertEquals("Группа 'testGroup' успешно удалена", result);
+        verify(groupRepository, times(1)).delete(groupToDelete);
     }
 
 }

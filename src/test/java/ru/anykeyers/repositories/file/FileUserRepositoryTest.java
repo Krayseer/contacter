@@ -4,7 +4,6 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.anykeyers.domain.User;
 import ru.anykeyers.repositories.UserRepository;
-import ru.anykeyers.repositories.file.FileUserRepository;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +15,7 @@ import static org.junit.Assert.*;
 /**
  * Тесты для методов класса {@link UserRepository}
  */
-public class UserRepositoryTest {
+public class FileUserRepositoryTest {
 
     private UserRepository userRepository;
 
@@ -29,15 +28,15 @@ public class UserRepositoryTest {
     }
 
     /**
-     * Тест метода {@link UserRepository#save(User)}
+     * Тест метода {@link UserRepository#saveOrUpdate(User)}
      */
     @Test
     public void testUserSave() throws IOException {
         User user1 = new User("user1");
         User user2 = new User("user2");
 
-        userRepository.save(user1);
-        userRepository.save(user2);
+        userRepository.saveOrUpdate(user1);
+        userRepository.saveOrUpdate(user2);
 
         String expected = String.format("%s%s", user1, user2);
         String actual = Files.readString(tempDbFile.toPath(), StandardCharsets.UTF_8).replace("\r\n", "");

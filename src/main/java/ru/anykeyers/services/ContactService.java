@@ -5,11 +5,11 @@ import ru.anykeyers.domain.Contact;
 import ru.anykeyers.domain.User;
 import ru.anykeyers.repositories.ContactRepository;
 
-import java.util.UUID;
+import java.util.Set;
 
 
 /**
- * Класс, отвечающий за логику при работе с контактами
+ * Сервис для работы с контактами
  */
 public class ContactService {
 
@@ -23,7 +23,27 @@ public class ContactService {
     }
 
     /**
+     * Существует ли контакт у пользователя
+     * @param user пользователь
+     * @param contactName имя контакта
+     * @return {@code true}, если существует, иначе {@code false}
+     */
+    public boolean existsContact(User user, String contactName) {
+        return contactRepository.existsByUsernameAndName(user.getUsername(), contactName);
+    }
+
+    /**
+     * Получение всех контактов пользователя
+     * @param user пользователь
+     * @return список контактов
+     */
+    public Set<Contact> getAllContacts(User user) {
+        return contactRepository.findByUsername(user.getUsername());
+    }
+
+    /**
      * Добавляет контакт в список контактов пользователя
+     * @return результат добавления контакта
      */
     public String addContact(User user, String contactName) {
         boolean isContactExists = contactRepository.existsByUsernameAndName(user.getUsername(), contactName);
@@ -36,47 +56,36 @@ public class ContactService {
     }
 
     /**
-     * Изменить контакт
+     * Изменить состояние контакта
+     * <ol>
+     *     <li>Изменить имя</li>
+     *     <li>Изменить телефонный номер</li>
+     * </ol>
      * @param user пользователь, которому нужно изменить контакт
-     * @param contactName имя контакта и обновленное значение, которое нужно применить одному из его полей
-     * @param fieldToEdit поле для изменения
-     * @return сообщение об успешном или неуспешном выполнении
+     * @return результат изменения состояния контакта
      */
-    public String editContact(User user, String contactName, Object newValue, Contact.Field fieldToEdit) {
-        Contact contactToEdit = contactRepository.findByUsernameAndName(user.getUsername(), contactName);
-        if (contactToEdit == null) {
-            return messages.getMessageByKey("contact.not-exists", contactName);
-        }
+    public String editContact(User user, String newValue) {
+        String contactNameToEdit = user.getContactNameToEdit();
+        Contact contactToEdit = contactRepository.findByUsernameAndName(user.getUsername(), contactNameToEdit);
 
-        switch (fieldToEdit) {
-            case CONTACT_NAME -> {
-                String newName = (String) newValue;
-                contactToEdit.setName(newName);
-            }
-            case CONTACT_PHONE_NUMBER -> {
-                String newPhoneNumber = (String) newValue;
-                contactToEdit.setPhoneNumber(newPhoneNumber);
-            }
+        switch (user.getState()) {
+            case EDIT_CONTACT_NAME -> contactToEdit.setName(newValue);
+            case EDIT_CONTACT_PHONE -> contactToEdit.setPhoneNumber(newValue);
             default -> messages.getMessageByKey("field.invalid");
         }
 
         contactRepository.saveOrUpdate(contactToEdit);
-        return messages.getMessageByKey("contact.successful-edit-name", contactName);
+        return messages.getMessageByKey("contact.successful-edit-name", contactNameToEdit);
     }
 
 
     /**
      * Удаляет контакт из списка контактов пользователя
+     * @return результат удаления контакта
      */
-    public String deleteContact(User user, String value, Contact.Field field) {
+    public String deleteContact(User user, String value) {
         String username = user.getUsername();
-        Contact contactToDelete = null;
-
-        switch (field) {
-            case CONTACT_NAME -> contactToDelete = contactRepository.findByUsernameAndName(username, value);
-            case CONTACT_PHONE_NUMBER -> contactToDelete = contactRepository.findByUsernameAndPhoneNumber(username, value);
-            default -> messages.getMessageByKey("field.invalid");
-        }
+        Contact contactToDelete = contactRepository.findByUsernameAndName(username, value);
 
         if (contactToDelete == null) {
             return messages.getMessageByKey("contact.not-exists", value);

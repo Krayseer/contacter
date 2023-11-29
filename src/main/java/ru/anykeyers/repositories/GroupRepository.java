@@ -10,6 +10,11 @@ import java.util.Set;
  */
 public interface GroupRepository {
 
+    /**
+     * Существует ли группа у пользователя
+     * @param username имя пользователя
+     * @param name название группы
+     */
     boolean existsByUsernameAndName(String username, String name);
 
     /**
@@ -22,7 +27,6 @@ public interface GroupRepository {
      * Получить группу по имени пользователя и имени группы
      * @param username имя пользователя
      * @param nameGroupToFind имя группы для поиска
-     * @return группа или null, если группа отсутствует
      */
     Group findByUsernameAndName(String username, String nameGroupToFind);
 
@@ -30,7 +34,6 @@ public interface GroupRepository {
      * Получить контакт по имени в группе
      * @param group группа для поиска
      * @param contactName имя контакта для поиска
-     * @return контакт или null, если контакт не был найден
      */
     Contact findContactInGroupByName(Group group, String contactName);
 

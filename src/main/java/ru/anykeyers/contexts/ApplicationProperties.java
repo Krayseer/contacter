@@ -13,7 +13,8 @@ public class ApplicationProperties {
 
     public ApplicationProperties() {
         this.properties = new Properties();
-        try (FileInputStream fileInputStream = new FileInputStream("src/main/resources/application.properties")) {
+        String pathToApplicationProperties = "src/main/resources/application.properties";
+        try (FileInputStream fileInputStream = new FileInputStream(pathToApplicationProperties)) {
             properties.load(fileInputStream);
         } catch (IOException e) {
             e.printStackTrace();

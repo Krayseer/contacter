@@ -11,11 +11,17 @@ public interface UserRepository {
      * Существует ли пользователь
      * @return true, если существует, иначе false
      */
-    boolean exists(User user);
+    boolean existsByUsername(String username);
 
     /**
      * Сохранить пользователя
      */
-    void save(User user);
+    void saveOrUpdate(User user);
+
+    /**
+     * Получить экземпляр пользователя
+     * @param username имя пользователя
+     */
+    User getUserByUsername(String username);
 
 }

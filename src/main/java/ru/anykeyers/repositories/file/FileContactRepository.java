@@ -1,28 +1,22 @@
 package ru.anykeyers.repositories.file;
 
-import org.apache.commons.io.FileUtils;
 import ru.anykeyers.domain.Contact;
+import ru.anykeyers.repositories.file.formatters.ContactFormatter;
 import ru.anykeyers.repositories.ContactRepository;
+import ru.anykeyers.repositories.file.data.ContactData;
+import ru.anykeyers.repositories.file.data.ObjectData;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
- * Реализация файловой базы данных
+ * Реализация файловой базы данных для контактов
  */
-public class FileContactRepository implements ContactRepository {
-
-    /**
-     * Файловая БД
-     */
-    private final File dbFile;
-
-    private final Map<String, Set<Contact>> usersContacts = new HashMap<>();
+public class FileContactRepository extends BaseFileRepository<Contact> implements ContactRepository {
 
     public FileContactRepository(String contactFilePath) {
-        this.dbFile = new File(contactFilePath);
-        initContacts();
+        super(contactFilePath);
+        formatter = new ContactFormatter();
     }
 
     @Override
@@ -34,7 +28,15 @@ public class FileContactRepository implements ContactRepository {
 
     @Override
     public Set<Contact> findByUsername(String username) {
-        return usersContacts.getOrDefault(username, new HashSet<>());
+        Map<String, ObjectData<Contact>> infoByUsername = getInfosByUsername();
+        if (infoByUsername.get(username) == null) {
+            infoByUsername.put(username, new ContactData());
+        }
+        ObjectData<Contact> contacts = infoByUsername.get(username);
+        if (contacts == null) {
+            return null;
+        }
+        return (Set<Contact>) contacts.getData();
     }
 
     @Override
@@ -59,54 +61,30 @@ public class FileContactRepository implements ContactRepository {
 
     @Override
     public void saveOrUpdate(Contact contact) {
-        if (!usersContacts.containsKey(contact.getUsername())) {
-            usersContacts.put(contact.getUsername(), new HashSet<>());
+        Map<String, ObjectData<Contact>> infoByUsername = getInfosByUsername();
+        if (infoByUsername.get(contact.getUsername()) == null) {
+            infoByUsername.put(contact.getUsername(), new ContactData());
         }
-        usersContacts.get(contact.getUsername()).removeIf(currentContact -> Objects.equals(currentContact.getId(), contact.getId()));
-        usersContacts.get(contact.getUsername()).add(contact);
-        saveContactsInDB();
-    }
-
-    private void saveContactsInDB() {
-        List<String> resultLines = new ArrayList<>();
-        for (Map.Entry<String, Set<Contact>> entry : usersContacts.entrySet()) {
-            for (Contact contact : entry.getValue()) {
-                resultLines.add(String.format("%s", contact));
-            }
-        }
-        try {
-            FileUtils.writeLines(dbFile, "UTF-8", resultLines, false);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        ContactData contactInfo = (ContactData) infoByUsername.get(contact.getUsername());
+        contactInfo.addData(contact);
+        updateFile(infoByUsername);
     }
 
     @Override
     public void delete(Contact contact) {
-        usersContacts.get(contact.getUsername()).remove(contact);
-        saveContactsInDB();
+        Map<String, ObjectData<Contact>> infoByUsername = getInfosByUsername();
+        ContactData contactInfo = (ContactData) infoByUsername.get(contact.getUsername());
+        contactInfo.removeData(contact);
+        updateFile(infoByUsername);
     }
 
-    /**
-     * Инициализирует контакты из файла в Map
-     */
-    private void initContacts() {
-        try {
-            List<String> lines = FileUtils.readLines(dbFile, "UTF-8");
-            for (String line : lines) {
-                String[] usernameAndContact = line.split(":");
-                String username = usernameAndContact[0];
-                String[] contactInfo = usernameAndContact[1].split(",");
-                String phoneNumber = contactInfo.length > 2 ? contactInfo[2] : "";
-                Contact contact = new Contact(username, contactInfo[0], contactInfo[1], phoneNumber);
-                if (!usersContacts.containsKey(username)) {
-                    usersContacts.put(username, new HashSet<>());
-                }
-                usersContacts.get(username).add(contact);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private void updateFile(Map<String, ObjectData<Contact>> infoByUsername) {
+        List<String> resultLines = infoByUsername.values().stream()
+                .map(userInfo -> (Set<Contact>) userInfo.getData())
+                .flatMap(Collection::stream)
+                .map(formatter::format)
+                .collect(Collectors.toList());
+        saveOrUpdateFile(resultLines);
     }
 
 }

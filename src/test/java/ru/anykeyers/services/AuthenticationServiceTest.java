@@ -1,70 +1,75 @@
 package ru.anykeyers.services;
 
-import org.junit.Before;
 import org.junit.Test;
-import ru.anykeyers.repositories.UserRepository;
-import ru.anykeyers.repositories.file.FileUserRepository;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.MockitoRule;
 import ru.anykeyers.domain.User;
+import ru.anykeyers.repositories.UserRepository;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
+import javax.inject.Inject;
 
 import static org.junit.Assert.*;
 
 /**
- * Тесты для методов класса {@link AuthenticationService}
+ * Тесты для класса {@link AuthenticationService}
  */
+@RunWith(MockitoJUnitRunner.class)
 public class AuthenticationServiceTest {
 
-    private AuthenticationService authenticationService;
-
+    @Mock
     private UserRepository userRepository;
 
-    private final User user = new User("username");
+    @InjectMocks
+    private AuthenticationService authenticationService;
 
-    @Before
-    public void setup() throws IOException {
-        File tempDbFile = Files.createTempFile("tempDbFile", ".txt").toFile();
-        userRepository = new FileUserRepository(tempDbFile.getPath());
-        authenticationService = new AuthenticationService(userRepository);
+    /**
+     * Тестирование получения экземпляра {@link User} по username
+     */
+    @Test
+    public void getUserByUsername() {
+        String username = "testUser";
+        User expectedUser = new User(username);
+        Mockito.when(userRepository.getUserByUsername(username)).thenReturn(expectedUser);
+
+        User actualUser = authenticationService.getUserByUsername(username);
+
+        assertEquals(expectedUser, actualUser);
+        Mockito.verify(userRepository, Mockito.times(1)).getUserByUsername(username);
     }
 
     /**
-     * Тест метода {@link AuthenticationService#authenticate(String)}
+     * Тестирование сохранения пользователя
      */
     @Test
-    public void testAuthenticateUser() {
-        String authResult = authenticationService.authenticate(user.getUsername());
+    public void saveOrUpdateUser() {
+        User user = new User("testUser");
 
-        String expectedResult = "Вы успешно авторизовались";
-        assertTrue(userRepository.exists(user));
-        assertTrue(authenticationService.isAuthenticated());
-        assertEquals(expectedResult, authResult);
+        authenticationService.saveOrUpdateUser(user);
+
+        Mockito.verify(userRepository, Mockito.times(1)).saveOrUpdate(user);
     }
 
     /**
-     * Тест метода {@link AuthenticationService#getCurrentUser()}
+     * Проверить существование пользователя
      */
     @Test
-    public void testGetCurrentUser() {
-        authenticationService.authenticate(user.getUsername());
+    public void existsUser() {
+        String existingUsername = "existingUser";
+        String nonExistingUsername = "nonExistingUser";
+        Mockito.when(userRepository.existsByUsername(existingUsername)).thenReturn(true);
+        Mockito.when(userRepository.existsByUsername(nonExistingUsername)).thenReturn(false);
 
-        assertNotNull(authenticationService.getCurrentUser());
-        assertEquals(user, authenticationService.getCurrentUser());
-    }
+        boolean existingUserExists = authenticationService.existsUser(existingUsername);
+        boolean nonExistingUserExists = authenticationService.existsUser(nonExistingUsername);
 
-    /**
-     * Тест метода {@link AuthenticationService#logoutUser()}
-     */
-    @Test
-    public void testLogoutUser() {
-        authenticationService.authenticate(user.getUsername());
-        String logoutResult = authenticationService.logoutUser();
-
-        String expectedResult = "Вы успешно вышли из аккаунта";
-        assertFalse(authenticationService.isAuthenticated());
-        assertEquals(expectedResult, logoutResult);
+        assertTrue(existingUserExists);
+        assertFalse(nonExistingUserExists);
+        Mockito.verify(userRepository, Mockito.times(1)).existsByUsername(existingUsername);
+        Mockito.verify(userRepository, Mockito.times(1)).existsByUsername(nonExistingUsername);
     }
 
 }

@@ -22,18 +22,18 @@ public class Contact {
      */
     private String phoneNumber;
 
-    public Contact(String username, String id, String name, String phoneNumber) {
-        this.username = username;
-        this.name = name;
-        this.phoneNumber = phoneNumber;
-        this.id = id;
-    }
-
     public Contact(String username, String name) {
+        this.id = UUID.randomUUID().toString();
         this.username = username;
         this.name = name;
         this.phoneNumber = "";
-        this.id = UUID.randomUUID().toString();
+    }
+
+    public Contact(String username, String id, String name, String phoneNumber) {
+        this.id = id;
+        this.username = username;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
     }
 
     public String getId() {
@@ -75,30 +75,13 @@ public class Contact {
         return Objects.equals(name, contact.getName()) && Objects.equals(phoneNumber, contact.getPhoneNumber());
     }
 
+    public String getInfo() {
+        return String.format("Имя: %s. Номер телефона: %s.", name, phoneNumber);
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(name, phoneNumber);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s:%s,%s,%s", username, id.toString(), name, phoneNumber);
-    }
-
-    /**
-     * Перечисление, использующееся для уточнения, какое поле у класса нужно изменить
-     */
-    public enum Field {
-
-        /**
-         * Имя контакта
-         */
-        CONTACT_NAME,
-        /**
-         * Номер контакта
-         */
-        CONTACT_PHONE_NUMBER;
-
     }
 
 }

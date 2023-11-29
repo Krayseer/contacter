@@ -9,6 +9,11 @@ import java.util.Set;
  */
 public interface ContactRepository {
 
+    /**
+     * Существует ли контакт у пользователя
+     * @param username имя пользователя
+     * @param name имя контакта
+     */
     boolean existsByUsernameAndName(String username, String name);
 
     /**
