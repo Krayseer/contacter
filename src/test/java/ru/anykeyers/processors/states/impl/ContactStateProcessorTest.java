@@ -1,124 +1,188 @@
 package ru.anykeyers.processors.states.impl;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-import ru.anykeyers.bots.Bot;
-import ru.anykeyers.bots.BotType;
-import ru.anykeyers.contexts.Messages;
-import ru.anykeyers.domain.Contact;
 import ru.anykeyers.domain.User;
-import ru.anykeyers.factories.StateProcessorFactory;
-import ru.anykeyers.processors.commands.Command;
-import ru.anykeyers.processors.commands.CommandProcessor;
-import ru.anykeyers.services.AuthenticationService;
-import ru.anykeyers.services.ContactService;
-import ru.anykeyers.services.GroupService;
+import ru.anykeyers.processors.states.domain.State;
+import ru.anykeyers.processors.states.domain.StateType;
+import ru.anykeyers.services.impl.AuthenticationServiceImpl;
+import ru.anykeyers.services.impl.ContactServiceImpl;
 
-import java.util.Arrays;
-import java.util.Set;
+import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
-// TODO: 29.11.2023 Нужно доделать 
+/**
+ * Тесты для класса {@link ContactStateProcessor}
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class ContactStateProcessorTest {
 
     @Mock
-    private Bot bot;
+    private AuthenticationServiceImpl authenticationService;
 
     @Mock
-    private AuthenticationService authenticationService;
-
-    @Mock
-    private StateProcessorFactory stateHandlerFactory;
-
-    private Messages messages = new Messages();
-
-    @Mock
-    private ContactService contactService;
-
-    @Mock
-    private GroupService groupService;
+    private ContactServiceImpl contactService;
 
     @InjectMocks
-    private CommandProcessor commandProcessor;
+    private ContactStateProcessor contactStateProcessor;
 
+    /**
+     * Обработка состояния добавления контакта
+     */
     @Test
-    public void testProcessCommand_HelpCommand() {
+    public void handleAddContactStateTest() {
+        // Подготовка
         User user = new User("testUser");
-        when(authenticationService.getUserByUsername(user.getUsername())).thenReturn(user);
-        doNothing().when(authenticationService).saveOrUpdateUser(user);
+        user.setState(State.ADD_CONTACT);
+        String contactName = "testContact";
+        String message = String.format("Контакт '%s' сохранен", contactName);
 
-        commandProcessor.processMessage(user.getUsername(), "/help", BotType.CONSOLE);
+        // Действие
+        Mockito.when(contactService.addContact(user, contactName)).thenReturn(message);
+        String result = contactStateProcessor.processState(user, contactName);
 
-        verify(authenticationService, times(1)).saveOrUpdateUser(user);
-        verify(bot, times(1)).sendMessage(user.getChatIdByAppType(), Command.getAllCommands());
+        // Проверка
+        Assert.assertEquals(message, result);
+        Assert.assertEquals(State.NONE, user.getState());
+        Assert.assertEquals(StateType.NONE, user.getStateType());
+        Assert.assertNull(user.getContactNameToEdit());
+        Assert.assertNull(user.getGroupNameToEdit());
+        Mockito.verify(authenticationService, Mockito.times(1)).saveOrUpdateUser(user);
     }
 
+    /**
+     * Обработка состояния редактирования контакта
+     * <ol>
+     *     <li>Обработка состояния с несуществующим контактом</li>
+     *     <li>Обработка состояния с существующим контактом</li>
+     * </ol>
+     */
     @Test
-    public void testProcessCommand_getAllCommands() {
-        // Mocking
+    public void handleEditContactStateTest() {
+        // Подготовка
         User user = new User("testUser");
-        when(authenticationService.getUserByUsername("testUser")).thenReturn(user);
+        user.setState(State.EDIT_CONTACT);
+        String contactName = "testContact";
 
-        // Assuming the command is "get_contacts"
-        when(contactService.getAllContacts(user)).thenReturn(Set.of(
-                new Contact("John Doe", "john@example.com"),
-                new Contact("Jane Doe", "jane@example.com")
-        ));
+        // Действие: обработка состояния изменения несуществующего контакта
+        Mockito.when(contactService.existsContact(user, "non-exists")).thenReturn(false);
+        String nonExistsContactEditResult = contactStateProcessor.processState(user, "non-exists");
 
-        // Testing
-        commandProcessor.processMessage("testUser", "/get_contacts", BotType.CONSOLE);
+        // Проверка: обработка состояния изменения несуществующего контакта
+        Assert.assertEquals("Не удалось найти контакт 'non-exists'", nonExistsContactEditResult);
+        Assert.assertEquals(State.EDIT_CONTACT, user.getState());
 
-        // Verifying
-        verify(bot, times(1)).sendMessage(eq(user.getChatIdByAppType()), anyString());
+        // Действие: обработка состояния изменения существующего контакта
+        Mockito.when(contactService.existsContact(user, contactName)).thenReturn(true);
+        String existsContactEditResult = contactStateProcessor.processState(user, contactName);
 
-        // Check the captured argument to the sendMessage method
-        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
-        verify(bot).sendMessage(eq(user.getChatIdByAppType()), argumentCaptor.capture());
-
-        // Assert the result
-        String processResult = argumentCaptor.getValue();
-        assertEquals("John Doe john@example.com\nJane Doe jane@example.com", processResult);
+        // Проверка: обработка состояния изменения существующего контакта
+        Assert.assertEquals("Введите поле, которое вы хотите изменить: \n1. имя\n2. номер", existsContactEditResult);
+        Assert.assertEquals(State.EDIT_CONTACT_FIELD, user.getState());
+        Assert.assertEquals(contactName, user.getContactNameToEdit());
+        Mockito.verify(authenticationService, Mockito.times(1)).saveOrUpdateUser(user);
     }
 
-//    @Test
-//    public void testProcessCommand_InvalidCommand() {
-//        // Arrange
-//        User user = new User("testUser", "password");
-//        when(authenticationService.getUserByUsername(user.getUsername())).thenReturn(user);
-//        when(stateHandlerFactory.getStateProcessorByType(StateType.NONE)).thenReturn(new NoneStateProcessor(bot, authenticationService));
-//        doNothing().when(authenticationService).saveOrUpdateUser(user);
-//        when(messages.getMessageByKey("command.not-exists")).thenReturn("Command not exists");
-//
-//        // Act
-//        commandProcessor.processMessage(user.getUsername(), "/invalidCommand", BotType.TELEGRAM);
-//
-//        // Assert
-//        verify(authenticationService, times(1)).saveOrUpdateUser(user);
-//        verify(bot, times(1)).sendMessage(user.getChatIdByAppType(), "Command not exists");
-//    }
-//
-//    @Test
-//    public void testProcessState_InvalidState() {
-//        // Arrange
-//        User user = new User("testUser", "password");
-//        user.setState(State.EDIT_CONTACT_NAME);
-//        when(authenticationService.getUserByUsername(user.getUsername())).thenReturn(user);
-//        doNothing().when(authenticationService).saveOrUpdateUser(user);
-//        when(stateHandlerFactory.getStateProcessorByType(StateType.CONTACT)).thenReturn(new ContactStateProcessor(bot, authenticationService));
-//        when(messages.getMessageByKey("contact.state.edit.bad-argument")).thenReturn("Invalid argument");
-//
-//        // Act
-//        commandProcessor.processMessage(user.getUsername(), "invalidMessage", BotType.TELEGRAM);
-//
-//        // Assert
-//        verify(authenticationService, times(1)).saveOrUpdateUser(user);
-//        verify(bot, times(1)).sendMessage(user.getChatIdByAppType(), "Invalid argument");
-//    }
+    /**
+     * Обработка состояния выбора поля для изменения контакта
+     * <ol>
+     *     <li>Обработка некорректного аргумента</li>
+     *     <li>Обработка аргумента редактирования имени контакта</li>
+     *     <li>Обработка аргумента редактирования номера телефона контакта</li>
+     * </ol>
+     */
+    @Test
+    public void handleEditFieldContactStateTest() {
+        // Подготовка
+        User user = new User("testUser");
+        String contactName = "testContact";
+        user.setState(State.EDIT_CONTACT_FIELD);
+        user.setContactNameToEdit(contactName);
+
+        // Действие: обработка некорректного аргумента при изменении контакта
+        String invalidArgumentProcess = contactStateProcessor.processState(user, "111111");
+
+        // Проверка: обработка некорректного аргумента при изменении контакта
+        Assert.assertEquals("Введен неверный параметр", invalidArgumentProcess);
+        Assert.assertEquals(State.EDIT_CONTACT_FIELD, user.getState());
+        Mockito.verify(authenticationService, Mockito.times(0)).saveOrUpdateUser(user);
+
+        // Действие: выбор имени контакта для изменения
+        String editContactNameProcess = contactStateProcessor.processState(user, "1");
+
+        // Проверка: выбор имени контакта для изменения
+        Assert.assertEquals(State.EDIT_CONTACT_NAME, user.getState());
+        Assert.assertEquals("Введите новое имя", editContactNameProcess);
+        Mockito.verify(authenticationService, Mockito.times(1)).saveOrUpdateUser(user);
+
+        // Действие: выбор номера телефона контакта для изменения
+        user.setState(State.EDIT_CONTACT_FIELD);
+        String editContactPhoneNumberProcess = contactStateProcessor.processState(user, "2");
+
+        // Проверка: выбор номера телеофна контакта для изменения
+        Assert.assertEquals(State.EDIT_CONTACT_PHONE, user.getState());
+        Assert.assertEquals("Введите новый номер телефона", editContactPhoneNumberProcess);
+        Mockito.verify(authenticationService, Mockito.times(2)).saveOrUpdateUser(user);
+    }
+
+    /**
+     * Обработка состояния изменения полей контакта
+     * <ol>
+     *     <li>Обработка состояния изменения имени контакта</li>
+     *     <li>Обрабокта состояния изменения номера телефона контакта</li>
+     * </ol>
+     */
+    @Test
+    public void handleEditSpecificFieldContactStateTest() {
+        List<State> editFieldStates = List.of(State.EDIT_CONTACT_NAME, State.EDIT_CONTACT_PHONE);
+        for (int i = 0; i < editFieldStates.size(); i++) {
+            // Подготовка
+            User user = new User("testUser");
+            String contactName = "testContact";
+            user.setState(editFieldStates.get(i));
+            user.setContactNameToEdit(contactName);
+            String message = "Контакт 'testContact' успешно изменен";
+
+            // Действие
+            Mockito.when(contactService.editContact(user, "newValue")).thenReturn(message);
+            String result = contactStateProcessor.processState(user, "newValue");
+
+            // Проверка
+            Assert.assertEquals(message, result);
+            Assert.assertEquals(State.NONE, user.getState());
+            Assert.assertEquals(StateType.NONE, user.getStateType());
+            Assert.assertNull(user.getContactNameToEdit());
+            Assert.assertNull(user.getGroupNameToEdit());
+            Mockito.verify(authenticationService, Mockito.times(i + 1)).saveOrUpdateUser(user);
+        }
+    }
+
+    /**
+     * Обработка состояния удаления контакта
+     */
+    @Test
+    public void handleDeleteContactStateTest() {
+        // Подготовка
+        User user = new User("testUser");
+        user.setState(State.DELETE_CONTACT);
+        String contactName = "testContact";
+        String message = String.format("Контакт '%s' успешно удален", contactName);
+
+        // Действие
+        Mockito.when(contactService.deleteContact(user, contactName)).thenReturn(message);
+        String result = contactStateProcessor.processState(user, "testContact");
+
+        // Проверка
+        Assert.assertEquals(message, result);
+        Assert.assertEquals(State.NONE, user.getState());
+        Assert.assertEquals(StateType.NONE, user.getStateType());
+        Assert.assertNull(user.getContactNameToEdit());
+        Assert.assertNull(user.getGroupNameToEdit());
+        Mockito.verify(authenticationService, Mockito.times(1)).saveOrUpdateUser(user);
+    }
+
 }

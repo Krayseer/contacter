@@ -1,43 +1,33 @@
 package ru.anykeyers.services;
 
-import ru.anykeyers.repositories.UserRepository;
+import ru.anykeyers.bots.BotType;
 import ru.anykeyers.domain.User;
 
 /**
- * Сервис для аутентификации пользователей
+ * Интерфейс для сервиса аутентификации пользователей
  */
-public class AuthenticationService {
-
-    private final UserRepository userRepository;
-
-    public AuthenticationService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+public interface AuthenticationService {
 
     /**
-     * Получить экземпляр пользователя по имени пользователя
-     * @param username имя пользоватея
-     * @return экземпляр
+     * Проверить существование пользователя по имени пользователя и типу бота
+     * @param username имя пользователя
+     * @param botType тип бота
+     * @return {@code true}, если пользователь существует, иначе {@code false}
      */
-    public User getUserByUsername(String username) {
-        return userRepository.getUserByUsername(username);
-    }
+    boolean existsUserByUsernameAndBotType(String username, BotType botType);
+
+    /**
+     * Получить экземпляр пользователя по имени пользователя и типу бота
+     * @param username имя пользоватея
+     * @param botType тип бота
+     * @return экземпляр пользователя
+     */
+    User getUserByUsernameAndBotType(String username, BotType botType);
 
     /**
      * Сохранить или обновить пользователя в БД
      * @param user пользователь
      */
-    public void saveOrUpdateUser(User user) {
-        userRepository.saveOrUpdate(user);
-    }
-
-    /**
-     * Пользователь существует
-     * @param username имя пользователя
-     * @return {@code true}, если пользователь существует, иначе {@code false}
-     */
-    public boolean existsUser(String username) {
-        return userRepository.existsByUsername(username);
-    }
+    void saveOrUpdateUser(User user);
 
 }

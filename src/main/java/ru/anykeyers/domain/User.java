@@ -1,6 +1,5 @@
 package ru.anykeyers.domain;
 
-import ru.anykeyers.bots.telegram.TelegramConfig;
 import ru.anykeyers.bots.BotType;
 import ru.anykeyers.processors.states.domain.State;
 import ru.anykeyers.processors.states.domain.StateType;
@@ -8,27 +7,29 @@ import ru.anykeyers.processors.states.domain.StateType;
 import java.util.Objects;
 
 /**
- * Класс пользователя
+ * Пользователь
  */
 public class User {
 
     /**
      * Имя пользователя
      */
-    private String username;
+    private final String username;
 
     /**
-     * Из какого последнего приложения была обработка пользователя
+     * Тип бота пользователя
      */
-    private BotType botType = BotType.CONSOLE;
+    private BotType botType;
 
     /**
-     * Состояние
+     * Состояние<br/>
+     * По дефолту значение {@link State#NONE}
      */
     private State state = State.NONE;
 
     /**
-     * Тип состояния
+     * Тип состояния<br/>
+     * По дефолту значение {@link StateType#NONE}
      */
     private StateType stateType = StateType.NONE;
 
@@ -43,13 +44,18 @@ public class User {
     private String groupNameToEdit;
 
     /**
-     * Конфигурация телеграмма пользователя
+     * Идентификатор чата пользователя
      */
-    private TelegramConfig telegramConfig;
+    private Long chatId;
 
 
     public User(String username) {
         this.username = username;
+    }
+
+    public User(String username, BotType botType) {
+        this.username = String.format("%s-%s", username, botType);
+        this.botType = botType;
     }
 
     public String getUsername() {
@@ -96,22 +102,12 @@ public class User {
         this.groupNameToEdit = groupNameToEdit;
     }
 
-    public TelegramConfig getTelegramConfig() {
-        return telegramConfig;
+    public Long getChatId() {
+        return chatId;
     }
 
-    public void setTelegramConfig(TelegramConfig telegramConfig) {
-        this.telegramConfig = telegramConfig;
-    }
-
-    /**
-     * Получить идентификатор чата, куда нужно отправить сообщение
-     */
-    public Long getChatIdByAppType() {
-        return switch (botType) {
-            case CONSOLE -> 0L;
-            case TELEGRAM_BOT -> telegramConfig.getChatId();
-        };
+    public void setChatId(Long chatId) {
+        this.chatId = chatId;
     }
 
     /**
@@ -128,12 +124,17 @@ public class User {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof User user)) return false;
-        return Objects.equals(username, user.getUsername());
+        return Objects.equals(username, user.getUsername())
+                && botType == user.getBotType()
+                && state == user.getState()
+                && stateType == user.getStateType()
+                && Objects.equals(contactNameToEdit, user.getContactNameToEdit())
+                && Objects.equals(groupNameToEdit, user.getGroupNameToEdit())
+                && Objects.equals(chatId, user.getChatId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(username);
+        return Objects.hash(username, botType, state, stateType, contactNameToEdit, groupNameToEdit, chatId);
     }
-
 }

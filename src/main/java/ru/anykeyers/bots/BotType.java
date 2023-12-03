@@ -1,12 +1,12 @@
 package ru.anykeyers.bots;
 
 /**
- * Тип приложения
+ * Тип бота
  */
 public enum BotType {
 
     /**
-     * Консольное приложение
+     * Консольный бот
      */
     CONSOLE,
     /**

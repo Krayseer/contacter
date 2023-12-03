@@ -1,13 +1,18 @@
 package ru.anykeyers.domain;
 
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 /**
- * Сущность группы
+ * Группа
  */
 public class Group {
 
+    /**
+     * Идентификатор группы
+     */
     private String id;
 
     /**
@@ -25,11 +30,14 @@ public class Group {
      */
     private Set<Contact> contacts;
 
-    public Group(String username, String id, String name, Set<Contact> contacts) {
-        this.id = id;
+    public Group(String username) {
+        this.username = username;
+    }
+
+    public Group(String username, String name) {
+        this.id = UUID.randomUUID().toString();
         this.username = username;
         this.name = name;
-        this.contacts = contacts;
     }
 
     public String getId() {
@@ -60,28 +68,41 @@ public class Group {
         return contacts;
     }
 
+    /**
+     * Добавить контакт у группу
+     * @param contact добавляемый контакт
+     */
     public void addContactInGroup(Contact contact) {
+        if (contacts == null) {
+            contacts = new HashSet<>();
+        }
         contacts.add(contact);
     }
 
-    public void deleteContactFromGroup(Contact contact) {
-        contacts.remove(contact);
-    }
-
-    public String getInfo() {
-        return String.format("Название: %s. Количество участников: %s.", name, contacts.size());
+    /**
+     * Удалить контакт из группы
+     * @param contact удаляемый контакт
+     * @return {@code true}, если контакт удалось удалить, иначе {@code false}
+     */
+    public boolean deleteContactFromGroup(Contact contact) {
+        if (contacts == null) {
+            return false;
+        }
+        return contacts.remove(contact);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Group group)) return false;
-        return Objects.equals(username, group.getUsername()) && Objects.equals(name, group.getName()) && Objects.equals(contacts, group.getContacts());
+        return Objects.equals(id, group.getId())
+                && Objects.equals(username, group.getUsername())
+                && Objects.equals(name, group.getName())
+                && Objects.equals(contacts, group.getContacts());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(username, name, contacts);
+        return Objects.hash(id, username, name, contacts);
     }
-
 }

@@ -1,25 +1,33 @@
 package ru.anykeyers.repositories.file;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import ru.anykeyers.bots.BotType;
 import ru.anykeyers.domain.User;
 import ru.anykeyers.repositories.UserRepository;
+import ru.anykeyers.repositories.file.parsers.FileUserParser;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-
-import static org.junit.Assert.*;
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
- * Тесты для методов класса {@link UserRepository}
+ * Тесты для класса {@link FileUserRepository}
  */
 public class FileUserRepositoryTest {
 
     private UserRepository userRepository;
 
     private File tempDbFile;
+
+    private final FileUserParser formatter;
+
+    public FileUserRepositoryTest() {
+        formatter = new FileUserParser();
+    }
 
     @Before
     public void setUp() throws IOException {
@@ -28,19 +36,23 @@ public class FileUserRepositoryTest {
     }
 
     /**
-     * Тест метода {@link UserRepository#saveOrUpdate(User)}
+     * Тест метода {@link UserRepository#saveOrUpdate(User)}<br/>
      */
     @Test
-    public void testUserSave() throws IOException {
-        User user1 = new User("user1");
-        User user2 = new User("user2");
+    public void saveUserTest() throws IOException {
+        // Подготовка
+        User user1 = new User("user1", BotType.CONSOLE);
+        User user2 = new User("user2", BotType.CONSOLE);
 
+        // Действие
         userRepository.saveOrUpdate(user1);
         userRepository.saveOrUpdate(user2);
 
-        String expected = String.format("%s%s", user1, user2);
-        String actual = Files.readString(tempDbFile.toPath(), StandardCharsets.UTF_8).replace("\r\n", "");
-        assertEquals(expected, actual);
+        // Проверка
+        Set<String> actualUsersLines = new HashSet<>(Files.readAllLines(tempDbFile.toPath()));
+        Stream.of(user1, user2)
+                .map(formatter::parseTo)
+                .forEach(user -> Assert.assertTrue(actualUsersLines.contains(user)));
     }
 
 }

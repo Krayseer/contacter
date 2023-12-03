@@ -23,6 +23,8 @@ public class Messages {
 
     /**
      * Получить сообщение из файла по ключу
+     * @param key ключ сообщения
+     * @return сообщение
      */
     public String getMessageByKey(String key) {
         return properties.getProperty(key);
@@ -30,6 +32,9 @@ public class Messages {
 
     /**
      * Получить сообщение из файла по ключу с аргументами
+     * @param key ключ сообщения
+     * @param args аргументы, которые нужно применить к сообщению
+     * @return сообщение
      */
     public String getMessageByKey(String key, Object... args) {
         return String.format(properties.getProperty(key), args);

@@ -36,10 +36,6 @@ public enum State {
     DELETE_CONTACT,
 
     /**
-     * Получить контакты из группы
-     */
-    GET_GROUP_CONTACTS,
-    /**
      * Добавление группы
      */
     ADD_GROUP,

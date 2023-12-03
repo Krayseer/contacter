@@ -1,10 +1,12 @@
 package ru.anykeyers.factories;
 
-import ru.anykeyers.bots.Bot;
-import ru.anykeyers.bots.telegram.TelegramBot;
+import org.telegram.telegrambots.meta.TelegramBotsApi;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
+import ru.anykeyers.bots.impl.TelegramBot;
 import ru.anykeyers.contexts.ApplicationProperties;
 import ru.anykeyers.contexts.Messages;
-import ru.anykeyers.bots.console.ConsoleBot;
+import ru.anykeyers.bots.impl.ConsoleBot;
 import ru.anykeyers.bots.BotType;
 
 import java.util.ArrayList;
@@ -22,28 +24,31 @@ public class BotFactory {
      */
     public void startBots() {
         ExecutorService executorService = Executors.newFixedThreadPool(2);
+        Messages messages = new Messages();
         getBotTypesFromProperties().forEach(botType -> {
             switch (botType) {
                 case CONSOLE:
                     executorService.submit(() -> {
-                        Bot consoleBot = new ConsoleBot();
-                        consoleBot.start();
+                        new ConsoleBot();
                     });
                     break;
                 case TELEGRAM_BOT:
                     executorService.submit(() -> {
-                        Bot telegramBot = new TelegramBot();
-                        telegramBot.start();
+                        try {
+                            TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
+                            telegramBotsApi.registerBot(new TelegramBot());
+                        } catch (TelegramApiException e) {
+                            String errorMessage = messages.getMessageByKey("bot.telegram.register-error");
+                            throw new RuntimeException(errorMessage);
+                        }
                     });
                     break;
-                default:
-                    throw new IllegalArgumentException();
             }
         });
     }
 
     /**
-     * Получить типы ботов, которые нужно запустить
+     * Получить из настроек типы ботов, которые нужно запустить
      */
     private List<BotType> getBotTypesFromProperties() {
         Messages messages = new Messages();
@@ -54,8 +59,8 @@ public class BotFactory {
             try {
                 BotType appType = BotType.valueOf(type);
                 botTypes.add(appType);
-            } catch (RuntimeException e) {
-                String errorMessage = messages.getMessageByKey("application.invalid-type", type);
+            } catch (IllegalArgumentException ex) {
+                String errorMessage = messages.getMessageByKey("bot.invalid-type", type);
                 throw new IllegalArgumentException(errorMessage);
             }
         }

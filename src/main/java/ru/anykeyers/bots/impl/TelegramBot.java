@@ -1,45 +1,47 @@
-package ru.anykeyers.bots.telegram;
+package ru.anykeyers.bots.impl;
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import ru.anykeyers.bots.Bot;
+import ru.anykeyers.bots.BotType;
 import ru.anykeyers.contexts.ApplicationProperties;
+import ru.anykeyers.contexts.Messages;
 import ru.anykeyers.domain.User;
 import ru.anykeyers.factories.RepositoryFactory;
+import ru.anykeyers.processors.MessageProcessor;
 import ru.anykeyers.processors.commands.Command;
-import ru.anykeyers.processors.commands.CommandProcessor;
 import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.services.AuthenticationService;
+import ru.anykeyers.services.impl.AuthenticationServiceImpl;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static ru.anykeyers.bots.BotType.TELEGRAM_BOT;
 
 /**
  * Телеграм бот
  */
 public class TelegramBot extends TelegramLongPollingBot implements Bot {
 
-    private final CommandProcessor commandProcessor;
+    private final MessageProcessor messageProcessor;
 
     private final AuthenticationService authenticationService;
 
     private final ApplicationProperties applicationProperties;
 
+    private final Messages messages;
+
     public TelegramBot() {
+        applicationProperties = new ApplicationProperties();
+        messages = new Messages();
         RepositoryFactory repositoryFactory = new RepositoryFactory();
         UserRepository userRepository = repositoryFactory.createUserRepository();
-        authenticationService = new AuthenticationService(userRepository);
-        commandProcessor = new CommandProcessor(this, authenticationService);
-        applicationProperties = new ApplicationProperties();
+        authenticationService = new AuthenticationServiceImpl(userRepository);
+        messageProcessor = new MessageProcessor(this, authenticationService);
     }
 
     @Override
@@ -52,18 +54,13 @@ public class TelegramBot extends TelegramLongPollingBot implements Bot {
                     : telegramUser.getId().toString();
             String text = message.getText();
             Long chatId = message.getChatId();
-
             if(text.equals("/start")) {
-                User user = authenticationService.existsUser(username) ?
-                        authenticationService.getUserByUsername(username) :
-                        new User(username);
-                TelegramConfig telegramConfig = new TelegramConfig(chatId);
-                user.setTelegramConfig(telegramConfig);
-                authenticationService.saveOrUpdateUser(user);
-                sendCommands(chatId);
+                initUser(username, chatId);
+                String welcomeMessage = messages.getMessageByKey("bot.welcome");
+                sendMessage(chatId, welcomeMessage);
+                return;
             }
-
-            receiveMessage(username, text);
+            handleMessage(username, text);
         }
     }
 
@@ -83,26 +80,38 @@ public class TelegramBot extends TelegramLongPollingBot implements Bot {
         try {
             execute(msg);
         } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
+            String errorMessage = messages.getMessageByKey("bot.telegram.send-error");
+            throw new RuntimeException(errorMessage);
         }
     }
 
-    @Override
-    public void receiveMessage(String username, String message) {
-        commandProcessor.processMessage(username, message, TELEGRAM_BOT);
+    /**
+     * Обработать сообщение
+     * @param username имя пользователя
+     * @param message сообщение
+     */
+    private void handleMessage(String username, String message) {
+        messageProcessor.processMessage(username, message, BotType.TELEGRAM_BOT);
     }
 
-    @Override
-    public void start() {
-        try {
-            TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
-            telegramBotsApi.registerBot(this);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
+    /**
+     * Проинициализировать пользователя
+     * @param username имя пользователя
+     * @param chatId идентификатор чат-бота
+     */
+    private void initUser(String username, Long chatId) {
+        User user = authenticationService.existsUserByUsernameAndBotType(username, BotType.TELEGRAM_BOT)
+                ? authenticationService.getUserByUsernameAndBotType(username, BotType.TELEGRAM_BOT)
+                : new User(username, BotType.TELEGRAM_BOT);
+        user.setChatId(chatId);
+        authenticationService.saveOrUpdateUser(user);
+        setCommands();
     }
 
-    private void sendCommands(Long chatId) {
+    /**
+     * Установить в меню возможные команды в приложении
+     */
+    private void setCommands() {
         SetMyCommands setMyCommands = new SetMyCommands();
         List<BotCommand> commands = new ArrayList<>();
         for (Command command : Command.values()) {
@@ -110,13 +119,11 @@ public class TelegramBot extends TelegramLongPollingBot implements Bot {
             commands.add(botCommand);
         }
         setMyCommands.setCommands(commands);
-
         try {
             execute(setMyCommands);
-            SendMessage message = SendMessage.builder().chatId(chatId).build();
-            execute(message);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            String errorMessage = messages.getMessageByKey("bot.telegram.set-commands-error");
+            throw new RuntimeException(errorMessage);
         }
     }
 

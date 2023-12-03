@@ -1,65 +1,77 @@
 package ru.anykeyers.processors.states.impl;
 
+import ru.anykeyers.contexts.Messages;
+import ru.anykeyers.processors.states.BaseStateProcessor;
 import ru.anykeyers.processors.states.domain.State;
 import ru.anykeyers.domain.User;
-import ru.anykeyers.processors.states.BaseStateProcessor;
-import ru.anykeyers.bots.Bot;
-import ru.anykeyers.repositories.ContactRepository;
 import ru.anykeyers.services.AuthenticationService;
 import ru.anykeyers.services.ContactService;
 
 import java.util.List;
 
-import static ru.anykeyers.processors.states.domain.State.*;
-
 /**
- * Класс обработчиков состояний контактов
+ * Обработчик состояний для контактов
  */
 public class ContactStateProcessor extends BaseStateProcessor {
 
     private final ContactService contactService;
 
-    public ContactStateProcessor(AuthenticationService authenticationService) {
-        super(authenticationService);
-        ContactRepository contactRepository = repositoryFactory.createContactRepository();
-        contactService = new ContactService(contactRepository);
+    private final AuthenticationService authenticationService;
+
+    private final Messages messages;
+
+    public ContactStateProcessor(AuthenticationService authenticationService,
+                                 ContactService contactService) {
+        this.contactService = contactService;
+        this.authenticationService = authenticationService;
+        messages = new Messages();
+        registerStatesHandlers();
     }
 
-    @Override
-    public void registerStatesHandlers() {
-        stateHandlers.put(ADD_CONTACT, (user, message) -> {
-            String result = contactService.addContact(user, message);
+    /**
+     * Регистрация состояний и их обработчиков
+     */
+    private void registerStatesHandlers() {
+        registerHandler(State.ADD_CONTACT, (user, contactName) -> {
+            String result = contactService.addContact(user, contactName);
             user.clearState();
             authenticationService.saveOrUpdateUser(user);
             return result;
         });
-        stateHandlers.put(EDIT_CONTACT, (user, message) -> {
-            if (!contactService.existsContact(user, message)) {
-                return messages.getMessageByKey("contact.not-exists", message);
+        registerHandler(State.EDIT_CONTACT, (user, contactNameToEdit) -> {
+            if (!contactService.existsContact(user, contactNameToEdit)) {
+                return messages.getMessageByKey("contact.not-exists", contactNameToEdit);
             }
-            user.setContactNameToEdit(message);
-            user.setState(EDIT_CONTACT_FIELD);
+            user.setContactNameToEdit(contactNameToEdit);
+            user.setState(State.EDIT_CONTACT_FIELD);
             authenticationService.saveOrUpdateUser(user);
             return messages.getMessageByKey("contact.state.edit.field");
         });
-        stateHandlers.put(EDIT_CONTACT_FIELD, (user, message) -> {
-            return switch (message.toLowerCase()) {
-                case ContactEditField.NAME -> processFieldEdit(user, EDIT_CONTACT_NAME, "contact.state.edit.name");
-                case ContactEditField.PHONE -> processFieldEdit(user, EDIT_CONTACT_PHONE, "contact.state.edit.phone");
-                default -> messages.getMessageByKey("contact.state.edit.bad-argument");
-            };
+        registerHandler(State.EDIT_CONTACT_FIELD, (user, field) -> {
+            switch (field.toLowerCase()) {
+                case ContactEditField.NAME -> {
+                    return processEditContact(user, State.EDIT_CONTACT_NAME, "contact.state.edit.name");
+                }
+                case ContactEditField.PHONE -> {
+                    return processEditContact(user, State.EDIT_CONTACT_PHONE, "contact.state.edit.phone");
+                }
+            }
+            return messages.getMessageByKey("argument.bad");
         });
-        List<State> editContactFieldsStates = List.of(EDIT_CONTACT_NAME, EDIT_CONTACT_PHONE);
-        editContactFieldsStates.forEach(state -> stateHandlers.put(state, (user, message) -> {
-            String result = contactService.editContact(user, message);
+        List<State> editContactFieldsStates = List.of(State.EDIT_CONTACT_NAME, State.EDIT_CONTACT_PHONE);
+        editContactFieldsStates.forEach(state -> registerHandler(state, (user, newValue) -> {
+            String result = contactService.editContact(user, newValue);
+            if (!result.equals(messages.getMessageByKey("contact.successful-edit-name", user.getContactNameToEdit()))) {
+                return result;
+            }
             user.clearState();
             authenticationService.saveOrUpdateUser(user);
             return result;
         }));
-        stateHandlers.put(DELETE_CONTACT, ((user, message) -> {
-            String result = contactService.deleteContact(user, message);
-            if (!result.equals(messages.getMessageByKey("contact.successful-delete", message))) {
-                return null;
+        registerHandler(State.DELETE_CONTACT, ((user, contactName) -> {
+            String result = contactService.deleteContact(user, contactName);
+            if (!result.equals(messages.getMessageByKey("contact.successful-delete", contactName))) {
+                return result;
             }
             user.clearState();
             authenticationService.saveOrUpdateUser(user);
@@ -67,7 +79,14 @@ public class ContactStateProcessor extends BaseStateProcessor {
         }));
     }
 
-    private String processFieldEdit(User user, State state, String messageKey) {
+    /**
+     * Изменение состояния контакта
+     * @param user пользователь
+     * @param state состояние, сигнализирующее что нужно изменить у контакта
+     * @param messageKey ключ сообщения успешного выполнения операции
+     * @return результат изменения контакта
+     */
+    private String processEditContact(User user, State state, String messageKey) {
         user.setState(state);
         authenticationService.saveOrUpdateUser(user);
         return messages.getMessageByKey(messageKey);
@@ -76,7 +95,7 @@ public class ContactStateProcessor extends BaseStateProcessor {
     /**
      * Класс, содержащий информацию о действиях, которые можно сделать с контактом
      */
-    private static final class ContactEditField {
+    private final class ContactEditField {
 
         /**
          * Изменение имени

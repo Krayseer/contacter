@@ -11,60 +11,76 @@ import ru.anykeyers.repositories.file.FileUserRepository;
 
 /**
  * Фабрика для создания репозиториев<br/>
- * Типы репозиториев устанавливаются в application.properties в ключе STORAGE_TYPE
+ * Типы репозиториев устанавливаются в application.properties в ключе "storage.type"
  */
 public class RepositoryFactory {
 
     private final ApplicationProperties applicationProperties;
 
-    private final StorageType STORAGE_TYPE;
+    private final Messages messages;
+
+    private final StorageType storageType;
 
     public RepositoryFactory() {
-        Messages messages = new Messages();
+        messages = new Messages();
         applicationProperties = new ApplicationProperties();
-        String storageType = applicationProperties.getSetting("storage.type");
+        String storageTypeFromSettings = applicationProperties.getSetting("storage.type");
         try {
-           STORAGE_TYPE = StorageType.valueOf(storageType);
-        } catch (RuntimeException e) {
-           throw new IllegalArgumentException(messages.getMessageByKey("storage.invalid-type", storageType));
+           storageType = StorageType.valueOf(storageTypeFromSettings);
+        } catch (IllegalArgumentException ex) {
+            String errorMessage = messages.getMessageByKey("storage.invalid-type", storageTypeFromSettings);
+            throw new IllegalArgumentException(errorMessage);
         }
     }
 
+    /**
+     * Создать экземпляр {@link UserRepository}
+     */
     public UserRepository createUserRepository() {
-        switch (STORAGE_TYPE) {
+        switch (storageType) {
             case FILE:
-                return new FileUserRepository(applicationProperties.getSetting("file-users-table"));
-            default:
-                return null;
+                String pathToUserTableFile = applicationProperties.getSetting("file-users-table");
+                return new FileUserRepository(pathToUserTableFile);
         }
+        String errorMessage = messages.getMessageByKey("storage.invalid-type", storageType);
+        throw new IllegalArgumentException(errorMessage);
     }
 
+    /**
+     * Создать экземпляр {@link ContactRepository}
+     */
     public ContactRepository createContactRepository() {
-        switch (STORAGE_TYPE) {
+        switch (storageType) {
             case FILE:
-                return new FileContactRepository(applicationProperties.getSetting("file-contacts-table"));
-            default:
-                return null;
+                String pathToContactTableFile = applicationProperties.getSetting("file-contacts-table");
+                return new FileContactRepository(pathToContactTableFile);
         }
+        String errorMessage = messages.getMessageByKey("storage.invalid-type", storageType);
+        throw new IllegalArgumentException(errorMessage);
     }
 
+    /**
+     * Создать экземпляр {@link GroupRepository}
+     */
     public GroupRepository createGroupRepository() {
-        switch (STORAGE_TYPE) {
+        switch (storageType) {
             case FILE:
-                return new FileGroupRepository(applicationProperties.getSetting("file-groups-table"));
-            default:
-                return null;
+                String pathToGroupTableFile = applicationProperties.getSetting("file-groups-table");
+                String pathToContactTableFile = applicationProperties.getSetting("file-contacts-table");
+                return new FileGroupRepository(pathToGroupTableFile, new FileContactRepository(pathToContactTableFile));
         }
+        String errorMessage = messages.getMessageByKey("storage.invalid-type", storageType);
+        throw new IllegalArgumentException(errorMessage);
     }
 
     /**
      * Тип хранилища, где будут храниться данные
      */
     private enum StorageType {
+        /**
+         * Файловая БД
+         */
         FILE,
-        POSTGRES,
-        MY_SQL,
-        CASSANDRA
     }
 
 }

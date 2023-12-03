@@ -1,75 +1,97 @@
 package ru.anykeyers.processors.states.impl;
 
-import ru.anykeyers.domain.Contact;
+import ru.anykeyers.contexts.Messages;
 import ru.anykeyers.domain.User;
-import ru.anykeyers.processors.states.domain.State;
 import ru.anykeyers.processors.states.BaseStateProcessor;
-import ru.anykeyers.repositories.ContactRepository;
-import ru.anykeyers.repositories.GroupRepository;
+import ru.anykeyers.processors.states.domain.State;
 import ru.anykeyers.services.AuthenticationService;
 import ru.anykeyers.services.GroupService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import static ru.anykeyers.processors.states.domain.State.*;
-
+/**
+ * Обработчик состояний для групп
+ */
 public class GroupStateProcessor extends BaseStateProcessor {
 
     private final GroupService groupService;
 
-    public GroupStateProcessor(AuthenticationService authenticationService) {
-        super(authenticationService);
-        GroupRepository groupRepository = repositoryFactory.createGroupRepository();
-        ContactRepository contactRepository = repositoryFactory.createContactRepository();
-        groupService = new GroupService(groupRepository, contactRepository);
+    private final AuthenticationService authenticationService;
+
+    private final Messages messages;
+
+    public GroupStateProcessor(AuthenticationService authenticationService,
+                               GroupService groupService) {
+        this.groupService = groupService;
+        this.authenticationService = authenticationService;
+        messages = new Messages();
+        registerStatesHandlers();
     }
 
-    @Override
-    public void registerStatesHandlers() {
-        stateHandlers.put(GET_GROUP_CONTACTS, (user, message) -> {
-            return groupService.getGroupContacts(user.getUsername(), message).stream()
-                    .map(Contact::getInfo)
-                    .collect(Collectors.joining("\n"));
-        });
-        stateHandlers.put(ADD_GROUP, (user, message) -> {
-            String result = groupService.addGroup(user, message);
+    /**
+     * Регистрация состояний и их обработчиков
+     */
+    private void registerStatesHandlers() {
+        registerHandler(State.ADD_GROUP, (user, groupName) -> {
+            String result = groupService.addGroup(user, groupName);
             user.clearState();
             authenticationService.saveOrUpdateUser(user);
             return result;
         });
-        stateHandlers.put(EDIT_GROUP, (user, message) -> {
-            user.setGroupNameToEdit(message);
-            user.setState(EDIT_GROUP_FIELD);
+        registerHandler(State.EDIT_GROUP, (user, groupNameToEdit) -> {
+            if (!groupService.existsGroup(user, groupNameToEdit)) {
+                return messages.getMessageByKey("group.not-exists", groupNameToEdit);
+            }
+            user.setGroupNameToEdit(groupNameToEdit);
+            user.setState(State.EDIT_GROUP_FIELD);
             authenticationService.saveOrUpdateUser(user);
             return messages.getMessageByKey("group.state.edit.todo");
         });
-        stateHandlers.put(EDIT_GROUP_FIELD, (user, message) -> {
-            return switch (message.toLowerCase()) {
-                case GroupKind.NAME -> processFieldEdit(user, EDIT_GROUP_NAME, "group.state.edit.name");
-                case GroupKind.ADD_CONTACT -> processFieldEdit(user, EDIT_GROUP_ADD_CONTACT, "group.state.edit.contact.add");
-                case GroupKind.DELETE_CONTACT -> processFieldEdit(user, EDIT_GROUP_DELETE_CONTACT, "group.state.edit.contact.delete");
-                default -> messages.getMessageByKey("contact.state.edit.bad-argument");
-            };
+        registerHandler(State.EDIT_GROUP_FIELD, (user, field) -> {
+            switch (field.toLowerCase()) {
+                case GroupKind.NAME -> {
+                    return processEditGroup(user, State.EDIT_GROUP_NAME, "group.state.edit.name");
+                }
+                case GroupKind.ADD_CONTACT -> {
+                    return processEditGroup(user, State.EDIT_GROUP_ADD_CONTACT, "group.state.edit.contact.add");
+                }
+                case GroupKind.DELETE_CONTACT -> {
+                    return processEditGroup(user, State.EDIT_GROUP_DELETE_CONTACT, "group.state.edit.contact.delete");
+                }
+            }
+            return messages.getMessageByKey("argument.bad");
         });
-        List<State> editContactFieldsStates = List.of(EDIT_GROUP_NAME, EDIT_GROUP_ADD_CONTACT, EDIT_GROUP_DELETE_CONTACT);
-        editContactFieldsStates.forEach(state -> stateHandlers.put(state, (user, message) -> {
-            String result = groupService.editGroup(user, message);
+        List<State> editGroupFieldsStates = List.of(
+                State.EDIT_GROUP_NAME, State.EDIT_GROUP_ADD_CONTACT, State.EDIT_GROUP_DELETE_CONTACT
+        );
+        editGroupFieldsStates.forEach(state -> registerHandler(state, (user, newValue) -> {
+            String result = groupService.editGroup(user, newValue);
+            if (!result.equals(messages.getMessageByKey("group.successful-edit-name", user.getGroupNameToEdit()))) {
+                return result;
+            }
             user.clearState();
             authenticationService.saveOrUpdateUser(user);
             return result;
         }));
-        stateHandlers.put(DELETE_GROUP, (user, message) -> {
-            String result = groupService.deleteGroup(user, message);
-            if (result.equals(messages.getMessageByKey("group.successful-delete", message))) {
-                user.clearState();
-                authenticationService.saveOrUpdateUser(user);
+        registerHandler(State.DELETE_GROUP, (user, groupName) -> {
+            String result = groupService.deleteGroup(user, groupName);
+            if (!result.equals(messages.getMessageByKey("group.successful-delete", groupName))) {
+                return result;
             }
+            user.clearState();
+            authenticationService.saveOrUpdateUser(user);
             return result;
         });
     }
 
-    private String processFieldEdit(User user, State state, String messageKey) {
+    /**
+     * Изменение состояния группы
+     * @param user пользователь
+     * @param state состояние, сигнализирующее что нужно изменить у группы
+     * @param messageKey ключ сообщения успешного выполнения операции
+     * @return результат изменения группы
+     */
+    private String processEditGroup(User user, State state, String messageKey) {
         user.setState(state);
         authenticationService.saveOrUpdateUser(user);
         return messages.getMessageByKey(messageKey);
@@ -78,7 +100,7 @@ public class GroupStateProcessor extends BaseStateProcessor {
     /**
      * Класс, содержащий информацию о действиях, которые можно сделать с группой
      */
-    private static final class GroupKind {
+    private final class GroupKind {
 
         /**
          * Изменение названия группы
@@ -96,6 +118,5 @@ public class GroupStateProcessor extends BaseStateProcessor {
         public static final String DELETE_CONTACT = "3";
 
     }
-
 
 }

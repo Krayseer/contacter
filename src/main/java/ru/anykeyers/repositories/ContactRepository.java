@@ -13,14 +13,24 @@ public interface ContactRepository {
      * Существует ли контакт у пользователя
      * @param username имя пользователя
      * @param name имя контакта
+     * @return {@code true}, если существует, иначе {@code false}
      */
     boolean existsByUsernameAndName(String username, String name);
 
     /**
      * Получить все контакты пользователя
      * @param username имя пользователя
+     * @return список контактов пользователя
      */
     Set<Contact> findByUsername(String username);
+
+    /**
+     * Получить контакт пользователя по идентификатору
+     * @param username имя пользователя
+     * @param contactId идентификатор контакта
+     * @return контакт пользователя
+     */
+    Contact findByUsernameAndId(String username, String contactId);
 
     /**
      * Получить контакт пользователя по имени
@@ -39,7 +49,7 @@ public interface ContactRepository {
     Contact findByUsernameAndPhoneNumber(String username, String phoneNumber);
 
     /**
-     * Сохраняет или обновляет контакт
+     * Сохранить или обновить контакт
      * @param contact контакт для сохранения или обновления
      */
     void saveOrUpdate(Contact contact);

@@ -1,7 +1,7 @@
 package ru.anykeyers.bots;
 
 /**
- * Интерфейс, описывающий поведение ботов
+ * Интерфейс бота
  */
 public interface Bot {
 
@@ -12,15 +12,4 @@ public interface Bot {
      */
     void sendMessage(Long chatId, String message);
 
-    /**
-     * Обработать сообщение
-     * @param username имя пользователя, которому нужно обработать сообщение
-     * @param message сообщение
-     */
-    void receiveMessage(String username, String message);
-
-    /**
-     * Запуск бота
-     */
-    void start();
 }

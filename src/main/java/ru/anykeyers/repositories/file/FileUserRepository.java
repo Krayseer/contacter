@@ -1,54 +1,69 @@
 package ru.anykeyers.repositories.file;
 
+import ru.anykeyers.bots.BotType;
 import ru.anykeyers.domain.User;
-import ru.anykeyers.repositories.file.formatters.UserFormatter;
+import ru.anykeyers.repositories.file.parsers.FileObjectParser;
+import ru.anykeyers.repositories.file.parsers.FileUserParser;
 import ru.anykeyers.repositories.UserRepository;
-import ru.anykeyers.repositories.file.data.ObjectData;
-import ru.anykeyers.repositories.file.data.UserData;
+import ru.anykeyers.repositories.file.services.FileService;
+import ru.anykeyers.repositories.file.services.impl.FileServiceImpl;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Реализация файловой базы данных
+ * Реализация файловой базы данных для пользователей
  */
-public class FileUserRepository extends BaseFileRepository<User> implements UserRepository {
+public class FileUserRepository implements UserRepository {
+
+    private final Map<String, Set<User>> usersByUsername;
+
+    private final File dbFile;
+
+    private final FileService<User> fileService;
 
     public FileUserRepository(String userFilePath) {
-        super(userFilePath);
-        formatter = new UserFormatter();
+        dbFile = new File(userFilePath);
+        FileObjectParser<User> userFormatter = new FileUserParser();
+        fileService = new FileServiceImpl<>(userFormatter);
+        Collection<User> users = fileService.initDataFromFile(dbFile);
+        usersByUsername = users.stream()
+                .collect(Collectors.groupingBy(User::getUsername, Collectors.toSet()));
     }
 
     @Override
-    public boolean existsByUsername(String username) {
-        return getInfosByUsername().containsKey(username);
+    public boolean existsByUsernameAndBotType(String username, BotType botType) {
+        String userCompoundKey = generateCompoundUserKey(username, botType);
+        return usersByUsername.containsKey(userCompoundKey);
     }
 
     @Override
     public void saveOrUpdate(User user) {
-        Map<String, ObjectData<User>> infoByUsername = getInfosByUsername();
-        if (infoByUsername.get(user.getUsername()) == null) {
-            infoByUsername.put(user.getUsername(), new UserData());
-        }
-        UserData userInfo = (UserData) infoByUsername.get(user.getUsername());
-        userInfo.addData(user);
-        updateFile(infoByUsername);
+        usersByUsername.put(user.getUsername(), Collections.singleton(user));
+        fileService.saveOrUpdateFile(dbFile, usersByUsername);
     }
 
     @Override
-    public User getUserByUsername(String username) {
-        if (!existsByUsername(username)) {
+    public User getUserByUsernameAndBotType(String username, BotType botType) {
+        if (!existsByUsernameAndBotType(username, botType)) {
             return null;
         }
-        return (User) getInfosByUsername().get(username).getData();
+        String userCompoundKey = generateCompoundUserKey(username, botType);
+        Collection<User> singletonCollectionUser = usersByUsername.get(userCompoundKey);
+        return singletonCollectionUser.stream()
+                .findFirst()
+                .orElseThrow();
     }
 
-    private void updateFile(Map<String, ObjectData<User>> infoByUsername) {
-        List<String> resultLines = infoByUsername.values().stream()
-                .map(userInfo -> (User) userInfo.getData())
-                .map(formatter::format)
-                .collect(Collectors.toList());
-        saveOrUpdateFile(resultLines);
+    /**
+     * Сгенерировать составной ключ(username) для пользователя
+     * @param username имя пользователя
+     * @param botType тип бота
+     * @return составной ключ
+     */
+    private String generateCompoundUserKey(String username, BotType botType) {
+        return String.format("%s-%s", username, botType);
     }
 
 }

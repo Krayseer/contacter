@@ -23,6 +23,8 @@ public class ApplicationProperties {
 
     /**
      * Получить настройку из файла по ключу
+     * @param key ключ, по которому нужно получить настройку
+     * @return настройка
      */
     public String getSetting(String key) {
         return properties.getProperty(key);

@@ -11,8 +11,8 @@ public class ContacterApplication {
      * Запуск приложения
      */
     public void start() {
-        BotFactory receiverFactory = new BotFactory();
-        receiverFactory.startBots();
+        BotFactory botsFactory = new BotFactory();
+        botsFactory.startBots();
     }
 
 }

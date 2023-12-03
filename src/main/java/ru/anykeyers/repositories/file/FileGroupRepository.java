@@ -2,49 +2,59 @@ package ru.anykeyers.repositories.file;
 
 import ru.anykeyers.domain.Contact;
 import ru.anykeyers.domain.Group;
-import ru.anykeyers.repositories.file.formatters.GroupFormatter;
+import ru.anykeyers.repositories.ContactRepository;
+import ru.anykeyers.repositories.file.parsers.FileGroupParser;
 import ru.anykeyers.repositories.GroupRepository;
-import ru.anykeyers.repositories.file.data.GroupData;
-import ru.anykeyers.repositories.file.data.ObjectData;
+import ru.anykeyers.repositories.file.parsers.FileObjectParser;
+import ru.anykeyers.repositories.file.services.FileService;
+import ru.anykeyers.repositories.file.services.impl.FileServiceImpl;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Реализация файловой базы данных
+ * Реализация файловой базы данных для групп
  */
-public class FileGroupRepository extends BaseFileRepository<Group> implements GroupRepository {
+public class FileGroupRepository implements GroupRepository {
 
-    public FileGroupRepository(String groupFilePath) {
-        super(groupFilePath);
-        formatter = new GroupFormatter();
+    private final Map<String, Set<Group>> groupsByUsername;
+
+    private final File dbFile;
+
+    private final FileService<Group> fileService;
+
+    public FileGroupRepository(String groupFilePath,
+                               ContactRepository contactRepository) {
+        dbFile = new File(groupFilePath);
+        FileObjectParser<Group> groupFormatter = new FileGroupParser(contactRepository);
+        fileService = new FileServiceImpl<>(groupFormatter);
+        Collection<Group> groups = fileService.initDataFromFile(dbFile);
+        groupsByUsername = groups.stream()
+                .collect(Collectors.groupingBy(Group::getUsername, Collectors.toSet()));
     }
 
     @Override
     public boolean existsByUsernameAndName(String username, String name) {
-        return findByUsername(username).stream()
+        Set<Group> groups = findByUsername(username);
+        if (groups == null) {
+            return false;
+        }
+        return groups.stream()
                 .map(Group::getName)
-                .anyMatch(groupName -> groupName.equalsIgnoreCase(name));
+                .anyMatch(groupName -> groupName.equals(name));
     }
 
     @Override
     public Set<Group> findByUsername(String username) {
-        Map<String, ObjectData<Group>> infoByUsername = getInfosByUsername();
-        if (infoByUsername.get(username) == null) {
-            infoByUsername.put(username, new GroupData());
-        }
-        ObjectData<Group> groups = infoByUsername.get(username);
-        if (groups == null) {
-            return null;
-        }
-        return (Set<Group>) groups.getData();
+        return groupsByUsername.get(username);
     }
 
     @Override
-    public Group findByUsernameAndName(String username, String nameGroupToFind) {
-        for (Group userGroup : findByUsername(username)) {
-            if (userGroup.getName().equals(nameGroupToFind)) {
-                return userGroup;
+    public Group findByUsernameAndName(String username, String groupName) {
+        for (Group group : findByUsername(username)) {
+            if (group.getName() != null && group.getName().equals(groupName)) {
+                return group;
             }
         }
         return null;
@@ -53,9 +63,12 @@ public class FileGroupRepository extends BaseFileRepository<Group> implements Gr
     @Override
     public Contact findContactInGroupByName(Group group, String contactName) {
         Set<Contact> groupContacts = group.getContacts();
-        for (Contact groupContact : groupContacts) {
-            if (groupContact.getName().equals(contactName)) {
-                return groupContact;
+        if (groupContacts == null) {
+            return null;
+        }
+        for (Contact contact : groupContacts) {
+            if (contact.getName() != null && contact.getName().equals(contactName)) {
+                return contact;
             }
         }
         return null;
@@ -63,30 +76,20 @@ public class FileGroupRepository extends BaseFileRepository<Group> implements Gr
 
     @Override
     public void saveOrUpdate(Group group) {
-        Map<String, ObjectData<Group>> groupsByUsername = getInfosByUsername();
-        if (groupsByUsername.get(group.getUsername()) == null) {
-            groupsByUsername.put(group.getUsername(), new GroupData());
+        if (!groupsByUsername.containsKey(group.getUsername())) {
+            groupsByUsername.put(group.getUsername(), new HashSet<>());
         }
-        ObjectData<Group> groupData = groupsByUsername.get(group.getUsername());
-        groupData.addData(group);
-        updateFile(groupsByUsername);
+        groupsByUsername.get(group.getUsername()).removeIf(g -> g.getId().equals(group.getId()));
+        Collection<Group> groups = groupsByUsername.get(group.getUsername());
+        groups.add(group);
+        fileService.saveOrUpdateFile(dbFile, groupsByUsername);
     }
 
     @Override
     public void delete(Group group) {
-        Map<String, ObjectData<Group>> infoByUsername = getInfosByUsername();
-        GroupData contactInfo = (GroupData) infoByUsername.get(group.getUsername());
-        contactInfo.removeData(group);
-        updateFile(infoByUsername);
-    }
-
-    private void updateFile(Map<String, ObjectData<Group>> infoByUsername) {
-        List<String> resultLines = infoByUsername.values().stream()
-                .map(userInfo -> (Set<Group>) userInfo.getData())
-                .flatMap(Collection::stream)
-                .map(formatter::format)
-                .collect(Collectors.toList());
-        saveOrUpdateFile(resultLines);
+        Collection<Group> contacts = groupsByUsername.get(group.getUsername());
+        contacts.remove(group);
+        fileService.saveOrUpdateFile(dbFile, groupsByUsername);
     }
 
 }

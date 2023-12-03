@@ -1,21 +1,19 @@
 package ru.anykeyers.services;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.junit.MockitoRule;
+import ru.anykeyers.bots.BotType;
 import ru.anykeyers.domain.User;
 import ru.anykeyers.repositories.UserRepository;
-
-import javax.inject.Inject;
-
-import static org.junit.Assert.*;
+import ru.anykeyers.services.impl.AuthenticationServiceImpl;
 
 /**
- * Тесты для класса {@link AuthenticationService}
+ * Тесты для сервиса {@link AuthenticationService}
  */
 @RunWith(MockitoJUnitRunner.class)
 public class AuthenticationServiceTest {
@@ -24,32 +22,39 @@ public class AuthenticationServiceTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private AuthenticationService authenticationService;
+    private AuthenticationServiceImpl authenticationService;
 
     /**
      * Тестирование получения экземпляра {@link User} по username
      */
     @Test
-    public void getUserByUsername() {
-        String username = "testUser";
-        User expectedUser = new User(username);
-        Mockito.when(userRepository.getUserByUsername(username)).thenReturn(expectedUser);
+    public void getUserByUsernameTest() {
+        // Подготовка
+        User expectedUser = new User("testUser", BotType.CONSOLE);
 
-        User actualUser = authenticationService.getUserByUsername(username);
+        // Действие
+        Mockito.when(userRepository.getUserByUsernameAndBotType(expectedUser.getUsername(), expectedUser.getBotType()))
+                .thenReturn(expectedUser);
+        User actualUser = authenticationService.getUserByUsernameAndBotType(expectedUser.getUsername(), expectedUser.getBotType());
 
-        assertEquals(expectedUser, actualUser);
-        Mockito.verify(userRepository, Mockito.times(1)).getUserByUsername(username);
+        // Проверка
+        Assert.assertEquals(expectedUser, actualUser);
+        Mockito.verify(userRepository, Mockito.times(1))
+                .getUserByUsernameAndBotType(expectedUser.getUsername(), expectedUser.getBotType());
     }
 
     /**
      * Тестирование сохранения пользователя
      */
     @Test
-    public void saveOrUpdateUser() {
+    public void saveOrUpdateUserTest() {
+        // Подготовка
         User user = new User("testUser");
 
+        // Действие
         authenticationService.saveOrUpdateUser(user);
 
+        // Проверка
         Mockito.verify(userRepository, Mockito.times(1)).saveOrUpdate(user);
     }
 
@@ -57,19 +62,22 @@ public class AuthenticationServiceTest {
      * Проверить существование пользователя
      */
     @Test
-    public void existsUser() {
+    public void existsUserTest() {
+        // Подготовка
         String existingUsername = "existingUser";
         String nonExistingUsername = "nonExistingUser";
-        Mockito.when(userRepository.existsByUsername(existingUsername)).thenReturn(true);
-        Mockito.when(userRepository.existsByUsername(nonExistingUsername)).thenReturn(false);
+        Mockito.when(userRepository.existsByUsernameAndBotType(existingUsername, BotType.CONSOLE)).thenReturn(true);
+        Mockito.when(userRepository.existsByUsernameAndBotType(nonExistingUsername, BotType.CONSOLE)).thenReturn(false);
 
-        boolean existingUserExists = authenticationService.existsUser(existingUsername);
-        boolean nonExistingUserExists = authenticationService.existsUser(nonExistingUsername);
+        // Действие
+        boolean existingUserExists = authenticationService.existsUserByUsernameAndBotType(existingUsername, BotType.CONSOLE);
+        boolean nonExistingUserExists = authenticationService.existsUserByUsernameAndBotType(nonExistingUsername, BotType.CONSOLE);
 
-        assertTrue(existingUserExists);
-        assertFalse(nonExistingUserExists);
-        Mockito.verify(userRepository, Mockito.times(1)).existsByUsername(existingUsername);
-        Mockito.verify(userRepository, Mockito.times(1)).existsByUsername(nonExistingUsername);
+        // Проверка
+        Assert.assertTrue(existingUserExists);
+        Assert.assertFalse(nonExistingUserExists);
+        Mockito.verify(userRepository, Mockito.times(1)).existsByUsernameAndBotType(existingUsername, BotType.CONSOLE);
+        Mockito.verify(userRepository, Mockito.times(1)).existsByUsernameAndBotType(nonExistingUsername, BotType.CONSOLE);
     }
 
 }

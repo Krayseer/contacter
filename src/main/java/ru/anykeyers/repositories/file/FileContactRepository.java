@@ -1,48 +1,64 @@
 package ru.anykeyers.repositories.file;
 
 import ru.anykeyers.domain.Contact;
-import ru.anykeyers.repositories.file.formatters.ContactFormatter;
+import ru.anykeyers.repositories.file.parsers.FileContactParser;
 import ru.anykeyers.repositories.ContactRepository;
-import ru.anykeyers.repositories.file.data.ContactData;
-import ru.anykeyers.repositories.file.data.ObjectData;
+import ru.anykeyers.repositories.file.services.FileService;
+import ru.anykeyers.repositories.file.services.impl.FileServiceImpl;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * Реализация файловой базы данных для контактов
  */
-public class FileContactRepository extends BaseFileRepository<Contact> implements ContactRepository {
+public class FileContactRepository implements ContactRepository {
+
+    private final Map<String, Set<Contact>> contactsByUsername;
+
+    private final File dbFile;
+
+    private final FileService<Contact> fileService;
 
     public FileContactRepository(String contactFilePath) {
-        super(contactFilePath);
-        formatter = new ContactFormatter();
+        dbFile = new File(contactFilePath);
+        fileService = new FileServiceImpl<>(new FileContactParser());
+        Collection<Contact> contacts = fileService.initDataFromFile(dbFile);
+        contactsByUsername = contacts.stream()
+                .collect(Collectors.groupingBy(Contact::getUsername, Collectors.toSet()));
     }
 
     @Override
     public boolean existsByUsernameAndName(String username, String name) {
-        return findByUsername(username).stream()
+        Set<Contact> contacts = findByUsername(username);
+        if (contacts == null) {
+            return false;
+        }
+        return contacts.stream()
                 .map(Contact::getName)
-                .anyMatch(contactName -> contactName.equalsIgnoreCase(name));
+                .anyMatch(contactName -> contactName.equals(name));
     }
 
     @Override
     public Set<Contact> findByUsername(String username) {
-        Map<String, ObjectData<Contact>> infoByUsername = getInfosByUsername();
-        if (infoByUsername.get(username) == null) {
-            infoByUsername.put(username, new ContactData());
+        return contactsByUsername.get(username);
+    }
+
+    @Override
+    public Contact findByUsernameAndId(String username, String contactId) {
+        for (Contact contact : findByUsername(username)) {
+            if (contact.getId() != null && contact.getId().equals(contactId)) {
+                return contact;
+            }
         }
-        ObjectData<Contact> contacts = infoByUsername.get(username);
-        if (contacts == null) {
-            return null;
-        }
-        return (Set<Contact>) contacts.getData();
+        return null;
     }
 
     @Override
     public Contact findByUsernameAndName(String username, String name) {
         for (Contact contact : findByUsername(username)) {
-            if (contact.getName().equals(name)) {
+            if (contact.getName() != null && contact.getName().equals(name)) {
                 return contact;
             }
         }
@@ -61,30 +77,20 @@ public class FileContactRepository extends BaseFileRepository<Contact> implement
 
     @Override
     public void saveOrUpdate(Contact contact) {
-        Map<String, ObjectData<Contact>> infoByUsername = getInfosByUsername();
-        if (infoByUsername.get(contact.getUsername()) == null) {
-            infoByUsername.put(contact.getUsername(), new ContactData());
+        if (!contactsByUsername.containsKey(contact.getUsername())) {
+            contactsByUsername.put(contact.getUsername(), new HashSet<>());
         }
-        ContactData contactInfo = (ContactData) infoByUsername.get(contact.getUsername());
-        contactInfo.addData(contact);
-        updateFile(infoByUsername);
+        contactsByUsername.get(contact.getUsername()).removeIf(c -> c.getId().equals(contact.getId()));
+        Set<Contact> contacts = contactsByUsername.get(contact.getUsername());
+        contacts.add(contact);
+        fileService.saveOrUpdateFile(dbFile, contactsByUsername);
     }
 
     @Override
     public void delete(Contact contact) {
-        Map<String, ObjectData<Contact>> infoByUsername = getInfosByUsername();
-        ContactData contactInfo = (ContactData) infoByUsername.get(contact.getUsername());
-        contactInfo.removeData(contact);
-        updateFile(infoByUsername);
-    }
-
-    private void updateFile(Map<String, ObjectData<Contact>> infoByUsername) {
-        List<String> resultLines = infoByUsername.values().stream()
-                .map(userInfo -> (Set<Contact>) userInfo.getData())
-                .flatMap(Collection::stream)
-                .map(formatter::format)
-                .collect(Collectors.toList());
-        saveOrUpdateFile(resultLines);
+        Set<Contact> contacts = contactsByUsername.get(contact.getUsername());
+        contacts.remove(contact);
+        fileService.saveOrUpdateFile(dbFile, contactsByUsername);
     }
 
 }

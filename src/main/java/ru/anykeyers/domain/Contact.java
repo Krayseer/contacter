@@ -4,12 +4,18 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Сущность контакта
+ * Контакт
  */
 public class Contact {
 
+    /**
+     * Идентификатор контакта
+     */
     private String id;
 
+    /**
+     * Имя пользователя, которому принадлежит контакт
+     */
     private String username;
 
     /**
@@ -22,18 +28,14 @@ public class Contact {
      */
     private String phoneNumber;
 
+    public Contact(String username) {
+        this.username = username;
+    }
+
     public Contact(String username, String name) {
         this.id = UUID.randomUUID().toString();
         this.username = username;
         this.name = name;
-        this.phoneNumber = "";
-    }
-
-    public Contact(String username, String id, String name, String phoneNumber) {
-        this.id = id;
-        this.username = username;
-        this.name = name;
-        this.phoneNumber = phoneNumber;
     }
 
     public String getId() {
@@ -72,16 +74,14 @@ public class Contact {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Contact contact)) return false;
-        return Objects.equals(name, contact.getName()) && Objects.equals(phoneNumber, contact.getPhoneNumber());
-    }
-
-    public String getInfo() {
-        return String.format("Имя: %s. Номер телефона: %s.", name, phoneNumber);
+        return Objects.equals(id, contact.getId())
+                && Objects.equals(username, contact.getUsername())
+                && Objects.equals(name, contact.getName())
+                && Objects.equals(phoneNumber, contact.getPhoneNumber());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, phoneNumber);
+        return Objects.hash(id, username, name, phoneNumber);
     }
-
 }
