@@ -49,8 +49,7 @@ public class ContactStateProcessorTest {
         Assert.assertEquals(message, result);
         Assert.assertEquals(State.NONE, user.getState());
         Assert.assertEquals(StateType.NONE, user.getStateType());
-        Assert.assertNull(user.getContactNameToEdit());
-        Assert.assertNull(user.getGroupNameToEdit());
+        Assert.assertNull(user.getEditInfo());
         Mockito.verify(authenticationService, Mockito.times(1)).saveOrUpdateUser(user);
     }
 
@@ -81,9 +80,9 @@ public class ContactStateProcessorTest {
         String existsContactEditResult = contactStateProcessor.processState(user, contactName);
 
         // Проверка: обработка состояния изменения существующего контакта
-        Assert.assertEquals("Введите поле, которое вы хотите изменить: \n1. имя\n2. номер", existsContactEditResult);
+        Assert.assertEquals("Введите поле, которое вы хотите изменить: \n1. Имя\n2. Номер\n3. Возраст\n4. Пол\n5. Блокировка", existsContactEditResult);
         Assert.assertEquals(State.EDIT_CONTACT_FIELD, user.getState());
-        Assert.assertEquals(contactName, user.getContactNameToEdit());
+        Assert.assertEquals(contactName, user.getEditInfo());
         Mockito.verify(authenticationService, Mockito.times(1)).saveOrUpdateUser(user);
     }
 
@@ -101,7 +100,7 @@ public class ContactStateProcessorTest {
         User user = new User("testUser");
         String contactName = "testContact";
         user.setState(State.EDIT_CONTACT_FIELD);
-        user.setContactNameToEdit(contactName);
+        user.setEditInfo(contactName);
 
         // Действие: обработка некорректного аргумента при изменении контакта
         String invalidArgumentProcess = contactStateProcessor.processState(user, "111111");
@@ -144,7 +143,7 @@ public class ContactStateProcessorTest {
             User user = new User("testUser");
             String contactName = "testContact";
             user.setState(editFieldStates.get(i));
-            user.setContactNameToEdit(contactName);
+            user.setEditInfo(contactName);
             String message = "Контакт 'testContact' успешно изменен";
 
             // Действие
@@ -155,8 +154,7 @@ public class ContactStateProcessorTest {
             Assert.assertEquals(message, result);
             Assert.assertEquals(State.NONE, user.getState());
             Assert.assertEquals(StateType.NONE, user.getStateType());
-            Assert.assertNull(user.getContactNameToEdit());
-            Assert.assertNull(user.getGroupNameToEdit());
+            Assert.assertNull(user.getEditInfo());
             Mockito.verify(authenticationService, Mockito.times(i + 1)).saveOrUpdateUser(user);
         }
     }
@@ -180,8 +178,7 @@ public class ContactStateProcessorTest {
         Assert.assertEquals(message, result);
         Assert.assertEquals(State.NONE, user.getState());
         Assert.assertEquals(StateType.NONE, user.getStateType());
-        Assert.assertNull(user.getContactNameToEdit());
-        Assert.assertNull(user.getGroupNameToEdit());
+        Assert.assertNull(user.getEditInfo());
         Mockito.verify(authenticationService, Mockito.times(1)).saveOrUpdateUser(user);
     }
 

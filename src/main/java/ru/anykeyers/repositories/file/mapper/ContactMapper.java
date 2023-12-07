@@ -1,6 +1,9 @@
 package ru.anykeyers.repositories.file.mapper;
 
 import ru.anykeyers.domain.Contact;
+import ru.anykeyers.domain.Gender;
+
+import java.util.Objects;
 
 /**
  * Парсер для контактов
@@ -11,9 +14,12 @@ public class ContactMapper implements Mapper<Contact> {
     public String format(Contact object) {
         StringBuilder builder = new StringBuilder();
         builder.append(object.getUsername())
-                .append(":id=").append(object.getId())
-                .append(";name=").append(object.getName())
-                .append(";phone_number=").append(object.getPhoneNumber());
+                .append(":id=").append(object.getId() == null ? "" : object.getId())
+                .append(";name=").append(object.getName() == null ? "" : object.getName())
+                .append(";phone_number=").append(object.getPhoneNumber() == null ? "" : object.getPhoneNumber())
+                .append(";age=").append(object.getAge() == 0 ? "" : object.getAge())
+                .append(";gender=").append(object.getGender() == null ? "" : object.getGender())
+                .append(";block=").append(object.isBlock());
         return builder.toString();
     }
 
@@ -38,6 +44,16 @@ public class ContactMapper implements Mapper<Contact> {
                 case "phone_number":
                     contact.setPhoneNumber(value);
                     break;
+                case "age":
+                    contact.setAge(value == null ? 0 : Integer.parseInt(value));
+                    break;
+                case "gender":
+                    contact.setGender(value == null ? null : Gender.valueOf(value));
+                    break;
+                case "block":
+                    contact.setBlock(Objects.equals(value, "true"));
+                    break;
+
             }
         }
         return contact;

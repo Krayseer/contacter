@@ -4,6 +4,7 @@ import ru.anykeyers.contexts.Messages;
 import ru.anykeyers.processors.states.BaseStateProcessor;
 import ru.anykeyers.processors.states.domain.State;
 import ru.anykeyers.domain.User;
+import ru.anykeyers.domain.kinds.contact.ContactEditKind;
 import ru.anykeyers.services.AuthenticationService;
 import ru.anykeyers.services.ContactService;
 
@@ -42,26 +43,38 @@ public class ContactStateProcessor extends BaseStateProcessor {
             if (!contactService.existsContact(user, contactNameToEdit)) {
                 return messages.getMessageByKey("contact.not-exists", contactNameToEdit);
             }
-            user.setContactNameToEdit(contactNameToEdit);
+            user.setEditInfo(contactNameToEdit);
             user.setState(State.EDIT_CONTACT_FIELD);
             authenticationService.saveOrUpdateUser(user);
             return messages.getMessageByKey("contact.state.edit.field");
         });
         registerHandler(State.EDIT_CONTACT_FIELD, (user, field) -> {
             switch (field.toLowerCase()) {
-                case ContactEditField.NAME -> {
+                case ContactEditKind.NAME -> {
                     return processEditContact(user, State.EDIT_CONTACT_NAME, "contact.state.edit.name");
                 }
-                case ContactEditField.PHONE -> {
+                case ContactEditKind.PHONE -> {
                     return processEditContact(user, State.EDIT_CONTACT_PHONE, "contact.state.edit.phone");
                 }
+                case ContactEditKind.AGE -> {
+                    return processEditContact(user, State.EDIT_CONTACT_AGE, "contact.state.edit.age");
+                }
+                case ContactEditKind.GENDER -> {
+                    return processEditContact(user, State.EDIT_CONTACT_GENDER, "contact.state.edit.gender");
+                }
+                case ContactEditKind.BLOCK -> {
+                    return processEditContact(user, State.EDIT_CONTACT_BLOCK, "contact.state.edit.block");
+                }
             }
-            return messages.getMessageByKey("argument.bad");
+            return messages.getMessageByKey("commons.bad-argument");
         });
-        List<State> editContactFieldsStates = List.of(State.EDIT_CONTACT_NAME, State.EDIT_CONTACT_PHONE);
+        List<State> editContactFieldsStates = List.of(
+                State.EDIT_CONTACT_NAME, State.EDIT_CONTACT_PHONE, State.EDIT_CONTACT_AGE,
+                State.EDIT_CONTACT_GENDER, State.EDIT_CONTACT_BLOCK, State.EDIT_CONTACT_UNBLOCK
+        );
         editContactFieldsStates.forEach(state -> registerHandler(state, (user, newValue) -> {
             String result = contactService.editContact(user, newValue);
-            if (!result.equals(messages.getMessageByKey("contact.successful-edit-name", user.getContactNameToEdit()))) {
+            if (!result.equals(messages.getMessageByKey("contact.successful-edit-name", user.getEditInfo()))) {
                 return result;
             }
             user.clearState();
@@ -90,23 +103,6 @@ public class ContactStateProcessor extends BaseStateProcessor {
         user.setState(state);
         authenticationService.saveOrUpdateUser(user);
         return messages.getMessageByKey(messageKey);
-    }
-
-    /**
-     * Класс, содержащий информацию о действиях, которые можно сделать с контактом
-     */
-    private final class ContactEditField {
-
-        /**
-         * Изменение имени
-         */
-        public final static String NAME = "1";
-
-        /**
-         * Изменение номера телефона
-         */
-        public final static String PHONE = "2";
-
     }
 
 }

@@ -91,6 +91,13 @@ public class Group {
         return contacts.remove(contact);
     }
 
+    /**
+     * Получить информацию по группе
+     */
+    public String getInfo() {
+        return String.format("Название: %s. Количество участников: %s.", name, contacts == null ? 0 : contacts.size());
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

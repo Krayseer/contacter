@@ -33,6 +33,7 @@ public class CommandProcessor {
         registerCommonCommands();
         registerContactCommands();
         registerGroupCommands();
+        registerFunctionCommands();
     }
 
     /**
@@ -71,6 +72,18 @@ public class CommandProcessor {
                 registerCommand(user, State.EDIT_GROUP, StateType.GROUP, "group.state.edit"));
         commandHandlers.put(Command.DELETE_GROUP_COMMAND, (user) ->
                 registerCommand(user, State.DELETE_GROUP, StateType.GROUP, "group.state.delete"));
+    }
+
+    /**
+     * Регистрация команд, связанных с получением обработанных данных (поиск, сортировка, фильтрация)
+     */
+    private void registerFunctionCommands() {
+        commandHandlers.put(Command.SEARCH_COMMAND, (user) ->
+                registerCommand(user, State.SEARCH_KIND, StateType.FUNCTION, "search.kind"));
+        commandHandlers.put(Command.FILTER_COMMAND, (user) ->
+                registerCommand(user, State.FILTER_KIND, StateType.FUNCTION, "filter.kind"));
+        commandHandlers.put(Command.SORT_COMMAND, (user) ->
+                registerCommand(user, State.SORT_KIND, StateType.FUNCTION, "sort.kind"));
     }
 
     /**

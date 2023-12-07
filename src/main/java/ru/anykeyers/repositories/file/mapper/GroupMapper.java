@@ -24,7 +24,7 @@ public class GroupMapper implements Mapper<Group> {
                 .append(":id=").append(object.getId())
                 .append(";name=").append(object.getName())
                 .append(";contacts=").append(object.getContacts() == null
-                        ? null
+                        ? ""
                         : object.getContacts()
                         .stream()
                         .map(Contact::getId)

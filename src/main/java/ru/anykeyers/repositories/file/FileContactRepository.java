@@ -47,6 +47,10 @@ public class FileContactRepository implements ContactRepository {
 
     @Override
     public Contact findByUsernameAndId(String username, String contactId) {
+        Set<Contact> contacts = findByUsername(username);
+        if (contacts == null) {
+            return null;
+        }
         for (Contact contact : findByUsername(username)) {
             if (contact.getId() != null && contact.getId().equals(contactId)) {
                 return contact;
@@ -57,7 +61,11 @@ public class FileContactRepository implements ContactRepository {
 
     @Override
     public Contact findByUsernameAndName(String username, String name) {
-        for (Contact contact : findByUsername(username)) {
+        Set<Contact> contacts = findByUsername(username);
+        if (contacts == null) {
+            return null;
+        }
+        for (Contact contact : contacts) {
             if (contact.getName() != null && contact.getName().equals(name)) {
                 return contact;
             }
@@ -67,7 +75,11 @@ public class FileContactRepository implements ContactRepository {
 
     @Override
     public Contact findByUsernameAndPhoneNumber(String username, String phoneNumber) {
-        for (Contact contact : findByUsername(username)) {
+        Set<Contact> contacts = findByUsername(username);
+        if (contacts == null) {
+            return null;
+        }
+        for (Contact contact : contacts) {
             if (contact.getPhoneNumber() != null && contact.getPhoneNumber().equals(phoneNumber)) {
                 return contact;
             }
@@ -87,7 +99,10 @@ public class FileContactRepository implements ContactRepository {
 
     @Override
     public void delete(Contact contact) {
-        Set<Contact> contacts = contactsByUsername.get(contact.getUsername());
+        Set<Contact> contacts = findByUsername(contact.getUsername());
+        if (contacts == null) {
+            return;
+        }
         contacts.remove(contact);
         fileService.saveOrUpdateFile(dbFile, contactsByUsername);
     }

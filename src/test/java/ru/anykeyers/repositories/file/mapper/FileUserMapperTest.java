@@ -29,7 +29,7 @@ public class FileUserMapperTest {
 
         // Проверка
         String expectedResult = "testUser-TELEGRAM_BOT:state_type=NONE;state=NONE;bot_type=TELEGRAM_BOT;" +
-            "edit_contact_name=null;edit_group_name=null;chat_id=null";
+            "edit_info=null;chat_id=null";
         Assert.assertEquals(expectedResult, formattedUser);
     }
 

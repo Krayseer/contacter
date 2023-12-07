@@ -5,6 +5,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import ru.anykeyers.domain.Contact;
+import ru.anykeyers.domain.Gender;
 import ru.anykeyers.domain.User;
 import ru.anykeyers.repositories.ContactRepository;
 
@@ -114,13 +115,17 @@ public class FileContactRepositoryTest {
     public void saveOrUpdateContactTest() throws IOException {
         // Подготовка
         Contact contact = new Contact(user.getUsername(), "Ivan Ivanov");
+        contact.setPhoneNumber("79999");
+        contact.setAge(12);
+        contact.setGender(Gender.MAN);
+        contact.setBlock(true);
 
         // Действие
         contactRepository.saveOrUpdate(contact);
 
         // Проверка
         List<String> actualFileLines = FileUtils.readLines(tempDbFile, StandardCharsets.UTF_8);
-        String expectedFileLines = String.format("user:id=%s;name=Ivan Ivanov;phone_number=null", contact.getId());
+        String expectedFileLines = String.format("user:id=%s;name=Ivan Ivanov;phone_number=79999;age=12;gender=MAN;block=true", contact.getId());
         Assert.assertEquals(List.of(expectedFileLines), actualFileLines);
     }
 

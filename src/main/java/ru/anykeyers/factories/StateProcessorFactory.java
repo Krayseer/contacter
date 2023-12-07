@@ -2,16 +2,14 @@ package ru.anykeyers.factories;
 
 import ru.anykeyers.contexts.Messages;
 import ru.anykeyers.processors.states.impl.ContactStateProcessor;
+import ru.anykeyers.processors.states.impl.FunctionalStateProcessor;
 import ru.anykeyers.processors.states.impl.GroupStateProcessor;
 import ru.anykeyers.processors.states.StateProcessor;
 import ru.anykeyers.processors.states.domain.StateType;
 import ru.anykeyers.repositories.ContactRepository;
 import ru.anykeyers.repositories.GroupRepository;
-import ru.anykeyers.services.AuthenticationService;
-import ru.anykeyers.services.ContactService;
-import ru.anykeyers.services.GroupService;
-import ru.anykeyers.services.impl.ContactServiceImpl;
-import ru.anykeyers.services.impl.GroupServiceImpl;
+import ru.anykeyers.services.*;
+import ru.anykeyers.services.impl.*;
 
 /**
  * Фабрика по созданию обработчиков состояний
@@ -47,6 +45,14 @@ public class StateProcessorFactory {
                 ContactRepository contactRepository = repositoryFactory.createContactRepository();
                 GroupService groupService = new GroupServiceImpl(groupRepository, contactRepository);
                 return new GroupStateProcessor(authenticationService, groupService);
+            }
+            case FUNCTION -> {
+                GroupRepository groupRepository = repositoryFactory.createGroupRepository();
+                ContactRepository contactRepository = repositoryFactory.createContactRepository();
+                SearchService searchService = new SearchServiceImpl(contactRepository, groupRepository);
+                FilterService filterService = new FilterServiceImpl(contactRepository);
+                SortService sortService = new SortServiceImpl(contactRepository);
+                return new FunctionalStateProcessor(authenticationService, searchService, filterService, sortService);
             }
             default -> {
                 String errorMessage = messages.getMessageByKey("state.type.not-exists");

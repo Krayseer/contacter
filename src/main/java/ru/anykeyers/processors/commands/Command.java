@@ -13,6 +13,10 @@ public enum Command {
     EDIT_GROUP_COMMAND("/edit_group", "Изменить состояние группы"),
     DELETE_GROUP_COMMAND("/delete_group", "Удалить группу"),
 
+    SEARCH_COMMAND("/search", "Поиск по контактам и группам"),
+    FILTER_COMMAND("/filter", "Фильтрация контактов"),
+    SORT_COMMAND("/sort", "Сортировка контактов"),
+
     HELP_COMMAND("/help", "Показать возможные комманды");
 
     /**

@@ -77,8 +77,8 @@ public class ContactServiceTest {
         // Действие: изменение имени контакта
         user.setState(State.EDIT_CONTACT_NAME);
         String newValue = "newName";
-        user.setContactNameToEdit(contact.getName());
-        Mockito.when(contactRepository.findByUsernameAndName(user.getUsername(), user.getContactNameToEdit())).thenReturn(contact);
+        user.setEditInfo(contact.getName());
+        Mockito.when(contactRepository.findByUsernameAndName(user.getUsername(), user.getEditInfo())).thenReturn(contact);
         String editNameResult = contactService.editContact(user, newValue);
 
         // Проверка: изменение имени контакта
@@ -89,8 +89,8 @@ public class ContactServiceTest {
         // Действие: изменение номера телефона контакта
         user.setState(State.EDIT_CONTACT_PHONE);
         String newPhoneNumber = "123123123";
-        user.setContactNameToEdit(contact.getName());
-        Mockito.when(contactRepository.findByUsernameAndName(user.getUsername(), user.getContactNameToEdit())).thenReturn(contact);
+        user.setEditInfo(contact.getName());
+        Mockito.when(contactRepository.findByUsernameAndName(user.getUsername(), user.getEditInfo())).thenReturn(contact);
         String editPhoneNumberResult = contactService.editContact(user, newPhoneNumber);
 
         // Проверка: изменение номера телефона контакта

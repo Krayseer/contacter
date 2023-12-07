@@ -17,8 +17,7 @@ public class UserMapper implements Mapper<User> {
                 .append(":state_type=").append(object.getStateType())
                 .append(";state=").append(object.getState())
                 .append(";bot_type=").append(object.getBotType())
-                .append(";edit_contact_name=").append(object.getContactNameToEdit())
-                .append(";edit_group_name=").append(object.getGroupNameToEdit())
+                .append(";edit_info=").append(object.getEditInfo())
                 .append(";chat_id=").append(object.getChatId());
         return builder.toString();
     }
@@ -44,17 +43,11 @@ public class UserMapper implements Mapper<User> {
                 case "bot_type":
                     user.setBotType(BotType.valueOf(value));
                     break;
-                case "edit_contact_name":
+                case "edit_info":
                     if (value == null || value.equals("null")) {
                         break;
                     }
-                    user.setContactNameToEdit(value);
-                    break;
-                case "edit_group_name":
-                    if (value == null || value.equals("null")) {
-                        break;
-                    }
-                    user.setGroupNameToEdit(value);
+                    user.setEditInfo(value);
                     break;
                 case "chat_id":
                     if (value == null || value.equals("null")) {
