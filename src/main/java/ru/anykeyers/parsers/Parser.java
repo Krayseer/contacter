@@ -3,7 +3,7 @@ package ru.anykeyers.parsers;
 /**
  * Интерфейс, описывающий функционал парсеров
  */
-public interface Parseable {
+public interface Parser {
 
     /**
      * Распарсить контакты в файл импорта

@@ -2,46 +2,49 @@ package ru.anykeyers.parsers.txt;
 
 import org.apache.commons.io.FileUtils;
 import ru.anykeyers.domain.Contact;
-import ru.anykeyers.parsers.BaseParser;
+import ru.anykeyers.parsers.Parser;
 import ru.anykeyers.repositories.ContactRepository;
+import ru.anykeyers.repositories.file.parsers.FileContactParser;
+import ru.anykeyers.repositories.file.parsers.FileObjectParser;
+import ru.anykeyers.repositories.file.services.FileService;
+import ru.anykeyers.repositories.file.services.impl.FileServiceImpl;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
  * Парсер TXT файлов
  */
-public class TxtParser extends BaseParser {
+public class TxtParser implements Parser {
+
+    FileObjectParser<Contact> contactParser;
+
+    private final ContactRepository contactRepository;
 
     public TxtParser(ContactRepository contactRepository) {
-        super(contactRepository);
+        this.contactRepository = contactRepository;
+        contactParser = new FileContactParser();
     }
 
     @Override
     public boolean parseImport(String username, String importPath) {
-        try {
-            List<String> lines = FileUtils.readLines(new File(importPath), "UTF-8");
-            for (String line : lines) {
-                String[] usernameAndContact = line.split(":");
-                String user = usernameAndContact[0];
-                String[] contactInfo = usernameAndContact[1].split(",");
-                Contact contact = new Contact(user, contactInfo[0], contactInfo[1],
-                        Integer.parseInt(contactInfo[2]), contactInfo[3], contactInfo[4], contactInfo[5]);
-                contactRepository.saveOrUpdate(contact);
-            }
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
+        FileService<Contact> fileService = new FileServiceImpl<>(contactParser);
+        Collection<Contact> contacts = fileService.initDataFromFile(new File(importPath));
+        contacts.forEach(contact -> {
+            contact.setUsername(username);
+            contactRepository.saveOrUpdate(contact);
+        });
+        return true;
     }
 
     @Override
     public boolean parseExport(String username, String exportPath) {
         List<String> resultLines = new ArrayList<>();
         for (Contact contact : contactRepository.findByUsername(username)) {
-            resultLines.add(contact.toString());
+            resultLines.add(contactParser.parseTo(contact));
         }
         try {
             FileUtils.writeLines(new File(exportPath), "UTF-8", resultLines, false);
@@ -50,4 +53,5 @@ public class TxtParser extends BaseParser {
             return false;
         }
     }
+
 }

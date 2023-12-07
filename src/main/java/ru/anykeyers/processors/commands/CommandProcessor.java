@@ -34,6 +34,7 @@ public class CommandProcessor {
         registerContactCommands();
         registerGroupCommands();
         registerFunctionCommands();
+        registerImportExportCommands();
     }
 
     /**
@@ -84,6 +85,13 @@ public class CommandProcessor {
                 registerCommand(user, State.FILTER_KIND, StateType.FUNCTION, "filter.kind"));
         commandHandlers.put(Command.SORT_COMMAND, (user) ->
                 registerCommand(user, State.SORT_KIND, StateType.FUNCTION, "sort.kind"));
+    }
+
+    private void registerImportExportCommands() {
+        commandHandlers.put(Command.IMPORT, (user) ->
+                registerCommand(user, State.IMPORT, StateType.IMPORT_EXPORT, "import.path"));
+        commandHandlers.put(Command.EXPORT, (user) ->
+                registerCommand(user, State.EXPORT, StateType.IMPORT_EXPORT, "export.path"));
     }
 
     /**

@@ -1,5 +1,6 @@
 package ru.anykeyers.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Objects;
@@ -44,6 +45,9 @@ public class Contact {
      * Блокировка контакта
      */
     private boolean block;
+
+    public Contact() { }
+
     public Contact(String username) {
         this.username = username;
     }
@@ -52,6 +56,16 @@ public class Contact {
         this.id = UUID.randomUUID().toString();
         this.username = username;
         this.name = name;
+    }
+
+    public Contact(String id, String username, String name, String phoneNumber, int age, Gender gender, boolean block) {
+        this.id = id;
+        this.username = username;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.age = age;
+        this.gender = gender;
+        this.block = block;
     }
 
     public String getId() {
@@ -113,6 +127,7 @@ public class Contact {
     /**
      * @return человекочитаемая информация о контакте
      */
+    @JsonIgnore
     public String getInfo() {
         StringBuilder builder = new StringBuilder();
         return builder
@@ -128,17 +143,12 @@ public class Contact {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Contact contact)) return false;
-        return age == contact.getAge() &&
-                block == contact.isBlock() &&
-                Objects.equals(id, contact.getId()) &&
-                Objects.equals(username, contact.getUsername()) &&
-                Objects.equals(name, contact.getName()) &&
-                Objects.equals(phoneNumber, contact.getPhoneNumber()) &&
-                gender == contact.getGender();
+        return Objects.equals(id, contact.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, username, name, phoneNumber, age, gender, block);
+        return Objects.hash(id);
     }
+
 }

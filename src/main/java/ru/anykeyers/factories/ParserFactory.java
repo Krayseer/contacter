@@ -1,6 +1,6 @@
 package ru.anykeyers.factories;
 
-import ru.anykeyers.parsers.Parseable;
+import ru.anykeyers.parsers.Parser;
 import ru.anykeyers.parsers.csv.CsvParser;
 import ru.anykeyers.parsers.json.JsonParser;
 import ru.anykeyers.parsers.txt.TxtParser;
@@ -23,7 +23,7 @@ public class ParserFactory {
      * @param format формат файла
      * @return экземпляр необходимого парсера
      */
-    public Parseable createParser(Format format) {
+    public Parser createParser(Format format) {
         return switch (format) {
             case TXT -> new TxtParser(contactRepository);
             case XML -> new XmlParser(contactRepository);

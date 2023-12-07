@@ -155,6 +155,8 @@ public class CommandProcessorTest {
                 /search : Поиск по контактам и группам
                 /filter : Фильтрация контактов
                 /sort : Сортировка контактов
+                /import : Импортировать контакты из файла
+                /export : Экспортировать контакты в файл
                 /help : Показать возможные комманды""";
         Assert.assertEquals(expectedResult, getAllCommandsResult);
         Assert.assertEquals(State.NONE, user.getState());

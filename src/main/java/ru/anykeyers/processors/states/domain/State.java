@@ -137,6 +137,16 @@ public enum State {
     /**
      * Сортировка по возрасту
      */
-    SORT_AGE
+    SORT_AGE,
+
+
+    /**
+     * Импорт
+     */
+    IMPORT,
+    /**
+     * Экспорт
+     */
+    EXPORT
 
 }

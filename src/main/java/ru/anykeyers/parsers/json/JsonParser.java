@@ -3,7 +3,7 @@ package ru.anykeyers.parsers.json;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ru.anykeyers.domain.Contact;
-import ru.anykeyers.parsers.BaseParser;
+import ru.anykeyers.parsers.Parser;
 import ru.anykeyers.repositories.ContactRepository;
 
 import java.io.File;
@@ -12,12 +12,14 @@ import java.util.Set;
 /**
  * Парсер JSON файлов
  */
-public class JsonParser extends BaseParser {
+public class JsonParser implements Parser {
 
     private final ObjectMapper objectMapper;
 
+    private final ContactRepository contactRepository;
+
     public JsonParser(ContactRepository contactRepository) {
-        super(contactRepository);
+        this.contactRepository = contactRepository;
         objectMapper = new ObjectMapper();
     }
 
@@ -26,7 +28,10 @@ public class JsonParser extends BaseParser {
         try {
             File importFile = new File(importPath);
             Set<Contact> importedContacts = objectMapper.readValue(importFile, new TypeReference<>() {});
-            importedContacts.forEach(contactRepository::saveOrUpdate);
+            importedContacts.forEach(contact -> {
+                contact.setUsername(username);
+                contactRepository.saveOrUpdate(contact);
+            });
             return true;
         } catch (Exception exception) {
             return false;
@@ -43,4 +48,5 @@ public class JsonParser extends BaseParser {
             return false;
         }
     }
+
 }

@@ -1,22 +1,25 @@
 package ru.anykeyers.parsers.xml;
 
-import jakarta.xml.bind.JAXBContext;
-import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Marshaller;
-import jakarta.xml.bind.Unmarshaller;
 import ru.anykeyers.domain.Contact;
-import ru.anykeyers.parsers.BaseParser;
+import ru.anykeyers.parsers.Parser;
 import ru.anykeyers.repositories.ContactRepository;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.util.Set;
 
 /**
  * Парсер XML файлов
  */
-public class XmlParser extends BaseParser {
+public class XmlParser implements Parser {
+
+    private final ContactRepository contactRepository;
 
     public XmlParser(ContactRepository contactRepository) {
-        super(contactRepository);
+        this.contactRepository = contactRepository;
     }
 
     @Override
@@ -28,7 +31,10 @@ public class XmlParser extends BaseParser {
 
             AdapterContactXml.Contacts contacts = (AdapterContactXml.Contacts) unmarshaller.unmarshal(importFile);
             Set<Contact> importedContacts = contacts.getContacts();
-            importedContacts.forEach(contactRepository::saveOrUpdate);
+            importedContacts.forEach(contact -> {
+                contact.setUsername(username);
+                contactRepository.saveOrUpdate(contact);
+            });
 
             return true;
         } catch (JAXBException exception) {

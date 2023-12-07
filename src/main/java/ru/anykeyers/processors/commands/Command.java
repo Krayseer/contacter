@@ -17,6 +17,9 @@ public enum Command {
     FILTER_COMMAND("/filter", "Фильтрация контактов"),
     SORT_COMMAND("/sort", "Сортировка контактов"),
 
+    IMPORT("/import", "Импортировать контакты из файла"),
+    EXPORT("/export", "Экспортировать контакты в файл"),
+
     HELP_COMMAND("/help", "Показать возможные комманды");
 
     /**

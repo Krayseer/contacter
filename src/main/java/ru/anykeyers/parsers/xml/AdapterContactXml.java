@@ -1,10 +1,11 @@
 package ru.anykeyers.parsers.xml;
 
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
-import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 import ru.anykeyers.domain.Contact;
+import ru.anykeyers.domain.Gender;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlAdapter;
 import java.util.Set;
 
 /**
@@ -15,8 +16,9 @@ public class AdapterContactXml extends XmlAdapter<AdapterContactXml.AdaptedConta
     @Override
     public Contact unmarshal(AdaptedContact adaptedContact) {
         return new Contact(
-                adaptedContact.username, adaptedContact.id, adaptedContact.name,
-                adaptedContact.age, adaptedContact.gender, adaptedContact.block, adaptedContact.phoneNumber
+                adaptedContact.id, adaptedContact.username,
+                adaptedContact.name, adaptedContact.phoneNumber, adaptedContact.age,
+                adaptedContact.gender, adaptedContact.block
         );
     }
 
@@ -29,7 +31,7 @@ public class AdapterContactXml extends XmlAdapter<AdapterContactXml.AdaptedConta
         adaptedContact.phoneNumber = contact.getPhoneNumber();
         adaptedContact.age = contact.getAge();
         adaptedContact.gender = contact.getGender();
-        adaptedContact.block = contact.getBlock();
+        adaptedContact.block = contact.isBlock();
         return adaptedContact;
     }
 
@@ -52,10 +54,10 @@ public class AdapterContactXml extends XmlAdapter<AdapterContactXml.AdaptedConta
         public int age;
 
         @XmlElement
-        public String gender;
+        public Gender gender;
 
         @XmlElement
-        public String block;
+        public boolean block;
 
     }
 

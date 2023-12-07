@@ -1,16 +1,20 @@
 package ru.anykeyers.services;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import ru.anykeyers.domain.Contact;
+import ru.anykeyers.domain.Gender;
 import ru.anykeyers.domain.User;
 import ru.anykeyers.repositories.ContactRepository;
 import ru.anykeyers.repositories.file.FileContactRepository;
+import ru.anykeyers.services.impl.ImportExportServiceImpl;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import static junit.framework.TestCase.assertEquals;
@@ -21,15 +25,19 @@ import static junit.framework.TestCase.assertTrue;
  */
 public class ImportExportServiceTest {
 
-    private ImportExportService importExportService;
+    private ImportExportServiceImpl importExportService;
 
     private ContactRepository contactRepository;
 
     private final User user = new User("user");
 
-    private final Contact contact = new Contact("user", "1234", "Андрей Иванов", 15, "Мужской", "UNBLOCK", "+7999999999999");
+    private final Contact contact = new Contact(
+            "1234", "user", "Андрей Иванов", "+7999999999999", 15, Gender.MAN, false
+    );
 
-    private final Contact secondContact = new Contact("user", "st-445", "Коля Андреев", 20, "Мужской", "UNBLOCK", "+12345678912");
+    private final Contact secondContact = new Contact(
+            "st-445", "user", "Коля Андреев", "+12345678912", 20, Gender.MAN, false
+    );
 
     private final File contactsFileJSON = new File("src/test/resources/files/contacts.json");
 
@@ -43,14 +51,14 @@ public class ImportExportServiceTest {
     public void setUp() throws IOException {
         File tempDbFile = Files.createTempFile("tempDbFile", ".txt").toFile();
         contactRepository = new FileContactRepository(tempDbFile.getPath());
-        importExportService = new ImportExportService(contactRepository);
+        importExportService = new ImportExportServiceImpl(contactRepository);
     }
 
     /**
      * Тест импорта в несуществующий файл
      */
     @Test
-    public void testImportNonExistsFile() {
+    public void importNonExistsFileTest() {
         String importResultNotExistsFile = importExportService.importData(user, "not-exists");
         assertEquals("Ошибка импорта контактов", importResultNotExistsFile);
     }
@@ -59,7 +67,7 @@ public class ImportExportServiceTest {
      * Тест экспорта в несуществующий файл
      */
     @Test
-    public void testExportNonExistsFile() {
+    public void exportNonExistsFileTest() {
         String exportResultNotExistsFile = importExportService.exportData(user, "not-exists");
         assertEquals("Ошибка экспорта контактов", exportResultNotExistsFile);
     }
@@ -68,7 +76,7 @@ public class ImportExportServiceTest {
      * Тест импорта контактов из JSON
      */
     @Test
-    public void testImportJSON() {
+    public void importJSONTest() {
         importTest(contactsFileJSON);
     }
 
@@ -76,7 +84,7 @@ public class ImportExportServiceTest {
      * Тест экспорта контактов в JSON
      */
     @Test
-    public void testExportJSON() throws IOException {
+    public void exportJSONTest() throws IOException {
         File tempJsonFile = Files.createTempFile("temp_json", ".json").toFile();
         exportTest(contactsFileJSON, tempJsonFile);
     }
@@ -85,7 +93,7 @@ public class ImportExportServiceTest {
      * Тест импорта контактов из XML
      */
     @Test
-    public void testImportXML() {
+    public void importXMLTest() {
         importTest(contactsFileXML);
     }
 
@@ -93,7 +101,7 @@ public class ImportExportServiceTest {
      * Тест экспорта контактов в XML
      */
     @Test
-    public void testExportXML() throws IOException {
+    public void exportXMLTest() throws IOException {
         File tempXmlFile = Files.createTempFile("temp_xml", ".xml").toFile();
         exportTest(contactsFileXML, tempXmlFile);
 
@@ -103,7 +111,7 @@ public class ImportExportServiceTest {
      * Тест импорта контактов в CSV
      */
     @Test
-    public void testImportCSV(){
+    public void importCSVTest(){
         importTest(contactsFileCSV);
     }
 
@@ -111,7 +119,7 @@ public class ImportExportServiceTest {
      * Тест экспорта контактов в CSV
      */
     @Test
-    public void testExportCSV() throws IOException {
+    public void exportCSVTest() throws IOException {
         File tempCsvFile = Files.createTempFile("temp_csv", ".csv").toFile();
         exportTest(contactsFileCSV, tempCsvFile);
     }
@@ -120,7 +128,7 @@ public class ImportExportServiceTest {
      * Тест импорта контактов в TXT
      */
     @Test
-    public void testImportTXT() {
+    public void importTXTTest() {
         importTest(contactsFileTXT);
     }
 
@@ -128,7 +136,7 @@ public class ImportExportServiceTest {
      * Тест экспорта контактов в TXT
      */
     @Test
-    public void testExportTXT() throws IOException {
+    public void exportTXTTest() throws IOException {
         File tempTxtFile = Files.createTempFile("temp_txt", ".txt").toFile();
         exportTest(contactsFileTXT, tempTxtFile);
     }
@@ -168,9 +176,17 @@ public class ImportExportServiceTest {
      * @return true, если файлы равны, иначе false
      */
     private boolean isFilesEquals(File firstFile, File secondFile) throws IOException {
-        byte[] firstFileData = Files.readAllBytes(firstFile.toPath());
-        byte[] secondFileData = Files.readAllBytes(secondFile.toPath());
-        return Arrays.equals(firstFileData, secondFileData);
+        List<String> firstFileLines = FileUtils.readLines(firstFile, StandardCharsets.UTF_8);
+        List<String> secondFileLines = FileUtils.readLines(secondFile, StandardCharsets.UTF_8);
+        if (firstFileLines.size() != secondFileLines.size()) {
+            return false;
+        }
+        for (String line : firstFileLines) {
+            if (!secondFileLines.contains(line)) {
+                return false;
+            }
+        }
+        return true;
     }
 
 
