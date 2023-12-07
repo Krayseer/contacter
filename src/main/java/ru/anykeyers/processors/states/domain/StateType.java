@@ -16,6 +16,10 @@ public enum StateType {
     /**
      * Группы
      */
-    GROUP
+    GROUP,
+    /**
+     * Обработка функции (поиск, фильтр, сортировка)
+     */
+    FUNCTION
 
 }

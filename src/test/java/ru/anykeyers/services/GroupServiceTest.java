@@ -65,9 +65,9 @@ public class GroupServiceTest {
 
         // Действие: изменение названия группы
         user.setState(State.EDIT_GROUP_NAME);
-        user.setGroupNameToEdit(group.getName());
+        user.setEditInfo(group.getName());
         String newValue = "newName";
-        Mockito.when(groupRepository.findByUsernameAndName(user.getUsername(), user.getGroupNameToEdit())).thenReturn(group);
+        Mockito.when(groupRepository.findByUsernameAndName(user.getUsername(), user.getEditInfo())).thenReturn(group);
         String editNameResult = groupService.editGroup(user, newValue);
 
         // Проверка: изменение названия группы
@@ -77,8 +77,8 @@ public class GroupServiceTest {
 
         // Действие: добавление контакта в группу
         user.setState(State.EDIT_GROUP_ADD_CONTACT);
-        user.setGroupNameToEdit(group.getName());
-        Mockito.when(groupRepository.findByUsernameAndName(user.getUsername(), user.getGroupNameToEdit())).thenReturn(group);
+        user.setEditInfo(group.getName());
+        Mockito.when(groupRepository.findByUsernameAndName(user.getUsername(), user.getEditInfo())).thenReturn(group);
         Mockito.when(contactRepository.findByUsernameAndName(user.getUsername(), contact.getName())).thenReturn(contact);
         String editGroupAddContact = groupService.editGroup(user, contact.getName());
 
@@ -89,8 +89,8 @@ public class GroupServiceTest {
 
         // Действие: удаление контакта из группы
         user.setState(State.EDIT_GROUP_DELETE_CONTACT);
-        user.setGroupNameToEdit(group.getName());
-        Mockito.when(groupRepository.findByUsernameAndName(user.getUsername(), user.getGroupNameToEdit())).thenReturn(group);
+        user.setEditInfo(group.getName());
+        Mockito.when(groupRepository.findByUsernameAndName(user.getUsername(), user.getEditInfo())).thenReturn(group);
         Mockito.when(contactRepository.findByUsernameAndName(user.getUsername(), contact.getName())).thenReturn(contact);
         String editGroupDeleteContact = groupService.editGroup(user, contact.getName());
 

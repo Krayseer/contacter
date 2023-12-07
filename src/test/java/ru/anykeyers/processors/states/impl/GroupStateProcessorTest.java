@@ -49,8 +49,7 @@ public class GroupStateProcessorTest {
         Assert.assertEquals(message, result);
         Assert.assertEquals(State.NONE, user.getState());
         Assert.assertEquals(StateType.NONE, user.getStateType());
-        Assert.assertNull(user.getContactNameToEdit());
-        Assert.assertNull(user.getGroupNameToEdit());
+        Assert.assertNull(user.getEditInfo());
         Mockito.verify(authenticationService, Mockito.times(1)).saveOrUpdateUser(user);
     }
 
@@ -85,7 +84,7 @@ public class GroupStateProcessorTest {
                 "Выберите действие: \n1. изменить название\n2. добавить контакт\n3. удалить контакт", existsGroupEditResult
         );
         Assert.assertEquals(State.EDIT_GROUP_FIELD, user.getState());
-        Assert.assertEquals(groupName, user.getGroupNameToEdit());
+        Assert.assertEquals(groupName, user.getEditInfo());
         Mockito.verify(authenticationService, Mockito.times(1)).saveOrUpdateUser(user);
     }
 
@@ -103,7 +102,7 @@ public class GroupStateProcessorTest {
         User user = new User("testUser");
         String groupName = "testGroup";
         user.setState(State.EDIT_GROUP_FIELD);
-        user.setGroupNameToEdit(groupName);
+        user.setEditInfo(groupName);
 
         // Действие: обработка некорректного аргумента при изменении группы
         String invalidArgumentProcess = groupStateProcessor.processState(user, "111111");
@@ -158,7 +157,7 @@ public class GroupStateProcessorTest {
             User user = new User("testUser");
             String groupName = "testGroup";
             user.setState(editFieldStates.get(i));
-            user.setGroupNameToEdit(groupName);
+            user.setEditInfo(groupName);
             String message = "Группа 'testGroup' успешно изменена";
 
             // Действие
@@ -169,8 +168,7 @@ public class GroupStateProcessorTest {
             Assert.assertEquals(message, result);
             Assert.assertEquals(State.NONE, user.getState());
             Assert.assertEquals(StateType.NONE, user.getStateType());
-            Assert.assertNull(user.getContactNameToEdit());
-            Assert.assertNull(user.getGroupNameToEdit());
+            Assert.assertNull(user.getEditInfo());
             Mockito.verify(authenticationService, Mockito.times(i + 1)).saveOrUpdateUser(user);
         }
     }
@@ -194,8 +192,7 @@ public class GroupStateProcessorTest {
         Assert.assertEquals(message, result);
         Assert.assertEquals(State.NONE, user.getState());
         Assert.assertEquals(StateType.NONE, user.getStateType());
-        Assert.assertNull(user.getContactNameToEdit());
-        Assert.assertNull(user.getGroupNameToEdit());
+        Assert.assertNull(user.getEditInfo());
         Mockito.verify(authenticationService, Mockito.times(1)).saveOrUpdateUser(user);
     }
 

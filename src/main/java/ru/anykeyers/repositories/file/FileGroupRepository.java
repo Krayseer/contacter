@@ -52,6 +52,10 @@ public class FileGroupRepository implements GroupRepository {
 
     @Override
     public Group findByUsernameAndName(String username, String groupName) {
+        Set<Group> groups = findByUsername(username);
+        if (groups == null) {
+            return null;
+        }
         for (Group group : findByUsername(username)) {
             if (group.getName() != null && group.getName().equals(groupName)) {
                 return group;

@@ -152,6 +152,9 @@ public class CommandProcessorTest {
                 /add_group : Добавить группу
                 /edit_group : Изменить состояние группы
                 /delete_group : Удалить группу
+                /search : Поиск по контактам и группам
+                /filter : Фильтрация контактов
+                /sort : Сортировка контактов
                 /help : Показать возможные комманды""";
         Assert.assertEquals(expectedResult, getAllCommandsResult);
         Assert.assertEquals(State.NONE, user.getState());
