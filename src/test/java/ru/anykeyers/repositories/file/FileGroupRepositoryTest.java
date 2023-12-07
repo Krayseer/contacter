@@ -145,7 +145,7 @@ public class FileGroupRepositoryTest {
         // Проверка
         List<String> expectedLines = List.of(
                 String.format("user:id=%s;name=testGroup;contacts=%s", firstGroup.getId(), contact.getId()),
-                String.format("user:id=%s;name=testGroupSecond;contacts=null", secondGroup.getId())
+                String.format("user:id=%s;name=testGroupSecond;contacts=", secondGroup.getId())
         );
         expectedLines.forEach(line -> Assert.assertTrue(actualLines.contains(line)));
     }

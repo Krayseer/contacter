@@ -34,14 +34,9 @@ public class User {
     private StateType stateType = StateType.NONE;
 
     /**
-     * Имя контакта, выбранное для редактирования
+     * Информация, для использования при обработке состояния
      */
-    private String contactNameToEdit;
-
-    /**
-     * Название группы, выбранное для редактирования
-     */
-    private String groupNameToEdit;
+    private String editInfo;
 
     /**
      * Идентификатор чата пользователя
@@ -86,20 +81,12 @@ public class User {
         this.stateType = stateType;
     }
 
-    public String getContactNameToEdit() {
-        return contactNameToEdit;
+    public String getEditInfo() {
+        return editInfo;
     }
 
-    public void setContactNameToEdit(String contactNameToEdit) {
-        this.contactNameToEdit = contactNameToEdit;
-    }
-
-    public String getGroupNameToEdit() {
-        return groupNameToEdit;
-    }
-
-    public void setGroupNameToEdit(String groupNameToEdit) {
-        this.groupNameToEdit = groupNameToEdit;
+    public void setEditInfo(String editInfo) {
+        this.editInfo = editInfo;
     }
 
     public Long getChatId() {
@@ -116,8 +103,7 @@ public class User {
     public void clearState() {
         state = State.NONE;
         stateType = StateType.NONE;
-        contactNameToEdit = null;
-        groupNameToEdit = null;
+        editInfo = null;
     }
 
     @Override
@@ -128,13 +114,12 @@ public class User {
                 && botType == user.getBotType()
                 && state == user.getState()
                 && stateType == user.getStateType()
-                && Objects.equals(contactNameToEdit, user.getContactNameToEdit())
-                && Objects.equals(groupNameToEdit, user.getGroupNameToEdit())
+                && Objects.equals(editInfo, user.getEditInfo())
                 && Objects.equals(chatId, user.getChatId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(username, botType, state, stateType, contactNameToEdit, groupNameToEdit, chatId);
+        return Objects.hash(username, botType, state, stateType, editInfo, chatId);
     }
 }

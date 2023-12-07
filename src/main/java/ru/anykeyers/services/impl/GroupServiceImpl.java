@@ -43,7 +43,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public String editGroup(User user, String newValue) {
-        String groupNameToEdit = user.getGroupNameToEdit();
+        String groupNameToEdit = user.getEditInfo();
         Group groupToEdit = groupRepository.findByUsernameAndName(user.getUsername(), groupNameToEdit);
 
         switch (user.getState()) {
@@ -65,7 +65,7 @@ public class GroupServiceImpl implements GroupService {
                     return messages.getMessageByKey("group.contact.not-exists", newValue);
                 }
             }
-            default -> messages.getMessageByKey("argument.bad");
+            default -> messages.getMessageByKey("commons.bad-argument");
         }
 
         groupRepository.saveOrUpdate(groupToEdit);
