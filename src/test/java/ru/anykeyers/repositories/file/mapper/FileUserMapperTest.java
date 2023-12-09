@@ -1,21 +1,19 @@
-package ru.anykeyers.repositories.file.parsers;
+package ru.anykeyers.repositories.file.mapper;
 
 import org.junit.Assert;
 import org.junit.Test;
 import ru.anykeyers.bots.BotType;
 import ru.anykeyers.domain.User;
 
-import java.io.File;
-
 /**
- * Тестирование класса {@link FileUserParser}
+ * Тестирование класса {@link UserMapper}
  */
 public class FileUserMapperTest {
 
-    private final FileUserParser mapper;
+    private final UserMapper mapper;
 
     public FileUserMapperTest() {
-        mapper = new FileUserParser();
+        mapper = new UserMapper();
     }
 
     /**
@@ -27,7 +25,7 @@ public class FileUserMapperTest {
         User user = new User("testUser", BotType.TELEGRAM_BOT);
 
         // Действие
-        String formattedUser = mapper.parseTo(user);
+        String formattedUser = mapper.format(user);
 
         // Проверка
         String expectedResult = "testUser-TELEGRAM_BOT:state_type=NONE;state=NONE;bot_type=TELEGRAM_BOT;" +
@@ -45,7 +43,7 @@ public class FileUserMapperTest {
                 "edit_contact_name=null;edit_group_name=null;chat_id=null";
 
         // Действие
-        User user = mapper.parseFrom(userString);
+        User user = mapper.parse(userString);
 
         // Проверка
         User expectedUser = new User("testUser", BotType.TELEGRAM_BOT);

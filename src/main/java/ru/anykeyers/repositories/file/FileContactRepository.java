@@ -1,7 +1,7 @@
 package ru.anykeyers.repositories.file;
 
 import ru.anykeyers.domain.Contact;
-import ru.anykeyers.repositories.file.parsers.FileContactParser;
+import ru.anykeyers.repositories.file.mapper.ContactMapper;
 import ru.anykeyers.repositories.ContactRepository;
 import ru.anykeyers.repositories.file.services.FileService;
 import ru.anykeyers.repositories.file.services.impl.FileServiceImpl;
@@ -23,7 +23,7 @@ public class FileContactRepository implements ContactRepository {
 
     public FileContactRepository(String contactFilePath) {
         dbFile = new File(contactFilePath);
-        fileService = new FileServiceImpl<>(new FileContactParser());
+        fileService = new FileServiceImpl<>(new ContactMapper());
         Collection<Contact> contacts = fileService.initDataFromFile(dbFile);
         contactsByUsername = contacts.stream()
                 .collect(Collectors.groupingBy(Contact::getUsername, Collectors.toSet()));
@@ -80,7 +80,6 @@ public class FileContactRepository implements ContactRepository {
         if (!contactsByUsername.containsKey(contact.getUsername())) {
             contactsByUsername.put(contact.getUsername(), new HashSet<>());
         }
-        contactsByUsername.get(contact.getUsername()).removeIf(c -> c.getId().equals(contact.getId()));
         Set<Contact> contacts = contactsByUsername.get(contact.getUsername());
         contacts.add(contact);
         fileService.saveOrUpdateFile(dbFile, contactsByUsername);

@@ -1,4 +1,4 @@
-package ru.anykeyers.repositories.file.parsers;
+package ru.anykeyers.repositories.file.mapper;
 
 import ru.anykeyers.domain.Contact;
 import ru.anykeyers.domain.Group;
@@ -9,16 +9,16 @@ import java.util.stream.Collectors;
 /**
  * Парсер для группы
  */
-public class FileGroupParser implements FileObjectParser<Group> {
+public class GroupMapper implements Mapper<Group> {
 
     private final ContactRepository contactRepository;
 
-    public FileGroupParser(ContactRepository contactRepository) {
+    public GroupMapper(ContactRepository contactRepository) {
         this.contactRepository = contactRepository;
     }
 
     @Override
-    public String parseTo(Group object) {
+    public String format(Group object) {
         StringBuilder builder = new StringBuilder();
         builder.append(object.getUsername())
                 .append(":id=").append(object.getId())
@@ -33,7 +33,7 @@ public class FileGroupParser implements FileObjectParser<Group> {
     }
 
     @Override
-    public Group parseFrom(String line) {
+    public Group parse(String line) {
         String[] usernameAndGroup = line.split(":");
         String username = usernameAndGroup[0];
         String[] groupInfo = usernameAndGroup[1].split(";");

@@ -1,24 +1,16 @@
 package ru.anykeyers.contexts;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
+import java.util.ResourceBundle;
 
 /**
  * Настройки приложения
  */
 public class ApplicationProperties {
 
-    private final Properties properties;
+    private final ResourceBundle properties;
 
     public ApplicationProperties() {
-        this.properties = new Properties();
-        String pathToApplicationProperties = "src/main/resources/application.properties";
-        try (FileInputStream fileInputStream = new FileInputStream(pathToApplicationProperties)) {
-            properties.load(fileInputStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        properties = ResourceBundle.getBundle("application");
     }
 
     /**
@@ -27,7 +19,7 @@ public class ApplicationProperties {
      * @return настройка
      */
     public String getSetting(String key) {
-        return properties.getProperty(key);
+        return properties.getString(key);
     }
 
 }

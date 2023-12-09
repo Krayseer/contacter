@@ -1,18 +1,18 @@
-package ru.anykeyers.repositories.file.parsers;
+package ru.anykeyers.repositories.file.mapper;
 
 import org.junit.Assert;
 import org.junit.Test;
 import ru.anykeyers.domain.Contact;
 
 /**
- * Тестирование класса {@link FileContactParser}
+ * Тестирование класса {@link ContactMapper}
  */
 public class FileContactMapperTest {
 
-    private final FileContactParser formatter;
+    private final ContactMapper mapper;
 
     public FileContactMapperTest() {
-        formatter = new FileContactParser();
+        mapper = new ContactMapper();
     }
 
     /**
@@ -25,7 +25,7 @@ public class FileContactMapperTest {
         contact.setPhoneNumber("7777777777");
 
         // Действие
-        String formattedContact = formatter.parseTo(contact);
+        String formattedContact = mapper.format(contact);
 
         // Проверка
         String expectedResult = String.format("testUser:id=%s;name=testContact;phone_number=7777777777", contact.getId());
@@ -41,7 +41,7 @@ public class FileContactMapperTest {
         String contactString = "testUser:id=111;name=testContact;phone_number=7777777777";
 
         // Действие
-        Contact contact = formatter.parseFrom(contactString);
+        Contact contact = mapper.parse(contactString);
 
         // Проверка
         Contact expectedContact = new Contact("testUser", "testContact");

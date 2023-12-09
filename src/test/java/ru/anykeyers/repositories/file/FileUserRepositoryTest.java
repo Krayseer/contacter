@@ -6,7 +6,7 @@ import org.junit.Test;
 import ru.anykeyers.bots.BotType;
 import ru.anykeyers.domain.User;
 import ru.anykeyers.repositories.UserRepository;
-import ru.anykeyers.repositories.file.parsers.FileUserParser;
+import ru.anykeyers.repositories.file.mapper.UserMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,10 +23,10 @@ public class FileUserRepositoryTest {
 
     private File tempDbFile;
 
-    private final FileUserParser formatter;
+    private final UserMapper formatter;
 
     public FileUserRepositoryTest() {
-        formatter = new FileUserParser();
+        formatter = new UserMapper();
     }
 
     @Before
@@ -51,7 +51,7 @@ public class FileUserRepositoryTest {
         // Проверка
         Set<String> actualUsersLines = new HashSet<>(Files.readAllLines(tempDbFile.toPath()));
         Stream.of(user1, user2)
-                .map(formatter::parseTo)
+                .map(formatter::format)
                 .forEach(user -> Assert.assertTrue(actualUsersLines.contains(user)));
     }
 

@@ -5,8 +5,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import ru.anykeyers.bots.BotType;
 import ru.anykeyers.domain.User;
-import ru.anykeyers.repositories.file.parsers.FileObjectParser;
-import ru.anykeyers.repositories.file.parsers.FileUserParser;
+import ru.anykeyers.repositories.file.mapper.Mapper;
+import ru.anykeyers.repositories.file.mapper.UserMapper;
 import ru.anykeyers.repositories.file.services.impl.FileServiceImpl;
 
 import java.io.File;
@@ -30,11 +30,11 @@ public class FileServiceTest {
         User secondUser = new User("secondUser", BotType.CONSOLE);
         List<User> users = List.of(firstUser, secondUser);
 
-        FileObjectParser<User> mapper = new FileUserParser();
+        Mapper<User> mapper = new UserMapper();
         FileService<User> fileService = new FileServiceImpl<>(mapper);
 
         File dbFile = Files.createTempFile("tempDbFile", "txt").toFile();
-        FileUtils.writeLines(dbFile, users.stream().map(mapper::parseTo).collect(Collectors.toList()));
+        FileUtils.writeLines(dbFile, users.stream().map(mapper::format).collect(Collectors.toList()));
 
         // Действие
         Collection<User> actualUsers = fileService.initDataFromFile(dbFile);
@@ -56,7 +56,7 @@ public class FileServiceTest {
         usersMap.put(firstUser.getUsername(), Collections.singleton(firstUser));
         usersMap.put(secondUser.getUsername(), Collections.singleton(secondUser));
 
-        FileObjectParser<User> mapper = new FileUserParser();
+        Mapper<User> mapper = new UserMapper();
         FileService<User> fileService = new FileServiceImpl<>(mapper);
 
         File dbFile = Files.createTempFile("tempDbFile", "txt").toFile();
@@ -67,8 +67,8 @@ public class FileServiceTest {
 
         // Проверка
         List<String> expectedUsersStrings = new ArrayList<>();
-        expectedUsersStrings.add(mapper.parseTo(firstUser));
-        expectedUsersStrings.add(mapper.parseTo(secondUser));
+        expectedUsersStrings.add(mapper.format(firstUser));
+        expectedUsersStrings.add(mapper.format(secondUser));
         actualLines.forEach(line -> Assert.assertTrue(expectedUsersStrings.contains(line)));
     }
 

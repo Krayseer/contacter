@@ -74,14 +74,12 @@ public class Contact {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Contact contact)) return false;
-        return Objects.equals(id, contact.getId())
-                && Objects.equals(username, contact.getUsername())
-                && Objects.equals(name, contact.getName())
-                && Objects.equals(phoneNumber, contact.getPhoneNumber());
+        return Objects.equals(id, contact.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, username, name, phoneNumber);
+        return Objects.hash(id);
     }
+
 }

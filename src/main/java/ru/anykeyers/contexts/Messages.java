@@ -1,24 +1,16 @@
 package ru.anykeyers.contexts;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
+import java.util.ResourceBundle;
 
 /**
  * Сообщения приложения
  */
 public class Messages {
 
-    private final Properties properties;
+    private final ResourceBundle messages;
 
     public Messages() {
-        properties = new Properties();
-        String pathToMessagesFile = "src/main/resources/messages.properties";
-        try (FileInputStream fileInputStream = new FileInputStream(pathToMessagesFile)) {
-            properties.load(fileInputStream);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        messages = ResourceBundle.getBundle("messages");
     }
 
     /**
@@ -27,7 +19,7 @@ public class Messages {
      * @return сообщение
      */
     public String getMessageByKey(String key) {
-        return properties.getProperty(key);
+        return messages.getString(key);
     }
 
     /**
@@ -37,7 +29,7 @@ public class Messages {
      * @return сообщение
      */
     public String getMessageByKey(String key, Object... args) {
-        return String.format(properties.getProperty(key), args);
+        return String.format(getMessageByKey(key), args);
     }
 
 }

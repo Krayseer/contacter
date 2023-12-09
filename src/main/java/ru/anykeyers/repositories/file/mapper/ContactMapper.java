@@ -1,14 +1,14 @@
-package ru.anykeyers.repositories.file.parsers;
+package ru.anykeyers.repositories.file.mapper;
 
 import ru.anykeyers.domain.Contact;
 
 /**
  * Парсер для контактов
  */
-public class FileContactParser implements FileObjectParser<Contact> {
+public class ContactMapper implements Mapper<Contact> {
 
     @Override
-    public String parseTo(Contact object) {
+    public String format(Contact object) {
         StringBuilder builder = new StringBuilder();
         builder.append(object.getUsername())
                 .append(":id=").append(object.getId())
@@ -18,7 +18,7 @@ public class FileContactParser implements FileObjectParser<Contact> {
     }
 
     @Override
-    public Contact parseFrom(String line) {
+    public Contact parse(String line) {
         String[] usernameAndContact = line.split(":");
         String username = usernameAndContact[0];
         String[] contactInfo = usernameAndContact[1].split(";");

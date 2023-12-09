@@ -95,14 +95,12 @@ public class Group {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Group group)) return false;
-        return Objects.equals(id, group.getId())
-                && Objects.equals(username, group.getUsername())
-                && Objects.equals(name, group.getName())
-                && Objects.equals(contacts, group.getContacts());
+        return Objects.equals(id, group.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, username, name, contacts);
+        return Objects.hash(id);
     }
+
 }

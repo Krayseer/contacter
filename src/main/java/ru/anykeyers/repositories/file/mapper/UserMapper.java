@@ -1,4 +1,4 @@
-package ru.anykeyers.repositories.file.parsers;
+package ru.anykeyers.repositories.file.mapper;
 
 import ru.anykeyers.domain.User;
 import ru.anykeyers.bots.BotType;
@@ -8,10 +8,10 @@ import ru.anykeyers.processors.states.domain.StateType;
 /**
  * Парсер для пользователя
  */
-public class FileUserParser implements FileObjectParser<User> {
+public class UserMapper implements Mapper<User> {
 
     @Override
-    public String parseTo(User object) {
+    public String format(User object) {
         StringBuilder builder = new StringBuilder();
         builder.append(object.getUsername())
                 .append(":state_type=").append(object.getStateType())
@@ -24,7 +24,7 @@ public class FileUserParser implements FileObjectParser<User> {
     }
 
     @Override
-    public User parseFrom(String line) {
+    public User parse(String line) {
         String[] usernameAndConfigs = line.split(":");
         String username = usernameAndConfigs[0];
         String[] configs = usernameAndConfigs[1].split(";");

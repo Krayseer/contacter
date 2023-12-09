@@ -3,9 +3,9 @@ package ru.anykeyers.repositories.file;
 import ru.anykeyers.domain.Contact;
 import ru.anykeyers.domain.Group;
 import ru.anykeyers.repositories.ContactRepository;
-import ru.anykeyers.repositories.file.parsers.FileGroupParser;
+import ru.anykeyers.repositories.file.mapper.GroupMapper;
 import ru.anykeyers.repositories.GroupRepository;
-import ru.anykeyers.repositories.file.parsers.FileObjectParser;
+import ru.anykeyers.repositories.file.mapper.Mapper;
 import ru.anykeyers.repositories.file.services.FileService;
 import ru.anykeyers.repositories.file.services.impl.FileServiceImpl;
 
@@ -27,8 +27,8 @@ public class FileGroupRepository implements GroupRepository {
     public FileGroupRepository(String groupFilePath,
                                ContactRepository contactRepository) {
         dbFile = new File(groupFilePath);
-        FileObjectParser<Group> groupFormatter = new FileGroupParser(contactRepository);
-        fileService = new FileServiceImpl<>(groupFormatter);
+        Mapper<Group> groupMapper = new GroupMapper(contactRepository);
+        fileService = new FileServiceImpl<>(groupMapper);
         Collection<Group> groups = fileService.initDataFromFile(dbFile);
         groupsByUsername = groups.stream()
                 .collect(Collectors.groupingBy(Group::getUsername, Collectors.toSet()));
@@ -79,7 +79,6 @@ public class FileGroupRepository implements GroupRepository {
         if (!groupsByUsername.containsKey(group.getUsername())) {
             groupsByUsername.put(group.getUsername(), new HashSet<>());
         }
-        groupsByUsername.get(group.getUsername()).removeIf(g -> g.getId().equals(group.getId()));
         Collection<Group> groups = groupsByUsername.get(group.getUsername());
         groups.add(group);
         fileService.saveOrUpdateFile(dbFile, groupsByUsername);

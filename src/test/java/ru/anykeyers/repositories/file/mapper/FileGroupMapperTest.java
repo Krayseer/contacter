@@ -1,4 +1,4 @@
-package ru.anykeyers.repositories.file.parsers;
+package ru.anykeyers.repositories.file.mapper;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -12,7 +12,7 @@ import ru.anykeyers.domain.Group;
 import ru.anykeyers.repositories.ContactRepository;
 
 /**
- * Тестирование класса {@link FileGroupParser}
+ * Тестирование класса {@link GroupMapper}
  */
 @RunWith(MockitoJUnitRunner.class)
 public class FileGroupMapperTest {
@@ -21,7 +21,7 @@ public class FileGroupMapperTest {
     private ContactRepository contactRepository;
 
     @InjectMocks
-    private FileGroupParser formatter;
+    private GroupMapper formatter;
 
     /**
      * Тестирование парсинга группы в строку
@@ -34,7 +34,7 @@ public class FileGroupMapperTest {
         group.addContactInGroup(contact);
 
         // Действие
-        String formattedGroup = formatter.parseTo(group);
+        String formattedGroup = formatter.format(group);
 
         // Проверка
         String expectedResult = String.format("testUser:id=%s;name=testGroup;contacts=%s", group.getId(), contact.getId());
@@ -52,7 +52,7 @@ public class FileGroupMapperTest {
 
         // Действие
         Mockito.when(contactRepository.findByUsernameAndId("testUser", "222")).thenReturn(contact);
-        Group group = formatter.parseFrom(groupString);
+        Group group = formatter.parse(groupString);
 
         // Проверка
         Group expectedGroup = new Group("testUser", "testGroup");

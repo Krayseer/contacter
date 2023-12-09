@@ -2,8 +2,8 @@ package ru.anykeyers.repositories.file;
 
 import ru.anykeyers.bots.BotType;
 import ru.anykeyers.domain.User;
-import ru.anykeyers.repositories.file.parsers.FileObjectParser;
-import ru.anykeyers.repositories.file.parsers.FileUserParser;
+import ru.anykeyers.repositories.file.mapper.Mapper;
+import ru.anykeyers.repositories.file.mapper.UserMapper;
 import ru.anykeyers.repositories.UserRepository;
 import ru.anykeyers.repositories.file.services.FileService;
 import ru.anykeyers.repositories.file.services.impl.FileServiceImpl;
@@ -25,7 +25,7 @@ public class FileUserRepository implements UserRepository {
 
     public FileUserRepository(String userFilePath) {
         dbFile = new File(userFilePath);
-        FileObjectParser<User> userFormatter = new FileUserParser();
+        Mapper<User> userFormatter = new UserMapper();
         fileService = new FileServiceImpl<>(userFormatter);
         Collection<User> users = fileService.initDataFromFile(dbFile);
         usersByUsername = users.stream()
