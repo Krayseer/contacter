@@ -1,7 +1,10 @@
 package ru.anykeyers.factory;
 
 import ru.anykeyers.exception.state.StateTypeNotExistsException;
+import ru.anykeyers.service.ImportExportService;
+import ru.anykeyers.service.impl.ContactImportExportService;
 import ru.anykeyers.processor.state.impl.ContactStateProcessor;
+import ru.anykeyers.processor.state.impl.ImportExportStateProcessor;
 import ru.anykeyers.processor.state.impl.OperationStateProcessor;
 import ru.anykeyers.processor.state.StateProcessor;
 import ru.anykeyers.processor.state.domain.StateType;
@@ -57,6 +60,7 @@ public class StateProcessorFactory {
         stateProcessorsByStateType.put(StateType.CONTACT, createContactStateProcessor(contactRepository));
         stateProcessorsByStateType.put(StateType.GROUP, createGroupStateProcessor(contactRepository, groupRepository));
         stateProcessorsByStateType.put(StateType.OPERATION, createOperationStateProcessor(contactRepository, groupRepository));
+        stateProcessorsByStateType.put(StateType.IMPORT_EXPORT, createImportExportStateProcessor(contactRepository));
     }
 
     /**
@@ -89,6 +93,17 @@ public class StateProcessorFactory {
                 userStateService, dataRetrievalService,
                 searchService, filterService, sortService
         );
+    }
+
+    /**
+     * Получить обработчик состояния по импорту/экспорту контактов
+     */
+    private StateProcessor createImportExportStateProcessor(ContactRepository contactRepository) {
+        ImportExportMapperFactory importExportMapperFactory = new ImportExportMapperFactory();
+        ImportExportService importExportService = new ContactImportExportService(
+                importExportMapperFactory, contactRepository
+        );
+        return new ImportExportStateProcessor(userStateService, importExportService);
     }
 
 }

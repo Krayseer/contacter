@@ -38,10 +38,9 @@ public class FileServiceImpl<T> implements FileService<T> {
     }
 
     @Override
-    public void saveOrUpdateFile(File dbFile, Map<String, ? extends Collection<T>> data) {
+    public void saveOrUpdateFile(File dbFile, Collection<T> data) {
         try {
-            List<String> linesToSave = data.values().stream()
-                    .flatMap(Collection::stream)
+            List<String> linesToSave = data.stream()
                     .map(mapper::format)
                     .collect(Collectors.toList());
             FileUtils.writeLines(dbFile, StandardCharsets.UTF_8.name(), linesToSave, false);

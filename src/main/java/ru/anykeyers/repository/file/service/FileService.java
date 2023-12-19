@@ -2,27 +2,25 @@ package ru.anykeyers.repository.file.service;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.Map;
 
 /**
- * Интерфейс сервиса для работы с файловой БД
- * @param <T> тип объекта
+ * Файловый сервис
  */
 public interface FileService<T> {
 
     /**
      * Инициализация коллекции данных из файла
      *
-     * @param dbFile путь до файловой БД
+     * @param file файл с данными
      */
-    Collection<T> initDataFromFile(File dbFile);
+    Collection<T> initDataFromFile(File file);
 
     /**
-     * Сохранить или обновить файловую БД новыми данными
+     * Сохранить или обновить файл новыми данными
      *
-     * @param dbFile путь до файловой БД
+     * @param file файл, который нужно обновить
      * @param data новые данные
      */
-    void saveOrUpdateFile(File dbFile, Map<String, ? extends Collection<T>> data);
+    void saveOrUpdateFile(File file, Collection<T> data);
 
 }

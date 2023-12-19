@@ -1,5 +1,6 @@
 package ru.anykeyers.processor.state;
 
+import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.exception.state.StateHandlerNotExistsException;
@@ -27,7 +28,7 @@ public abstract class BaseStateProcessor implements StateProcessor {
     }
 
     @Override
-    public String processState(User user, String message) {
+    public Message processState(User user, String message) {
         StateInfo userStateInfo = userStateService.getUserState(user);
         if (userStateInfo.getState() == null) {
             throw new StateNotSelectException();
@@ -36,11 +37,11 @@ public abstract class BaseStateProcessor implements StateProcessor {
         if (stateHandler == null) {
             throw new StateHandlerNotExistsException(userStateInfo.getState());
         }
-        String handleStateResult;
+        Message handleStateResult;
         try {
             handleStateResult = stateHandler.handleState(user, message);
         } catch (Exception ex) {
-            return ex.getMessage();
+            return new Message(ex.getMessage());
         }
         return handleStateResult;
     }

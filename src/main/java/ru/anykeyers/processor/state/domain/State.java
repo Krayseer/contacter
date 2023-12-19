@@ -140,4 +140,13 @@ public enum State {
      */
     SORT_AGE,
 
+    /**
+     * Импорт
+     */
+    IMPORT,
+    /**
+     * Экспорт
+     */
+    EXPORT,
+
 }

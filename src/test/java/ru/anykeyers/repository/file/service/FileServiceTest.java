@@ -7,6 +7,7 @@ import ru.anykeyers.bot.BotType;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.common.Mapper;
 import ru.anykeyers.repository.file.mapper.FileUserMapper;
+import ru.anykeyers.repository.file.service.impl.FileRepositoryServiceImpl;
 import ru.anykeyers.repository.file.service.impl.FileServiceImpl;
 
 import java.io.File;
@@ -19,6 +20,8 @@ import java.util.stream.Collectors;
  * Тесты для класса {@link FileService}
  */
 public class FileServiceTest {
+
+    private final FileRepositoryService<User> repositoryService = new FileRepositoryServiceImpl<>();
 
     /**
      * Тестирование составления карты вида [имя пользователя -> коллекция данных] из файловой БД
@@ -62,7 +65,7 @@ public class FileServiceTest {
         File dbFile = Files.createTempFile("tempDbFile", "txt").toFile();
 
         // Действие
-        fileService.saveOrUpdateFile(dbFile, usersMap);
+        fileService.saveOrUpdateFile(dbFile, repositoryService.getCollectionFromMap(usersMap));
         List<String> actualLines = FileUtils.readLines(dbFile, "UTF-8");
 
         // Проверка

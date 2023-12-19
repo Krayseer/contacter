@@ -1,5 +1,6 @@
 package ru.anykeyers.processor.state;
 
+import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.entity.User;
 
 /**
@@ -14,6 +15,6 @@ public interface StateProcessor {
      * @param message сообщение для обработки
      * @return результат обработки сообщения в зависимости от состояния
      */
-    String processState(User user, String message);
+    Message processState(User user, String message);
 
 }
