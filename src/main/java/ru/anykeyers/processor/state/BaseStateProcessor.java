@@ -2,6 +2,7 @@ package ru.anykeyers.processor.state;
 
 import ru.anykeyers.utils.EnumUtils;
 import ru.anykeyers.domain.Message;
+import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.exception.state.StateHandlerNotExistsException;

@@ -97,13 +97,13 @@ public class OperationStateProcessor extends BaseStateProcessor {
             StateInfo userStateInfo = userStateService.getUserState(user);
             if (kind.equals(ContactSearchKind.BY_NAME)) {
                 userStateInfo.setState(State.SEARCH_NAME);
-                return messages.getMessageByKey("search.contact.name");
+                return new Message(messages.getMessageByKey("search.contact.name"));
             } else if (kind.equals(ContactSearchKind.BY_PHONE)) {
                 userStateInfo.setState(State.SEARCH_PHONE);
-                return messages.getMessageByKey("search.contact.phone-number");
+                return new Message(messages.getMessageByKey("search.contact.phone-number"));
             } else if (kind.equals(ContactSearchKind.GROUP_CONTACTS_BY_NAME)) {
                 userStateInfo.setState(State.SEARCH_GROUP_CONTACTS);
-                return messages.getMessageByKey("search.group.contacts");
+                return new Message(messages.getMessageByKey("search.group.contacts"));
             }
             throw new BadArgumentException();
         });
@@ -147,13 +147,13 @@ public class OperationStateProcessor extends BaseStateProcessor {
             StateInfo userStateInfo = userStateService.getUserState(user);
             if (kind.equals(ContactFilterKind.BY_AGE)) {
                 userStateInfo.setState(State.FILTER_AGE);
-                return messages.getMessageByKey("filter.age");
+                return new Message(messages.getMessageByKey("filter.age"));
             } else if (kind.equals(ContactFilterKind.BY_GENDER)) {
                 userStateInfo.setState(State.FILTER_GENDER);
-                return messages.getMessageByKey("filter.gender");
+                return new Message(messages.getMessageByKey("filter.gender"));
             } else if (kind.equals(ContactFilterKind.BY_BLOCK)) {
                 userStateInfo.setState(State.FILTER_BLOCK);
-                return messages.getMessageByKey("filter.block");
+                return new Message(messages.getMessageByKey("filter.block"));
             }
             throw new BadArgumentException();
         }));
@@ -191,10 +191,10 @@ public class OperationStateProcessor extends BaseStateProcessor {
             StateInfo userStateInfo = userStateService.getUserState(user);
             if (kind.equals(ContactSortKind.BY_NAME)) {
                 userStateInfo.setState(State.SORT_NAME);
-                return messages.getMessageByKey("sort.kind.type");
+                return new Message(messages.getMessageByKey("sort.kind.type"));
             } else if (kind.equals(ContactSortKind.BY_AGE)) {
                 userStateInfo.setState(State.SORT_AGE);
-                return messages.getMessageByKey("sort.kind.type");
+                return new Message(messages.getMessageByKey("sort.kind.type"));
             }
             throw new BadArgumentException();
         }));
