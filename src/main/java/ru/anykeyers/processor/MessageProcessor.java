@@ -3,6 +3,7 @@ package ru.anykeyers.processor;
 import ru.anykeyers.bot.Bot;
 import ru.anykeyers.bot.BotType;
 import ru.anykeyers.common.Messages;
+import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.exception.CommandHandlerNotExistsException;
@@ -67,10 +68,15 @@ public class MessageProcessor {
     public void processMessage(String username, String message, BotType botType) {
         Command command = getCommandByValue(message);
         User user = authenticationService.getUserByUsernameAndBotType(username, botType);
-        String processResult = command != null
+        Message processResult = command != null
                 ? processCommand(user, command)
                 : processState(user, message);
-        bot.sendMessage(user.getChatId(), processResult);
+        if (processResult.getText() != null) {
+            bot.sendText(user.getChatId(), processResult.getText());
+        }
+        if (processResult.getFile() != null) {
+            bot.sendFile(user.getChatId(), processResult.getFile());
+        }
     }
 
     /**
@@ -79,12 +85,12 @@ public class MessageProcessor {
      * @param user пользователь, для которого идет обработка команды
      * @param command команда
      */
-    private String processCommand(User user, Command command) {
-        String result;
+    private Message processCommand(User user, Command command) {
+        Message result;
         try {
             result = commandProcessor.processCommand(user, command);
         } catch (CommandHandlerNotExistsException ex) {
-            return ex.getMessage();
+            return new Message(ex.getMessage());
         }
         return result;
     }
@@ -97,17 +103,17 @@ public class MessageProcessor {
      * @param user пользователь, который обрабатывает сообщение
      * @param message сообщение
      */
-    private String processState(User user, String message) {
+    private Message processState(User user, String message) {
         StateInfo userStateInfo = userStateService.getUserState(user);
         if(State.NONE.equals(userStateInfo.getState())) {
-            return messages.getMessageByKey("command.exception.need-select");
+            return new Message(messages.getMessageByKey("command.exception.need-select"));
         }
         StateProcessor stateProcessor = stateProcessorFactory.getStateProcessorByType(userStateInfo.getStateType());
-        String processStateResult;
+        Message processStateResult;
         try {
             processStateResult = stateProcessor.processState(user, message);
         } catch (StateHandlerNotExistsException | StateNotSelectException ex) {
-            return ex.getMessage();
+            return new Message(ex.getMessage());
         }
         return processStateResult;
     }

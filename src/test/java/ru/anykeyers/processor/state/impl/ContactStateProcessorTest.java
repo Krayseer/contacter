@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.processor.state.domain.State;
@@ -167,13 +168,13 @@ public class ContactStateProcessorTest {
             userStateInfo.setState(editFieldState);
             userStateInfo.setEditInfo(contactName);
             Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
-            String message = "Контакт 'testContact' успешно изменен";
+            Message message = new Message("Контакт 'testContact' успешно изменен");
 
             // Действие
-            String result = contactStateProcessor.processState(user, "newValue");
+            Message result = contactStateProcessor.processState(user, "newValue");
 
             // Проверка
-            Assert.assertEquals(message, result);
+            Assert.assertEquals(message.getText(), result.getText());
             Assert.assertEquals(State.NONE, userStateInfo.getState());
             Assert.assertEquals(StateType.NONE, userStateInfo.getStateType());
             Assert.assertNull(userStateInfo.getEditInfo());
@@ -191,13 +192,13 @@ public class ContactStateProcessorTest {
         userStateInfo.setState(State.DELETE_CONTACT);
         Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
         String contactName = "testContact";
-        String message = String.format("Контакт '%s' успешно удален", contactName);
+        Message message = new Message(String.format("Контакт '%s' успешно удален", contactName));
 
         // Действие
-        String result = contactStateProcessor.processState(user, "testContact");
+        Message result = contactStateProcessor.processState(user, "testContact");
 
         // Проверка
-        Assert.assertEquals(message, result);
+        Assert.assertEquals(message.getText(), result.getText());
         Assert.assertEquals(State.NONE, userStateInfo.getState());
         Assert.assertEquals(StateType.NONE, userStateInfo.getStateType());
         Assert.assertNull(userStateInfo.getEditInfo());

@@ -18,6 +18,9 @@ public enum Command {
     FILTER_COMMAND("/filter", "command.operation.filter"),
     SORT_COMMAND("/sort", "command.operation.sort"),
 
+    IMPORT_COMMAND("/import", "command.import"),
+    EXPORT_COMMAND("/export", "command.export"),
+
     HELP_COMMAND("/help", "command.help");
 
     /**

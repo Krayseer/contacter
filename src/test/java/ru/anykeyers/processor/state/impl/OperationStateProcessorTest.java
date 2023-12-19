@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import ru.anykeyers.domain.Gender;
+import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.domain.entity.Group;
@@ -75,7 +76,7 @@ public class OperationStateProcessorTest {
         // Действие: получение всех контактов пользователя
         Mockito.when(contactService.findAll(user)).thenReturn(Set.of(contact));
         Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
-        String resultContact = operationStateProcessor.processState(user, "1");
+        Message resultContact = operationStateProcessor.processState(user, "1");
 
         // Проверка
         Assert.assertEquals(State.NONE, userStateInfo.getState());
@@ -85,33 +86,33 @@ public class OperationStateProcessorTest {
                 Номер телефона: 799999
                 Возраст: 30
                 Пол: Мужской
-                Заблокирован: Нет""", resultContact);
+                Заблокирован: Нет""", resultContact.getText());
 
         // Действие: получение всех групп пользователя
         userStateInfo.setState(State.GET_KIND);
         Mockito.when(groupService.findAll(user)).thenReturn(Set.of(group));
-        String resultGroup = operationStateProcessor.processState(user, "2");
+        Message resultGroup = operationStateProcessor.processState(user, "2");
 
         // Проверка
         Assert.assertEquals(State.NONE, userStateInfo.getState());
         Assert.assertEquals("""
-                Название: testGroup. Количество участников: 1.""", resultGroup);
+                Название: testGroup. Количество участников: 1.""", resultGroup.getText());
 
         // Действие: получение всех контактов группы
         userStateInfo.setState(State.GET_KIND);
-        String resultGroupContacts = operationStateProcessor.processState(user, "3");
+        Message resultGroupContacts = operationStateProcessor.processState(user, "3");
 
         // Проверка
         Assert.assertEquals(State.GET_GROUP_CONTACTS, userStateInfo.getState());
         Assert.assertNull(userStateInfo.getEditInfo());
-        Assert.assertEquals("Введите название группы, контакты которой хотите получить", resultGroupContacts);
+        Assert.assertEquals("Введите название группы, контакты которой хотите получить", resultGroupContacts.getText());
 
         // Действие: обработка некорректного аргумента
         userStateInfo.setState(State.GET_KIND);
-        String resultError = operationStateProcessor.processState(user, "4151");
+        Message resultError = operationStateProcessor.processState(user, "4151");
 
         // Проверка
-        Assert.assertEquals("Введен неверный параметр", resultError);
+        Assert.assertEquals("Введен неверный параметр", resultError.getText());
     }
 
     /**
@@ -127,7 +128,7 @@ public class OperationStateProcessorTest {
         Mockito.when(groupService.findAllGroupContacts(user, group.getName()))
                 .thenReturn(Set.of(contact));
         Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
-        String resultGroupContacts = operationStateProcessor.processState(user, group.getName());
+        Message resultGroupContacts = operationStateProcessor.processState(user, group.getName());
 
         // Проверка
         Assert.assertEquals(State.NONE, userStateInfo.getState());
@@ -137,7 +138,7 @@ public class OperationStateProcessorTest {
                 Номер телефона: 799999
                 Возраст: 30
                 Пол: Мужской
-                Заблокирован: Нет""", resultGroupContacts);
+                Заблокирован: Нет""", resultGroupContacts.getText());
     }
 
     /**
@@ -157,39 +158,39 @@ public class OperationStateProcessorTest {
 
         // Действие: поиск по имени контакта
         Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
-        String searchContactByNameResult = operationStateProcessor.processState(user, "1");
+        Message searchContactByNameResult = operationStateProcessor.processState(user, "1");
 
         // Проверка
         Assert.assertEquals(State.SEARCH_NAME, userStateInfo.getState());
         Assert.assertEquals(
-                "Введите имя контакта, информацию о котором нужно вывести", searchContactByNameResult
+                "Введите имя контакта, информацию о котором нужно вывести", searchContactByNameResult.getText()
         );
 
         // Действие: поиск по номеру контакта
         userStateInfo.setState(State.SEARCH_KIND);
-        String searchContactByPhoneResult = operationStateProcessor.processState(user, "2");
+        Message searchContactByPhoneResult = operationStateProcessor.processState(user, "2");
 
         // Проверка
         Assert.assertEquals(State.SEARCH_PHONE, userStateInfo.getState());
         Assert.assertEquals(
-                "Введите номер телефона контакта, информацию о котором нужно вывести", searchContactByPhoneResult
+                "Введите номер телефона контакта, информацию о котором нужно вывести", searchContactByPhoneResult.getText()
         );
 
         // Действие: поиск контактов в группе
         userStateInfo.setState(State.SEARCH_KIND);
-        String searchGroupContacts = operationStateProcessor.processState(user, "3");
+        Message searchGroupContacts = operationStateProcessor.processState(user, "3");
 
         // Проверка
         Assert.assertEquals(State.SEARCH_GROUP_CONTACTS, userStateInfo.getState());
-        Assert.assertEquals("Введите название группы, контакты которой нужно вывести", searchGroupContacts);
+        Assert.assertEquals("Введите название группы, контакты которой нужно вывести", searchGroupContacts.getText());
 
         // Действие: ввод некорректного аргумента
         userStateInfo.setState(State.SEARCH_KIND);
-        String searchError = operationStateProcessor.processState(user, "4");
+        Message searchError = operationStateProcessor.processState(user, "4");
 
         // Проверка
         Assert.assertEquals(State.SEARCH_KIND, userStateInfo.getState());
-        Assert.assertEquals("Введен неверный параметр", searchError);
+        Assert.assertEquals("Введен неверный параметр", searchError.getText());
     }
 
     /**
@@ -203,13 +204,13 @@ public class OperationStateProcessorTest {
 
         // Действие
         Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
-        String result = operationStateProcessor.processState(user, "testGroup");
+        Message result = operationStateProcessor.processState(user, "testGroup");
 
         // Проверка
         Assert.assertEquals(State.SEARCH_GROUP_CONTACTS_BY_NAME, userStateInfo.getState());
         Assert.assertEquals("testGroup", userStateInfo.getEditInfo());
         Assert.assertEquals(
-                "Введите имя контакта", result
+                "Введите имя контакта", result.getText()
         );
     }
 
@@ -231,7 +232,7 @@ public class OperationStateProcessorTest {
         // Действие: найти контакты по имени
         Mockito.when(contactService.searchByArgument(user, userStateInfo, "test"))
                 .thenReturn(Set.of(contact));
-        String searchNameResult = operationStateProcessor.processState(user, "test");
+        Message searchNameResult = operationStateProcessor.processState(user, "test");
 
         // Проверка
         Assert.assertEquals(State.NONE, userStateInfo.getState());
@@ -240,13 +241,13 @@ public class OperationStateProcessorTest {
                 Номер телефона: 799999
                 Возраст: 30
                 Пол: Мужской
-                Заблокирован: Нет""", searchNameResult);
+                Заблокирован: Нет""", searchNameResult.getText());
 
         // Действие: найти контакты по номеру телефона
         userStateInfo.setState(State.SEARCH_PHONE);
         Mockito.when(contactService.searchByArgument(user, userStateInfo, "7"))
                 .thenReturn(Set.of(contact));
-        String searchPhoneResult = operationStateProcessor.processState(user, "7");
+        Message searchPhoneResult = operationStateProcessor.processState(user, "7");
 
         // Проверка
         Assert.assertEquals(State.NONE, userStateInfo.getState());
@@ -255,14 +256,14 @@ public class OperationStateProcessorTest {
                 Номер телефона: 799999
                 Возраст: 30
                 Пол: Мужской
-                Заблокирован: Нет""", searchPhoneResult);
+                Заблокирован: Нет""", searchPhoneResult.getText());
 
         // Действие: найти контакты в группе по имени
         userStateInfo.setState(State.SEARCH_GROUP_CONTACTS_BY_NAME);
         userStateInfo.setEditInfo(group.getName());
         Mockito.when(groupService.findGroupContactsByName(user, userStateInfo, "test"))
                 .thenReturn(Set.of(contact));
-        String searchGroupContactsResult = operationStateProcessor.processState(user, "test");
+        Message searchGroupContactsResult = operationStateProcessor.processState(user, "test");
 
         // Проверка
         Assert.assertEquals(State.NONE, userStateInfo.getState());
@@ -271,7 +272,7 @@ public class OperationStateProcessorTest {
                 Номер телефона: 799999
                 Возраст: 30
                 Пол: Мужской
-                Заблокирован: Нет""", searchGroupContactsResult);
+                Заблокирован: Нет""", searchGroupContactsResult.getText());
     }
 
     /**
@@ -291,41 +292,41 @@ public class OperationStateProcessorTest {
         Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
 
         // Действие: выбор действия фильтрации по возрасту
-        String filterByAge = operationStateProcessor.processState(user, "1");
+        Message filterByAge = operationStateProcessor.processState(user, "1");
 
         // Проверка
         Assert.assertEquals(State.FILTER_AGE, userStateInfo.getState());
-        Assert.assertEquals("Введите возраст, по которому будет происходить фильтрация", filterByAge);
+        Assert.assertEquals("Введите возраст, по которому будет происходить фильтрация", filterByAge.getText());
 
         // Действие: выбор действия фильтрации по полу
         userStateInfo.setState(State.FILTER_KIND);
-        String filterByGender = operationStateProcessor.processState(user, "2");
+        Message filterByGender = operationStateProcessor.processState(user, "2");
 
         // Проверка
         Assert.assertEquals(State.FILTER_GENDER, userStateInfo.getState());
         Assert.assertEquals("""
                 Выберите пол:
                 1. Мужской
-                2. Женский""", filterByGender);
+                2. Женский""", filterByGender.getText());
 
         // Действие: выбор действия фильтрации по блокировке
         userStateInfo.setState(State.FILTER_KIND);
-        String filterByBlock = operationStateProcessor.processState(user, "3");
+        Message filterByBlock = operationStateProcessor.processState(user, "3");
 
         // Проверка
         Assert.assertEquals(State.FILTER_BLOCK, userStateInfo.getState());
         Assert.assertEquals("""
                 Выберите параметр:
                 1. Заблокированные контакты
-                2. Не заблокированные контакты""", filterByBlock);
+                2. Не заблокированные контакты""", filterByBlock.getText());
 
         // Действие: выбор некорректного аргумента действия
         userStateInfo.setState(State.FILTER_KIND);
-        String filterError = operationStateProcessor.processState(user, "5143");
+        Message filterError = operationStateProcessor.processState(user, "5143");
 
         // Проверка
         Assert.assertEquals(State.FILTER_KIND, userStateInfo.getState());
-        Assert.assertEquals("Введен неверный параметр", filterError);
+        Assert.assertEquals("Введен неверный параметр", filterError.getText());
     }
 
     /**
@@ -339,7 +340,7 @@ public class OperationStateProcessorTest {
         Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
 
         // Действие
-        String result = operationStateProcessor.processState(user, "25");
+        Message result = operationStateProcessor.processState(user, "25");
 
         // Проверка
         Assert.assertEquals(State.FILTER_AGE_KIND, userStateInfo.getState());
@@ -348,7 +349,7 @@ public class OperationStateProcessorTest {
                 Выберите аргумент:
                 1. Старше
                 2. Младше
-                3. Равен""", result);
+                3. Равен""", result.getText());
     }
 
     /**
@@ -369,7 +370,7 @@ public class OperationStateProcessorTest {
         // Действие: фильтрация по контактам по возрасту (старше)
         Mockito.when(contactService.filterByKind(user, userStateInfo, "1"))
                 .thenReturn(Set.of(contact));
-        String ageGreaterFilterResult = operationStateProcessor.processState(user, "1");
+        Message ageGreaterFilterResult = operationStateProcessor.processState(user, "1");
 
         // Проверка
         Assert.assertEquals(State.NONE, userStateInfo.getState());
@@ -378,13 +379,13 @@ public class OperationStateProcessorTest {
                 Номер телефона: 799999
                 Возраст: 30
                 Пол: Мужской
-                Заблокирован: Нет""", ageGreaterFilterResult);
+                Заблокирован: Нет""", ageGreaterFilterResult.getText());
 
         // Действие: фильтрация по контактам с мужским полом
         userStateInfo.setState(State.FILTER_GENDER);
         Mockito.when(contactService.filterByKind(user, userStateInfo, "1"))
                 .thenReturn(Set.of(contact));
-        String genderFilterResult = operationStateProcessor.processState(user, "1");
+        Message genderFilterResult = operationStateProcessor.processState(user, "1");
 
         // Проверка
         Assert.assertEquals(State.NONE, userStateInfo.getState());
@@ -393,17 +394,17 @@ public class OperationStateProcessorTest {
                 Номер телефона: 799999
                 Возраст: 30
                 Пол: Мужской
-                Заблокирован: Нет""", genderFilterResult);
+                Заблокирован: Нет""", genderFilterResult.getText());
 
         // Действие: фильтрация по заблокированным контактам
         userStateInfo.setState(State.FILTER_BLOCK);
         Mockito.when(contactService.filterByKind(user, userStateInfo, "1"))
                 .thenReturn(Set.of());
-        String blockFilterResult = operationStateProcessor.processState(user, "1");
+        Message blockFilterResult = operationStateProcessor.processState(user, "1");
 
         // Проверка
         Assert.assertEquals(State.NONE, userStateInfo.getState());
-        Assert.assertEquals("Нет данных", blockFilterResult);
+        Assert.assertEquals("Нет данных", blockFilterResult.getText());
     }
 
     /**
@@ -422,33 +423,33 @@ public class OperationStateProcessorTest {
         Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
 
         // Действие: выбор сортировки по имени
-        String nameSortResult = operationStateProcessor.processState(user, "1");
+        Message nameSortResult = operationStateProcessor.processState(user, "1");
 
         // Проверка
         Assert.assertEquals(State.SORT_NAME, userStateInfo.getState());
         Assert.assertEquals("""
                 Выберите режим:
                 1. По возрастанию (А-Я/0-9)
-                2. По убыванию (Я-А/9-0)""", nameSortResult);
+                2. По убыванию (Я-А/9-0)""", nameSortResult.getText());
 
         // Действие: выбор сортировки по возрасту
         userStateInfo.setState(State.SORT_KIND);
-        String ageSortResult = operationStateProcessor.processState(user, "2");
+        Message ageSortResult = operationStateProcessor.processState(user, "2");
 
         // Проверка
         Assert.assertEquals(State.SORT_AGE, userStateInfo.getState());
         Assert.assertEquals("""
                 Выберите режим:
                 1. По возрастанию (А-Я/0-9)
-                2. По убыванию (Я-А/9-0)""", ageSortResult);
+                2. По убыванию (Я-А/9-0)""", ageSortResult.getText());
 
         // Действие: выбор некорректного аргумента действия
         userStateInfo.setState(State.SORT_KIND);
-        String filterError = operationStateProcessor.processState(user, "5143");
+        Message filterError = operationStateProcessor.processState(user, "5143");
 
         // Проверка
         Assert.assertEquals(State.SORT_KIND, userStateInfo.getState());
-        Assert.assertEquals("Введен неверный параметр", filterError);
+        Assert.assertEquals("Введен неверный параметр", filterError.getText());
     }
 
     /**
@@ -475,7 +476,7 @@ public class OperationStateProcessorTest {
         nameSortContacts.add(secondContact);
         Mockito.when(contactService.sortByKind(user, userStateInfo, SortDirectionKind.ASCENDING))
                 .thenReturn(nameSortContacts);
-        String nameSortResult = operationStateProcessor.processState(user, "1");
+        Message nameSortResult = operationStateProcessor.processState(user, "1");
 
         // Проверка
         Assert.assertEquals(State.NONE, userStateInfo.getState());
@@ -490,7 +491,7 @@ public class OperationStateProcessorTest {
                  Номер телефона:\s
                  Возраст: 2
                  Пол:\s
-                 Заблокирован: Нет""", nameSortResult);
+                 Заблокирован: Нет""", nameSortResult.getText());
 
         // Действие: сортировка по возрасту (убывание)
         Set<Contact> ageSortContacts = new LinkedHashSet<>();
@@ -499,7 +500,7 @@ public class OperationStateProcessorTest {
         userStateInfo.setState(State.SORT_AGE);
         Mockito.when(contactService.sortByKind(user, userStateInfo, SortDirectionKind.DESCENDING))
                 .thenReturn(ageSortContacts);
-        String ageSortResult = operationStateProcessor.processState(user, "2");
+        Message ageSortResult = operationStateProcessor.processState(user, "2");
 
         // Проверка
         Assert.assertEquals(State.NONE, userStateInfo.getState());
@@ -514,7 +515,7 @@ public class OperationStateProcessorTest {
                 Номер телефона:\s
                 Возраст: 1
                 Пол:\s
-                Заблокирован: Нет""", ageSortResult);
+                Заблокирован: Нет""", ageSortResult.getText());
     }
 
 }

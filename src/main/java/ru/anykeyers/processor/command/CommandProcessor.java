@@ -1,6 +1,7 @@
 package ru.anykeyers.processor.command;
 
 import ru.anykeyers.common.Messages;
+import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.exception.CommandHandlerNotExistsException;
 import ru.anykeyers.processor.state.domain.State;
@@ -35,6 +36,7 @@ public class CommandProcessor {
         registerContactCommands();
         registerGroupCommands();
         registerOperationCommands();
+        registerImportExportCommands();
     }
 
     /**
@@ -44,7 +46,7 @@ public class CommandProcessor {
      * @param command команда
      * @return результат обработки команды
      */
-    public String processCommand(User user, Command command) {
+    public Message processCommand(User user, Command command) {
         CommandHandler commandHandler = commandHandlers.get(command);
         if (commandHandler == null) {
             throw new CommandHandlerNotExistsException(command.getCommandValue());
@@ -92,17 +94,28 @@ public class CommandProcessor {
     }
 
     /**
+     * Регистрация команд, связанных с импортом/экспортом контактов
+     */
+    private void registerImportExportCommands() {
+        commandHandlers.put(Command.IMPORT_COMMAND, (user) ->
+                registerCommand(user, State.IMPORT, StateType.IMPORT_EXPORT, "import_export.import.path"));
+        commandHandlers.put(Command.EXPORT_COMMAND, (user) ->
+                registerCommand(user, State.EXPORT, StateType.IMPORT_EXPORT, "import_export.export.format"));
+    }
+
+    /**
      * Регистрация общих команд приложения
      */
     private void registerCommonCommands() {
         commandHandlers.put(Command.HELP_COMMAND, (user) -> {
             StateInfo userStateInfo = userStateService.getUserState(user);
             userStateInfo.clear();
-            return Arrays.stream(Command.values())
+            String commandsString = Arrays.stream(Command.values())
                     .map(command -> String.format("%s : %s",
                             command.getCommandValue(),
                             messages.getMessageByKey(command.getDescriptionKey())))
                     .collect(Collectors.joining("\n"));
+            return new Message(commandsString);
         });
     }
 
@@ -115,11 +128,11 @@ public class CommandProcessor {
      * @param messageKey ключ сообщения
      * @return сообщение о результате регистрации
      */
-    private String registerCommand(User user, State state, StateType stateType, String messageKey) {
+    private Message registerCommand(User user, State state, StateType stateType, String messageKey) {
         StateInfo userStateInfo = userStateService.getUserState(user);
         userStateInfo.setState(state);
         userStateInfo.setStateType(stateType);
-        return messages.getMessageByKey(messageKey);
+        return new Message(messages.getMessageByKey(messageKey));
     }
 
 }
