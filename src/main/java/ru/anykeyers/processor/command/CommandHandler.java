@@ -1,5 +1,6 @@
 package ru.anykeyers.processor.command;
 
+import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.entity.User;
 
 /**
@@ -13,6 +14,6 @@ public interface CommandHandler {
      * @param user пользователь, обрабатывающий команду
      * @return результат обработки команды
      */
-    String handleCommand(User user);
+    Message handleCommand(User user);
 
 }

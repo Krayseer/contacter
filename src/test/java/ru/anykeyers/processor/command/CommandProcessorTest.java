@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import ru.anykeyers.bot.BotType;
+import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.processor.state.domain.State;
@@ -36,10 +37,10 @@ public class CommandProcessorTest {
 
         // Действие
         Mockito.when(userStateService.getUserState(user)).thenReturn(new StateInfo());
-        String result = commandProcessor.processCommand(user, Command.ADD_CONTACT_COMMAND);
+        Message result = commandProcessor.processCommand(user, Command.ADD_CONTACT_COMMAND);
 
         // Проверка
-        Assert.assertEquals("Введите имя нового контакта", result);
+        Assert.assertEquals("Введите имя нового контакта", result.getText());
         StateInfo userStateInfo = userStateService.getUserState(user);
         Assert.assertEquals(State.ADD_CONTACT, userStateInfo.getState());
         Assert.assertEquals(StateType.CONTACT, userStateInfo.getStateType());
@@ -55,10 +56,10 @@ public class CommandProcessorTest {
 
         // Действие
         Mockito.when(userStateService.getUserState(user)).thenReturn(new StateInfo());
-        String result = commandProcessor.processCommand(user, Command.EDIT_CONTACT_COMMAND);
+        Message result = commandProcessor.processCommand(user, Command.EDIT_CONTACT_COMMAND);
 
         // Проверка
-        Assert.assertEquals("Введите имя контакта, который хотите изменить", result);
+        Assert.assertEquals("Введите имя контакта, который хотите изменить", result.getText());
         StateInfo userStateInfo = userStateService.getUserState(user);
         Assert.assertEquals(State.EDIT_CONTACT, userStateInfo.getState());
         Assert.assertEquals(StateType.CONTACT, userStateInfo.getStateType());
@@ -74,10 +75,10 @@ public class CommandProcessorTest {
 
         // Действие
         Mockito.when(userStateService.getUserState(user)).thenReturn(new StateInfo());
-        String result = commandProcessor.processCommand(user, Command.DELETE_CONTACT_COMMAND);
+        Message result = commandProcessor.processCommand(user, Command.DELETE_CONTACT_COMMAND);
 
         // Проверка
-        Assert.assertEquals("Введите имя контакта, который хотите удалить", result);
+        Assert.assertEquals("Введите имя контакта, который хотите удалить", result.getText());
         StateInfo userStateInfo = userStateService.getUserState(user);
         Assert.assertEquals(State.DELETE_CONTACT, userStateInfo.getState());
         Assert.assertEquals(StateType.CONTACT, userStateInfo.getStateType());
@@ -93,10 +94,10 @@ public class CommandProcessorTest {
 
         // Действие
         Mockito.when(userStateService.getUserState(user)).thenReturn(new StateInfo());
-        String result = commandProcessor.processCommand(user, Command.ADD_GROUP_COMMAND);
+        Message result = commandProcessor.processCommand(user, Command.ADD_GROUP_COMMAND);
 
         // Проверка
-        Assert.assertEquals("Введите название группы", result);
+        Assert.assertEquals("Введите название группы", result.getText());
         StateInfo userStateInfo = userStateService.getUserState(user);
         Assert.assertEquals(State.ADD_GROUP, userStateInfo.getState());
         Assert.assertEquals(StateType.GROUP, userStateInfo.getStateType());
@@ -112,10 +113,10 @@ public class CommandProcessorTest {
 
         // Действие
         Mockito.when(userStateService.getUserState(user)).thenReturn(new StateInfo());
-        String result = commandProcessor.processCommand(user, Command.EDIT_GROUP_COMMAND);
+        Message result = commandProcessor.processCommand(user, Command.EDIT_GROUP_COMMAND);
 
         // Проверка
-        Assert.assertEquals("Введите название группы, состояние которой вы хотите изменить", result);
+        Assert.assertEquals("Введите название группы, состояние которой вы хотите изменить", result.getText());
         StateInfo userStateInfo = userStateService.getUserState(user);
         Assert.assertEquals(State.EDIT_GROUP, userStateInfo.getState());
         Assert.assertEquals(StateType.GROUP, userStateInfo.getStateType());
@@ -131,10 +132,10 @@ public class CommandProcessorTest {
 
         // Действие
         Mockito.when(userStateService.getUserState(user)).thenReturn(new StateInfo());
-        String result = commandProcessor.processCommand(user, Command.DELETE_GROUP_COMMAND);
+        Message result = commandProcessor.processCommand(user, Command.DELETE_GROUP_COMMAND);
 
         // Проверка
-        Assert.assertEquals("Введите название группы, которую хотите удалить", result);
+        Assert.assertEquals("Введите название группы, которую хотите удалить", result.getText());
         StateInfo userStateInfo = userStateService.getUserState(user);
         Assert.assertEquals(State.DELETE_GROUP, userStateInfo.getState());
         Assert.assertEquals(StateType.GROUP, userStateInfo.getStateType());
@@ -150,14 +151,14 @@ public class CommandProcessorTest {
 
         // Действие
         Mockito.when(userStateService.getUserState(user)).thenReturn(new StateInfo());
-        String result = commandProcessor.processCommand(user, Command.GET_COMMAND);
+        Message result = commandProcessor.processCommand(user, Command.GET_COMMAND);
 
         // Проверка
         Assert.assertEquals("""
                 Выберите действие:
                 1. Получить все контакты
                 2. Получить все группы
-                3. Получить все контакты группы""", result);
+                3. Получить все контакты группы""", result.getText());
         StateInfo userStateInfo = userStateService.getUserState(user);
         Assert.assertEquals(State.GET_KIND, userStateInfo.getState());
         Assert.assertEquals(StateType.OPERATION, userStateInfo.getStateType());
@@ -173,14 +174,14 @@ public class CommandProcessorTest {
 
         // Действие
         Mockito.when(userStateService.getUserState(user)).thenReturn(new StateInfo());
-        String result = commandProcessor.processCommand(user, Command.SEARCH_COMMAND);
+        Message result = commandProcessor.processCommand(user, Command.SEARCH_COMMAND);
 
         // Проверка
         Assert.assertEquals("""
                 Выберите действие:
                 1. Найти контакты по имени
                 2. Найти контакты по номеру телефона
-                3. Найти контакты в группе по имени""", result);
+                3. Найти контакты в группе по имени""", result.getText());
         StateInfo userStateInfo = userStateService.getUserState(user);
         Assert.assertEquals(State.SEARCH_KIND, userStateInfo.getState());
         Assert.assertEquals(StateType.OPERATION, userStateInfo.getStateType());
@@ -196,14 +197,14 @@ public class CommandProcessorTest {
 
         // Действие
         Mockito.when(userStateService.getUserState(user)).thenReturn(new StateInfo());
-        String result = commandProcessor.processCommand(user, Command.FILTER_COMMAND);
+        Message result = commandProcessor.processCommand(user, Command.FILTER_COMMAND);
 
         // Проверка
         Assert.assertEquals("""
                 Выберите поле для фильтрации:
                 1. Возраст
                 2. Пол
-                3. Блокировка""", result);
+                3. Блокировка""", result.getText());
         StateInfo userStateInfo = userStateService.getUserState(user);
         Assert.assertEquals(State.FILTER_KIND, userStateInfo.getState());
         Assert.assertEquals(StateType.OPERATION, userStateInfo.getStateType());
@@ -219,16 +220,59 @@ public class CommandProcessorTest {
 
         // Действие
         Mockito.when(userStateService.getUserState(user)).thenReturn(new StateInfo());
-        String result = commandProcessor.processCommand(user, Command.SORT_COMMAND);
+        Message result = commandProcessor.processCommand(user, Command.SORT_COMMAND);
 
         // Проверка
         Assert.assertEquals("""
                 Выберите параметр сортировки:
                 1. Имя
-                2. Возраст""", result);
+                2. Возраст""", result.getText());
         StateInfo userStateInfo = userStateService.getUserState(user);
         Assert.assertEquals(State.SORT_KIND, userStateInfo.getState());
         Assert.assertEquals(StateType.OPERATION, userStateInfo.getStateType());
+    }
+
+    /**
+     * Обработка команды импорта
+     */
+    @Test
+    public void processCommandImportTest() {
+        // Подготовка
+        User user = new User("testUser", BotType.CONSOLE);
+
+        // Действие
+        Mockito.when(userStateService.getUserState(user)).thenReturn(new StateInfo());
+        Message result = commandProcessor.processCommand(user, Command.IMPORT_COMMAND);
+
+        // Проверка
+        Assert.assertEquals("Выберите файл", result.getText());
+        StateInfo userStateInfo = userStateService.getUserState(user);
+        Assert.assertEquals(State.IMPORT, userStateInfo.getState());
+        Assert.assertEquals(StateType.IMPORT_EXPORT, userStateInfo.getStateType());
+    }
+
+    /**
+     * Обработка команды экспорта
+     */
+    @Test
+    public void processCommandExportTest() {
+        // Подготовка
+        User user = new User("testUser", BotType.CONSOLE);
+
+        // Действие
+        Mockito.when(userStateService.getUserState(user)).thenReturn(new StateInfo());
+        Message result = commandProcessor.processCommand(user, Command.EXPORT_COMMAND);
+
+        // Проверка
+        Assert.assertEquals("""
+                Выберите формат файла экспорта:
+                1. txt
+                2. json
+                3. xml
+                4. csv""", result.getText());
+        StateInfo userStateInfo = userStateService.getUserState(user);
+        Assert.assertEquals(State.EXPORT, userStateInfo.getState());
+        Assert.assertEquals(StateType.IMPORT_EXPORT, userStateInfo.getStateType());
     }
 
     /**
@@ -241,7 +285,7 @@ public class CommandProcessorTest {
 
         // Действие
         Mockito.when(userStateService.getUserState(user)).thenReturn(new StateInfo());
-        String result = commandProcessor.processCommand(user, Command.HELP_COMMAND);
+        Message result = commandProcessor.processCommand(user, Command.HELP_COMMAND);
 
         // Проверка
         Assert.assertEquals("""
@@ -255,7 +299,9 @@ public class CommandProcessorTest {
                 /search : Поиск по контактам и группам
                 /filter : Фильтрация контактов
                 /sort : Сортировка контактов
-                /help : Показать все возможные команды""", result);
+                /import : Импорт
+                /export : Экспорт
+                /help : Показать все возможные команды""", result.getText());
         StateInfo userStateInfo = userStateService.getUserState(user);
         Assert.assertEquals(State.NONE, userStateInfo.getState());
         Assert.assertEquals(StateType.NONE, userStateInfo.getStateType());

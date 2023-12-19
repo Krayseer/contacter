@@ -1,8 +1,12 @@
 package ru.anykeyers.bot.impl;
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Document;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
@@ -21,6 +25,10 @@ import ru.anykeyers.service.UserStateService;
 import ru.anykeyers.service.impl.AuthenticationServiceImpl;
 import ru.anykeyers.service.impl.UserStateServiceImpl;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,19 +55,30 @@ public class TelegramBot extends TelegramLongPollingBot implements Bot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (update.hasMessage() && update.getMessage().hasText()) {
+        if (update.hasMessage()) {
             Message message = update.getMessage();
             org.telegram.telegrambots.meta.api.objects.User telegramUser = message.getFrom();
             String username = telegramUser.getUserName() != null
                     ? telegramUser.getUserName()
                     : telegramUser.getId().toString();
-            String text = message.getText();
             Long chatId = message.getChatId();
-            if(text.equals("/start")) {
-                initUser(username, chatId);
-                String welcomeMessage = messages.getMessageByKey("bot.welcome");
-                sendMessage(chatId, welcomeMessage);
-                return;
+            String text;
+            if (message.hasDocument()) {
+                java.io.File file = copyFile(message.getDocument());
+                text = file.getPath();
+            } else if (message.hasText()) {
+                String messageText = message.getText();
+                if(messageText.equals("/start")) {
+                    initUser(username, chatId);
+                    String welcomeMessage = messages.getMessageByKey("bot.welcome");
+                    sendText(chatId, welcomeMessage);
+                    setCommands();
+                    return;
+                }
+                text = messageText;
+            } else {
+                String errorMessage = messages.getMessageByKey("bot.telegram.exception.invalid-request-message");
+                throw new RuntimeException(errorMessage);
             }
             handleMessage(username, text);
         }
@@ -76,7 +95,20 @@ public class TelegramBot extends TelegramLongPollingBot implements Bot {
     }
 
     @Override
-    public void sendMessage(Long chatId, String message) {
+    public void sendFile(Long chatId, File file) {
+        SendDocument sendDocument = new SendDocument();
+        sendDocument.setChatId(chatId);
+        sendDocument.setDocument(new InputFile(file));
+        try {
+            execute(sendDocument);
+        } catch (TelegramApiException e) {
+            String errorMessage = messages.getMessageByKey("bot.telegram.exception.send-error");
+            throw new RuntimeException(errorMessage);
+        }
+    }
+
+    @Override
+    public void sendText(Long chatId, String message) {
         SendMessage msg = SendMessage.builder().chatId(chatId).text(message).build();
         try {
             execute(msg);
@@ -108,7 +140,28 @@ public class TelegramBot extends TelegramLongPollingBot implements Bot {
                 : new User(username, BotType.TELEGRAM_BOT);
         user.setChatId(chatId);
         authenticationService.saveOrUpdateUser(user);
-        setCommands();
+    }
+
+    /**
+     * Создать копию файла из документа
+     *
+     * @param document принимаемый документ
+     */
+    private File copyFile(Document document) {
+        String fileId = document.getFileId();
+        GetFile getFile = new GetFile();
+        getFile.setFileId(fileId);
+        String format = document.getFileName().split("\\.")[1];
+        try {
+            org.telegram.telegrambots.meta.api.objects.File file = execute(getFile);
+            java.io.File downloadedFile = downloadFile(file);
+            Path tempFilePath = Files.createTempFile("temp_", String.format(".%s", format));
+            Files.copy(downloadedFile.toPath(), tempFilePath, StandardCopyOption.REPLACE_EXISTING);
+            return tempFilePath.toFile();
+        } catch (Exception e) {
+            String errorMessage = messages.getMessageByKey("bot.telegram.exception.copy-file-error");
+            throw new RuntimeException(errorMessage);
+        }
     }
 
     /**

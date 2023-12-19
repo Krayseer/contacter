@@ -1,6 +1,7 @@
 package ru.anykeyers.processor.state.impl;
 
 import ru.anykeyers.common.Messages;
+import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.exception.group.GroupNotExistsException;
@@ -36,20 +37,20 @@ public class GroupStateProcessor extends BaseStateProcessor {
             try {
                 groupService.addGroup(user, groupName);
             } catch (Exception ex) {
-                return ex.getMessage();
+                return new Message(ex.getMessage());
             }
             StateInfo userStateInfo = userStateService.getUserState(user);
             userStateInfo.clear();
-            return messages.getMessageByKey("group.successful-save", groupName);
+            return new Message(messages.getMessageByKey("group.successful-save", groupName));
         });
         registerHandler(State.EDIT_GROUP, (user, groupNameToEdit) -> {
             if (!groupService.existsGroup(user, groupNameToEdit)) {
-                return messages.getMessageByKey("group.exception.name.not-exists", groupNameToEdit);
+                return new Message(messages.getMessageByKey("group.exception.name.not-exists", groupNameToEdit));
             }
             StateInfo userStateInfo = userStateService.getUserState(user);
             userStateInfo.setEditInfo(groupNameToEdit);
             userStateInfo.setState(State.EDIT_GROUP_FIELD);
-            return messages.getMessageByKey("group.state.edit.todo");
+            return new Message(messages.getMessageByKey("group.state.edit.todo"));
         });
         registerHandler(State.EDIT_GROUP_FIELD, (user, field) -> {
             GroupEditActionKind kind =
@@ -65,7 +66,7 @@ public class GroupStateProcessor extends BaseStateProcessor {
                     return processEditGroup(user, State.EDIT_GROUP_DELETE_CONTACT, "group.state.edit.contact.delete");
                 }
             }
-            return messages.getMessageByKey("exception.argument.invalid");
+            return new Message(messages.getMessageByKey("exception.argument.invalid"));
         });
         List<State> editGroupFieldsStates = List.of(
                 State.EDIT_GROUP_NAME, State.EDIT_GROUP_ADD_CONTACT, State.EDIT_GROUP_DELETE_CONTACT
@@ -76,20 +77,20 @@ public class GroupStateProcessor extends BaseStateProcessor {
             try {
                 groupService.editGroup(user, userStateInfo, newValue);
             } catch (Exception ex){
-                return ex.getMessage();
+                return new Message(ex.getMessage());
             }
             userStateInfo.clear();
-            return messages.getMessageByKey("group.successful-edit", groupName);
+            return new Message(messages.getMessageByKey("group.successful-edit", groupName));
         }));
         registerHandler(State.DELETE_GROUP, (user, groupName) -> {
             try {
                 groupService.deleteGroup(user, groupName);
             } catch (GroupNotExistsException ex) {
-                return ex.getMessage();
+                return new Message(ex.getMessage());
             }
             StateInfo userStateInfo = userStateService.getUserState(user);
             userStateInfo.clear();
-            return messages.getMessageByKey("group.successful-delete", groupName);
+            return new Message(messages.getMessageByKey("group.successful-delete", groupName));
         });
     }
 
@@ -101,10 +102,10 @@ public class GroupStateProcessor extends BaseStateProcessor {
      * @param messageKey ключ сообщения успешного выполнения операции
      * @return результат изменения группы
      */
-    private String processEditGroup(User user, State state, String messageKey) {
+    private Message processEditGroup(User user, State state, String messageKey) {
         StateInfo userStateInfo = userStateService.getUserState(user);
         userStateInfo.setState(state);
-        return messages.getMessageByKey(messageKey);
+        return new Message(messages.getMessageByKey(messageKey));
     }
 
 }

@@ -1,6 +1,7 @@
 package ru.anykeyers.processor.state.impl;
 
 import ru.anykeyers.common.Messages;
+import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.domain.entity.Group;
@@ -75,7 +76,7 @@ public class OperationStateProcessor extends BaseStateProcessor {
                 case GROUP_CONTACTS -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.GET_GROUP_CONTACTS);
-                    return messages.getMessageByKey("get.group.contacts");
+                    return new Message(messages.getMessageByKey("get.group.contacts"));
                 }
             }
             throw new BadArgumentException();
@@ -85,7 +86,7 @@ public class OperationStateProcessor extends BaseStateProcessor {
             try {
                 contacts = groupService.findAllGroupContacts(user, message);
             } catch (Exception ex) {
-                return ex.getMessage();
+                return new Message(ex.getMessage());
             }
             StateInfo userStateInfo = userStateService.getUserState(user);
             userStateInfo.clear();
@@ -104,17 +105,17 @@ public class OperationStateProcessor extends BaseStateProcessor {
                 case BY_NAME -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.SEARCH_NAME);
-                    return messages.getMessageByKey("search.contact.name");
+                    return new Message(messages.getMessageByKey("search.contact.name"));
                 }
                 case BY_PHONE -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.SEARCH_PHONE);
-                    return messages.getMessageByKey("search.contact.phone-number");
+                    return new Message(messages.getMessageByKey("search.contact.phone-number"));
                 }
                 case GROUP_CONTACTS_BY_NAME -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.SEARCH_GROUP_CONTACTS);
-                    return messages.getMessageByKey("search.group.contacts");
+                    return new Message(messages.getMessageByKey("search.group.contacts"));
                 }
             }
             throw new BadArgumentException();
@@ -123,7 +124,7 @@ public class OperationStateProcessor extends BaseStateProcessor {
             StateInfo userStateInfo = userStateService.getUserState(user);
             userStateInfo.setState(State.SEARCH_GROUP_CONTACTS_BY_NAME);
             userStateInfo.setEditInfo(message);
-            return messages.getMessageByKey("search.group.contacts.name");
+            return new Message(messages.getMessageByKey("search.group.contacts.name"));
         }));
         registerHandler(State.SEARCH_GROUP_CONTACTS_BY_NAME, ((user, message) -> {
             StateInfo userStateInfo = userStateService.getUserState(user);
@@ -143,7 +144,7 @@ public class OperationStateProcessor extends BaseStateProcessor {
             try {
                 contacts = contactService.searchByArgument(user, userStateInfo, message);
             } catch (Exception ex) {
-                return ex.getMessage();
+                return new Message(ex.getMessage());
             }
             userStateInfo.clear();
             return formatContacts(contacts);
@@ -161,17 +162,17 @@ public class OperationStateProcessor extends BaseStateProcessor {
                 case BY_AGE -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.FILTER_AGE);
-                    return messages.getMessageByKey("filter.age");
+                    return new Message(messages.getMessageByKey("filter.age"));
                 }
                 case BY_GENDER -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.FILTER_GENDER);
-                    return messages.getMessageByKey("filter.gender");
+                    return new Message(messages.getMessageByKey("filter.gender"));
                 }
                 case BY_BLOCK -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.FILTER_BLOCK);
-                    return messages.getMessageByKey("filter.block");
+                    return new Message(messages.getMessageByKey("filter.block"));
                 }
             }
             throw new BadArgumentException();
@@ -185,7 +186,7 @@ public class OperationStateProcessor extends BaseStateProcessor {
             StateInfo userStateInfo = userStateService.getUserState(user);
             userStateInfo.setState(State.FILTER_AGE_KIND);
             userStateInfo.setEditInfo(message);
-            return messages.getMessageByKey("filter.age.kind");
+            return new Message(messages.getMessageByKey("filter.age.kind"));
         }));
         List<State> states = List.of(State.FILTER_AGE_KIND, State.FILTER_BLOCK, State.FILTER_GENDER);
         states.forEach(state -> registerHandler(state, ((user, message) -> {
@@ -194,7 +195,7 @@ public class OperationStateProcessor extends BaseStateProcessor {
             try {
                 contacts = contactService.filterByKind(user, userStateInfo, message);
             } catch (Exception ex) {
-                return ex.getMessage();
+                return new Message(ex.getMessage());
             }
             userStateInfo.clear();
             return formatContacts(contacts);
@@ -211,12 +212,12 @@ public class OperationStateProcessor extends BaseStateProcessor {
                 case BY_NAME -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.SORT_NAME);
-                    return messages.getMessageByKey("sort.kind.type");
+                    return new Message(messages.getMessageByKey("sort.kind.type"));
                 }
                 case BY_AGE -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.SORT_AGE);
-                    return messages.getMessageByKey("sort.kind.type");
+                    return new Message(messages.getMessageByKey("sort.kind.type"));
                 }
             }
             throw new BadArgumentException();
@@ -230,7 +231,7 @@ public class OperationStateProcessor extends BaseStateProcessor {
                         (SortDirectionKind) utils.getEnumKindByField(SortDirectionKind.values(), message);
                 contacts = contactService.sortByKind(user, userStateInfo, kind);
             } catch (Exception ex) {
-                return ex.getMessage();
+                return new Message(ex.getMessage());
             }
             userStateInfo.clear();
             return formatContacts(contacts);
@@ -242,12 +243,13 @@ public class OperationStateProcessor extends BaseStateProcessor {
      *
      * @param contacts контакты
      */
-    private String formatContacts(Set<Contact> contacts) {
-        return contacts.isEmpty()
+    private Message formatContacts(Set<Contact> contacts) {
+        String contactsToText = contacts.isEmpty()
                 ? messages.getMessageByKey("commons.empty")
                 : contacts.stream()
                     .map(contactMapper::format)
                     .collect(Collectors.joining("\n\n"));
+        return new Message(contactsToText);
     }
 
     /**
@@ -255,12 +257,13 @@ public class OperationStateProcessor extends BaseStateProcessor {
      *
      * @param groups группы
      */
-    private String formatGroups(Set<Group> groups) {
-        return groups.isEmpty()
+    private Message formatGroups(Set<Group> groups) {
+        String groupsToText = groups.isEmpty()
                 ? messages.getMessageByKey("commons.empty")
                 : groups.stream()
-                    .map(groupMapper::format)
-                    .collect(Collectors.joining("\n\n"));
+                .map(groupMapper::format)
+                .collect(Collectors.joining("\n\n"));
+        return new Message(groupsToText);
     }
 
 }

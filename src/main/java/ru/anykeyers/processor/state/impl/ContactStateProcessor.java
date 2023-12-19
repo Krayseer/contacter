@@ -1,6 +1,7 @@
 package ru.anykeyers.processor.state.impl;
 
 import ru.anykeyers.common.Messages;
+import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.exception.BadArgumentException;
 import ru.anykeyers.processor.state.BaseStateProcessor;
@@ -36,20 +37,20 @@ public class ContactStateProcessor extends BaseStateProcessor {
             try {
                 contactService.addContact(user, contactName);
             } catch (Exception ex) {
-                return ex.getMessage();
+                return new Message(ex.getMessage());
             }
             StateInfo userStateInfo = userStateService.getUserState(user);
             userStateInfo.clear();
-            return messages.getMessageByKey("contact.successful-save", contactName);
+            return new Message(messages.getMessageByKey("contact.successful-save", contactName));
         });
         registerHandler(State.EDIT_CONTACT, (user, contactNameToEdit) -> {
             if (!contactService.existsContact(user, contactNameToEdit)) {
-                return messages.getMessageByKey("contact.exception.name.not-exists", contactNameToEdit);
+                return new Message(messages.getMessageByKey("contact.exception.name.not-exists", contactNameToEdit));
             }
             StateInfo userStateInfo = userStateService.getUserState(user);
             userStateInfo.setEditInfo(contactNameToEdit);
             userStateInfo.setState(State.EDIT_CONTACT_FIELD);
-            return messages.getMessageByKey("contact.state.edit.field");
+            return new Message(messages.getMessageByKey("contact.state.edit.field"));
         });
         registerHandler(State.EDIT_CONTACT_FIELD, (user, field) -> {
             ContactEditKind kind = (ContactEditKind) utils.getEnumKindByField(ContactEditKind.values(), field);
@@ -82,20 +83,20 @@ public class ContactStateProcessor extends BaseStateProcessor {
             try {
                 contactService.editContact(user, userStateInfo, newValue);
             } catch (Exception ex) {
-                return ex.getMessage();
+                return new Message(ex.getMessage());
             }
             userStateInfo.clear();
-            return messages.getMessageByKey("contact.successful-edit", contactName);
+            return new Message(messages.getMessageByKey("contact.successful-edit", contactName));
         }));
         registerHandler(State.DELETE_CONTACT, ((user, contactName) -> {
             try {
                 contactService.deleteContact(user, contactName);
             } catch (Exception ex) {
-                return ex.getMessage();
+                return new Message(ex.getMessage());
             }
             StateInfo userStateInfo = userStateService.getUserState(user);
             userStateInfo.clear();
-            return messages.getMessageByKey("contact.successful-delete", contactName);
+            return new Message(messages.getMessageByKey("contact.successful-delete", contactName));
         }));
     }
 
@@ -107,10 +108,10 @@ public class ContactStateProcessor extends BaseStateProcessor {
      * @param messageKey ключ сообщения успешного выполнения операции
      * @return результат изменения контакта
      */
-    private String processEditContact(User user, State state, String messageKey) {
+    private Message processEditContact(User user, State state, String messageKey) {
         StateInfo userStateInfo = userStateService.getUserState(user);
         userStateInfo.setState(state);
-        return messages.getMessageByKey(messageKey);
+        return new Message(messages.getMessageByKey(messageKey));
     }
 
 }

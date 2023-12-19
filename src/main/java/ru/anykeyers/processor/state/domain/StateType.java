@@ -20,6 +20,10 @@ public enum StateType {
     /**
      * Операция (получение/поиск/фильтр/сортировка)
      */
-    OPERATION
+    OPERATION,
+    /**
+     * Импорт/экспорт
+     */
+    IMPORT_EXPORT,
 
 }

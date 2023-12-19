@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.processor.state.domain.State;
@@ -42,13 +43,13 @@ public class GroupStateProcessorTest {
         userStateInfo.setState(State.ADD_GROUP);
         Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
         String groupName = "testGroup";
-        String message = String.format("Группа '%s' сохранена", groupName);
+        Message message = new Message(String.format("Группа '%s' сохранена", groupName));
 
         // Действие
-        String result = groupStateProcessor.processState(user, groupName);
+        Message result = groupStateProcessor.processState(user, groupName);
 
         // Проверка
-        Assert.assertEquals(message, result);
+        Assert.assertEquals(message.getText(), result.getText());
         Assert.assertEquals(State.NONE, userStateInfo.getState());
         Assert.assertEquals(StateType.NONE, userStateInfo.getStateType());
         Assert.assertNull(userStateInfo.getEditInfo());
@@ -72,19 +73,20 @@ public class GroupStateProcessorTest {
 
         // Действие: обработка состояния изменения несуществующей группы
         Mockito.when(groupService.existsGroup(user, "non-exists")).thenReturn(false);
-        String nonExistsGroupEditResult = groupStateProcessor.processState(user, "non-exists");
+        Message nonExistsGroupEditResult = groupStateProcessor.processState(user, "non-exists");
 
         // Проверка: обработка состояния изменения несуществующей группы
-        Assert.assertEquals("Не удалось найти группу 'non-exists'", nonExistsGroupEditResult);
+        Assert.assertEquals("Не удалось найти группу 'non-exists'", nonExistsGroupEditResult.getText());
         Assert.assertEquals(State.EDIT_GROUP, userStateInfo.getState());
 
         // Действие: обработка состояния изменения существующей группы
         Mockito.when(groupService.existsGroup(user, groupName)).thenReturn(true);
-        String existsGroupEditResult = groupStateProcessor.processState(user, groupName);
+        Message existsGroupEditResult = groupStateProcessor.processState(user, groupName);
 
         // Проверка: обработка состояния изменения существующей группы
         Assert.assertEquals(
-                "Выберите действие: \n1. изменить название\n2. добавить контакт\n3. удалить контакт", existsGroupEditResult
+                "Выберите действие: \n1. изменить название\n2. добавить контакт\n3. удалить контакт",
+                existsGroupEditResult.getText()
         );
         Assert.assertEquals(State.EDIT_GROUP_FIELD, userStateInfo.getState());
         Assert.assertEquals(groupName, userStateInfo.getEditInfo());
@@ -109,34 +111,40 @@ public class GroupStateProcessorTest {
         userStateInfo.setEditInfo(groupName);
 
         // Действие: обработка некорректного аргумента при изменении группы
-        String invalidArgumentProcess = groupStateProcessor.processState(user, "111111");
+        Message invalidArgumentProcess = groupStateProcessor.processState(user, "111111");
 
         // Проверка: обработка некорректного аргумента при изменении группы
-        Assert.assertEquals("Введен неверный параметр", invalidArgumentProcess);
+        Assert.assertEquals("Введен неверный параметр", invalidArgumentProcess.getText());
         Assert.assertEquals(State.EDIT_GROUP_FIELD, userStateInfo.getState());
 
         // Действие: выбор имени группы для изменения
-        String editContactNameProcess = groupStateProcessor.processState(user, "1");
+        Message editContactNameProcess = groupStateProcessor.processState(user, "1");
 
         // Проверка: выбор имени группы для изменения
         Assert.assertEquals(State.EDIT_GROUP_NAME, userStateInfo.getState());
-        Assert.assertEquals("Введите новое название группы", editContactNameProcess);
+        Assert.assertEquals("Введите новое название группы", editContactNameProcess.getText());
 
         // Действие: добавление контакта в группу
         userStateInfo.setState(State.EDIT_GROUP_FIELD);
-        String addContactInGroupProcess = groupStateProcessor.processState(user, "2");
+        Message addContactInGroupProcess = groupStateProcessor.processState(user, "2");
 
         // Проверка: добавление контакта в группу
         Assert.assertEquals(State.EDIT_GROUP_ADD_CONTACT, userStateInfo.getState());
-        Assert.assertEquals("Введите имя контакта, который вы хотите добавить в группу", addContactInGroupProcess);
+        Assert.assertEquals(
+                "Введите имя контакта, который вы хотите добавить в группу",
+                addContactInGroupProcess.getText()
+        );
 
         // Действие: удаление контакта из группы
         userStateInfo.setState(State.EDIT_GROUP_FIELD);
-        String deleteContactFromGroupProcess = groupStateProcessor.processState(user, "3");
+        Message deleteContactFromGroupProcess = groupStateProcessor.processState(user, "3");
 
         // Проверка: удаление контакта из группы
         Assert.assertEquals(State.EDIT_GROUP_DELETE_CONTACT, userStateInfo.getState());
-        Assert.assertEquals("Введите имя контакта, который вы хотите удалить из группы", deleteContactFromGroupProcess);
+        Assert.assertEquals(
+                "Введите имя контакта, который вы хотите удалить из группы",
+                deleteContactFromGroupProcess.getText()
+        );
     }
 
     /**
@@ -160,13 +168,13 @@ public class GroupStateProcessorTest {
             userStateInfo.setState(editFieldState);
             Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
             userStateInfo.setEditInfo(groupName);
-            String message = "Группа 'testGroup' успешно изменена";
+            Message message = new Message("Группа 'testGroup' успешно изменена");
 
             // Действие
-            String result = groupStateProcessor.processState(user, "newValue");
+            Message result = groupStateProcessor.processState(user, "newValue");
 
             // Проверка
-            Assert.assertEquals(message, result);
+            Assert.assertEquals(message.getText(), result.getText());
             Assert.assertEquals(State.NONE, userStateInfo.getState());
             Assert.assertEquals(StateType.NONE, userStateInfo.getStateType());
             Assert.assertNull(userStateInfo.getEditInfo());
@@ -184,13 +192,13 @@ public class GroupStateProcessorTest {
         userStateInfo.setState(State.DELETE_GROUP);
         Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
         String groupName = "testGroup";
-        String message = String.format("Группа '%s' успешно удалена", groupName);
+        Message message = new Message(String.format("Группа '%s' успешно удалена", groupName));
 
         // Действие
-        String result = groupStateProcessor.processState(user, groupName);
+        Message result = groupStateProcessor.processState(user, groupName);
 
         // Проверка
-        Assert.assertEquals(message, result);
+        Assert.assertEquals(message.getText(), result.getText());
         Assert.assertEquals(State.NONE, userStateInfo.getState());
         Assert.assertEquals(StateType.NONE, userStateInfo.getStateType());
         Assert.assertNull(userStateInfo.getEditInfo());
