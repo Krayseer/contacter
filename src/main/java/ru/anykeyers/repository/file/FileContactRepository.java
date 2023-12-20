@@ -1,12 +1,13 @@
 package ru.anykeyers.repository.file;
 
+import ru.anykeyers.common.Mapper;
 import ru.anykeyers.domain.entity.Contact;
-import ru.anykeyers.repository.file.service.FileService;
-import ru.anykeyers.repository.file.service.impl.FileServiceImpl;
-import ru.anykeyers.repository.file.mapper.FileContactMapper;
+import ru.anykeyers.service.FileService;
 import ru.anykeyers.repository.ContactRepository;
 import ru.anykeyers.repository.file.service.FileRepositoryService;
 import ru.anykeyers.repository.file.service.impl.FileRepositoryServiceImpl;
+import ru.anykeyers.service.impl.import_export.txt.TXTFileService;
+import ru.anykeyers.service.impl.import_export.txt.domain.TXTContactMapper;
 
 import java.io.File;
 import java.util.*;
@@ -27,7 +28,8 @@ public class FileContactRepository implements ContactRepository {
 
     public FileContactRepository(String contactFilePath) {
         dbFile = new File(contactFilePath);
-        fileService = new FileServiceImpl<>(new FileContactMapper());
+        Mapper<Contact> contactMapper = new TXTContactMapper();
+        fileService = new TXTFileService<>(contactMapper);
         repositoryService = new FileRepositoryServiceImpl<>();
         Collection<Contact> contacts = fileService.initDataFromFile(dbFile);
         contactsByUsername = repositoryService.getMapFromCollection(contacts, Contact::getUsername);
