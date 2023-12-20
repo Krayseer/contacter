@@ -1,4 +1,4 @@
-package ru.anykeyers.repository.file.mapper;
+package ru.anykeyers.service.import_export.txt.domain;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -10,20 +10,21 @@ import org.mockito.junit.MockitoJUnitRunner;
 import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.domain.entity.Group;
 import ru.anykeyers.repository.ContactRepository;
+import ru.anykeyers.service.impl.import_export.txt.domain.TXTGroupMapper;
 
 import java.util.Optional;
 
 /**
- * Тестирование класса {@link FileGroupMapper}
+ * Тестирование класса {@link TXTGroupMapper}
  */
 @RunWith(MockitoJUnitRunner.class)
-public class FileGroupMapperTest {
+public class TXTGroupMapperTest {
 
     @Mock
     private ContactRepository contactRepository;
 
     @InjectMocks
-    private FileGroupMapper mapper;
+    private TXTGroupMapper mapper;
 
     /**
      * Тестирование форматирования группы в строку

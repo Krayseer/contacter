@@ -1,17 +1,18 @@
-package ru.anykeyers.repository.file.mapper;
+package ru.anykeyers.service.import_export.txt.domain;
 
 import org.junit.Assert;
 import org.junit.Test;
 import ru.anykeyers.common.Mapper;
 import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.domain.Gender;
+import ru.anykeyers.service.impl.import_export.txt.domain.TXTContactMapper;
 
 /**
- * Тестирование класса {@link FileContactMapper}
+ * Тестирование класса {@link TXTContactMapper}
  */
-public class FileContactMapperTest {
+public class TXTContactMapperTest {
 
-    private final Mapper<Contact> contactMapper = new FileContactMapper();
+    private final Mapper<Contact> contactMapper = new TXTContactMapper();
 
     /**
      * Тестирование форматирования контакта в строку

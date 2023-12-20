@@ -1,4 +1,4 @@
-package ru.anykeyers.repository.file.mapper;
+package ru.anykeyers.service.impl.import_export.txt.domain;
 
 import ru.anykeyers.common.Mapper;
 import ru.anykeyers.domain.entity.User;
@@ -7,7 +7,7 @@ import ru.anykeyers.bot.BotType;
 /**
  * Маппер для пользователя
  */
-public class FileUserMapper implements Mapper<User> {
+public class TXTUserMapper implements Mapper<User> {
 
     @Override
     public String format(User object) {

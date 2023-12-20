@@ -6,13 +6,11 @@ import org.junit.Test;
 import ru.anykeyers.bot.BotType;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.repository.UserRepository;
-import ru.anykeyers.repository.file.mapper.FileUserMapper;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.stream.Stream;
 
 /**
  * Тесты для класса {@link FileUserRepository}
@@ -22,12 +20,6 @@ public class FileUserRepositoryTest {
     private UserRepository userRepository;
 
     private File tempDbFile;
-
-    private final FileUserMapper formatter;
-
-    public FileUserRepositoryTest() {
-        formatter = new FileUserMapper();
-    }
 
     @Before
     public void setUp() throws IOException {
@@ -49,10 +41,11 @@ public class FileUserRepositoryTest {
         userRepository.saveOrUpdate(user2);
 
         // Проверка
-        Set<String> actualUsersLines = new HashSet<>(Files.readAllLines(tempDbFile.toPath()));
-        Stream.of(user1, user2)
-                .map(formatter::format)
-                .forEach(user -> Assert.assertTrue(actualUsersLines.contains(user)));
+        List<String> actualUsersLines = Files.readAllLines(tempDbFile.toPath());
+        List<String> expectedFileLines = new ArrayList<>();
+        expectedFileLines.add("user1-CONSOLE:bot_type=CONSOLE;chat_id=null");
+        expectedFileLines.add("user2-CONSOLE:bot_type=CONSOLE;chat_id=null");
+        Assert.assertTrue(actualUsersLines.containsAll(expectedFileLines));
     }
 
 }
