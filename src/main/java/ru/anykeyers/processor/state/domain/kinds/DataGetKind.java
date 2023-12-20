@@ -3,21 +3,21 @@ package ru.anykeyers.processor.state.domain.kinds;
 /**
  * Типы критериев получения информации
  */
-public final class DataGetKind {
+public enum DataGetKind {
 
     /**
      * Получить все контакты
      */
-    public static final String CONTACTS = "1";
+    CONTACTS,
 
     /**
      * Получить все группы
      */
-    public static final String GROUPS = "2";
+    GROUPS,
 
     /**
      * Получить все контакты группы
      */
-    public static final String GROUP_CONTACTS = "3";
+    GROUP_CONTACTS
 
 }

@@ -52,20 +52,21 @@ public class ContactStateProcessor extends BaseStateProcessor {
             return messages.getMessageByKey("contact.state.edit.field");
         });
         registerHandler(State.EDIT_CONTACT_FIELD, (user, field) -> {
-            switch (field) {
-                case ContactEditKind.NAME -> {
+            ContactEditKind kind = (ContactEditKind) utils.getEnumKindByField(ContactEditKind.values(), field);
+            switch (kind) {
+                case NAME -> {
                     return processEditContact(user, State.EDIT_CONTACT_NAME, "contact.state.edit.name");
                 }
-                case ContactEditKind.PHONE -> {
+                case PHONE -> {
                     return processEditContact(user, State.EDIT_CONTACT_PHONE, "contact.state.edit.phone");
                 }
-                case ContactEditKind.AGE -> {
+                case AGE -> {
                     return processEditContact(user, State.EDIT_CONTACT_AGE, "contact.state.edit.age");
                 }
-                case ContactEditKind.GENDER -> {
+                case GENDER -> {
                     return processEditContact(user, State.EDIT_CONTACT_GENDER, "contact.state.edit.gender");
                 }
-                case ContactEditKind.BLOCK -> {
+                case BLOCK -> {
                     return processEditContact(user, State.EDIT_CONTACT_BLOCK, "contact.state.edit.block");
                 }
             }

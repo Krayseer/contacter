@@ -3,21 +3,21 @@ package ru.anykeyers.processor.state.domain.kinds;
 /**
  * Типы критериев поиска контактов
  */
-public final class ContactSearchKind {
+public enum ContactSearchKind {
 
     /**
      * Поиск контакта по имени
      */
-    public static final String BY_NAME = "1";
+    BY_NAME,
 
     /**
      * Поиск контакта по номеру телефона
      */
-    public static final String BY_PHONE = "2";
+    BY_PHONE,
 
     /**
      * Получить все контакты группы по имени
      */
-    public static final String GROUP_CONTACTS_BY_NAME = "3";
+    GROUP_CONTACTS_BY_NAME
 
 }

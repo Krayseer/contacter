@@ -1,7 +1,11 @@
 package ru.anykeyers.service;
 
 import ru.anykeyers.domain.StateInfo;
+import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.domain.entity.User;
+import ru.anykeyers.processor.state.domain.kinds.sort.SortDirectionKind;
+
+import java.util.Set;
 
 /**
  * Сервис для работы с контактами
@@ -11,7 +15,7 @@ public interface ContactService {
     /**
      * Существует ли контакт у пользователя
      *
-     * @param user пользователь
+     * @param user        пользователь
      * @param contactName имя контакта
      * @return {@code true}, если существует, иначе {@code false}
      */
@@ -20,7 +24,7 @@ public interface ContactService {
     /**
      * Добавляет контакт в список контактов пользователя
      *
-     * @param user пользователь
+     * @param user        пользователь
      * @param contactName имя контакта
      */
     void addContact(User user, String contactName);
@@ -35,7 +39,7 @@ public interface ContactService {
      *     <li>Изменить блокировку</li>
      * </ol>
      *
-     * @param user пользователь, которому нужно изменить контакт
+     * @param user     пользователь, которому нужно изменить контакт
      * @param newValue новое значение
      */
     void editContact(User user, StateInfo userStateInfo, String newValue);
@@ -44,9 +48,51 @@ public interface ContactService {
     /**
      * Удаляет контакт из списка контактов пользователя
      *
-     * @param user пользователь
+     * @param user        пользователь
      * @param contactName имя контакта
      */
     void deleteContact(User user, String contactName);
+
+    /**
+     * Найти все контакты пользователя
+     *
+     * @param user пользователь
+     * @return список контактов
+     */
+    Set<Contact> findAll(User user);
+
+    /**
+     * Найти все контакты по подстроке
+     * <ol>
+     *     <li>по имени</li>
+     *     <li>по номеру телефона</li>
+     * </ol>
+     *
+     * @param user          пользователь
+     * @param userStateInfo информация о состоянии пользователя
+     * @param substring     подстрока поиска
+     * @return список контактов, удовлетворяющих критерию поиску
+     */
+    Set<Contact> searchByArgument(User user, StateInfo userStateInfo, String substring);
+
+    /**
+     * Отфильтровать контакты в зависимости от типа фильтрации
+     *
+     * @param user          пользователь
+     * @param userStateInfo информация о состоянии пользователя
+     * @param kind          тип фильтрации
+     * @return список отфильтрованных контактов
+     */
+    Set<Contact> filterByKind(User user, StateInfo userStateInfo, String kind);
+
+    /**
+     * Отсортировать контакты в зависимости от типа сортировки
+     *
+     * @param user          пользователь
+     * @param userStateInfo информация о состоянии пользователя
+     * @param kind          тип сортировки
+     * @return список отсортированных контактов
+     */
+    Set<Contact> sortByKind(User user, StateInfo userStateInfo, SortDirectionKind kind);
 
 }

@@ -1,6 +1,7 @@
 package ru.anykeyers.service;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -16,10 +17,14 @@ import ru.anykeyers.exception.InvalidNumberFormat;
 import ru.anykeyers.exception.contact.ContactAlreadyExistsException;
 import ru.anykeyers.exception.contact.ContactNotExistsException;
 import ru.anykeyers.processor.state.domain.State;
+import ru.anykeyers.processor.state.domain.kinds.sort.SortDirectionKind;
 import ru.anykeyers.repository.ContactRepository;
-import ru.anykeyers.service.impl.ContactServiceImpl;
+import ru.anykeyers.service.impl.contact.ContactServiceImpl;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Тесты для сервиса {@link ContactService}
@@ -32,6 +37,28 @@ public class ContactServiceTest {
 
     @InjectMocks
     private ContactServiceImpl contactService;
+
+    private Contact firstContact;
+
+    private Contact secondContact;
+
+    private User user;
+
+    @Before
+    public void setUp() {
+        user = new User("testUser");
+
+        firstContact = new Contact("testId", "testFirst");
+        firstContact.setPhoneNumber("798");
+        firstContact.setAge(15);
+        firstContact.setGender(Gender.MAN);
+
+        secondContact = new Contact("testId2", "testSecond");
+        secondContact.setPhoneNumber("799");
+        secondContact.setAge(25);
+        secondContact.setGender(Gender.WOMAN);
+        secondContact.setBlocked(true);
+    }
 
     /**
      * Проверка существования контакта у пользователя
@@ -274,6 +301,261 @@ public class ContactServiceTest {
 
         // Проверка
         Mockito.verify(contactRepository, Mockito.times(1)).delete(contact);
+    }
+
+    /**
+     * Тестирование поиска контактов по имени
+     * <ol>
+     *     <li>По несуществующему имени</li>
+     *     <li>По вхождении подстроки имени</li>
+     *     <li>По полному вхождению имени</li>
+     * </ol>
+     */
+    @Test
+    public void findContactsByNameTest() {
+        // Подготовка
+        StateInfo userStateInfo = new StateInfo();
+        userStateInfo.setState(State.SEARCH_NAME);
+
+        // Действие: поиск по несуществующему имени
+        Mockito.when(contactRepository.findByUsername(user.getUsername()))
+                .thenReturn(Set.of(firstContact, secondContact));
+        Set<Contact> getContactsByNonExistsName = contactService.searchByArgument(user, userStateInfo, "kkk");
+
+        // Проверка
+        Assert.assertEquals(0, getContactsByNonExistsName.size());
+        Assert.assertEquals(Set.of(), getContactsByNonExistsName);
+
+        // Действие: поиск по полному вхождению имени
+        Set<Contact> getContactsByFullName = contactService.searchByArgument(user, userStateInfo, "testFirst");
+
+        // Проверка
+        Assert.assertEquals(1, getContactsByFullName.size());
+        Assert.assertEquals(Set.of(firstContact), getContactsByFullName);
+
+        // Действие: поиск по вхождению подстроки имени
+        Set<Contact> getContactsByContains = contactService.searchByArgument(user, userStateInfo, "test");
+
+        // Проверка
+        Assert.assertEquals(2, getContactsByContains.size());
+        Assert.assertEquals(Set.of(firstContact, secondContact), getContactsByContains);
+    }
+
+    /**
+     * Тестирование поиска контактов по номеру телефона
+     * <ol>
+     *     <li>По несуществующему номеру телефона</li>
+     *     <li>По вхождению подстроки номера телефона</li>
+     *     <li>По полному вхождению номера телефона</li>
+     * </ol>
+     */
+    @Test
+    public void findContactsByPhoneNumberTest() {
+        // Подготовка
+        StateInfo userStateInfo = new StateInfo();
+        userStateInfo.setState(State.SEARCH_PHONE);
+        // Действие: получение контактов по несуществующему номеру телефона
+        Mockito.when(contactRepository.findByUsername(user.getUsername()))
+                .thenReturn(Set.of(firstContact, secondContact));
+        Set<Contact> getContactsByNonExistsName = contactService.searchByArgument(user, userStateInfo, "888");
+
+        // Проверка
+        Assert.assertEquals(0, getContactsByNonExistsName.size());
+        Assert.assertEquals(Set.of(), getContactsByNonExistsName);
+
+        // Действие: получение контактов по полному вхождению номера телефона
+        Set<Contact> getContactsByFullName = contactService.searchByArgument(user, userStateInfo, "798");
+
+        // Проверка
+        Assert.assertEquals(1, getContactsByFullName.size());
+        Assert.assertEquals(Set.of(firstContact), getContactsByFullName);
+
+        // Действие: получение контактов по вхождению подстроки номера телефона
+        Set<Contact> getContactsByContains = contactService.searchByArgument(user, userStateInfo, "79");
+
+        // Проверка
+        Assert.assertEquals(2, getContactsByContains.size());
+        Assert.assertEquals(Set.of(firstContact, secondContact), getContactsByContains);
+    }
+
+    /**
+     * Тестирование фильтрации контактов по возрасту
+     * <ol>
+     *     <li>Фильтрация по возрасту с некорректным аргументом</li>
+     *     <li>Фильтрация по возрасту старше</li>
+     *     <li>Фильтрация по возрасту младше</li>
+     *     <li>Фильтрация по возрасту равному</li>
+     * </ol>
+     */
+    @Test
+    public void filterAgeTest() {
+        // Подготовка
+        StateInfo userStateInfo = new StateInfo();
+        userStateInfo.setState(State.FILTER_AGE_KIND);
+        userStateInfo.setEditInfo("18");
+
+        // Действие
+        Mockito.when(contactRepository.findByUsername(user.getUsername()))
+                .thenReturn(Set.of(firstContact, secondContact));
+
+        // Проверка: фильтрация по возрасту старше 18
+        Set<Contact> contactsGreaterThan =
+                contactService.filterByKind(user, userStateInfo, "1");
+        Assert.assertEquals(1, contactsGreaterThan.size());
+        Assert.assertEquals(Set.of(secondContact), contactsGreaterThan);
+
+        // Проверка: фильтрация по возрасту меньше 18
+        Set<Contact> contactsLessThan =
+                contactService.filterByKind(user, userStateInfo, "2");
+        Assert.assertEquals(1, contactsLessThan.size());
+        Assert.assertEquals(Set.of(firstContact), contactsLessThan);
+
+        // Проверка: фильтрация по возрасту равному 15
+        userStateInfo.setEditInfo("15");
+        Set<Contact> contactsEquals =
+                contactService.filterByKind(user, userStateInfo, "3");
+        Assert.assertEquals(1, contactsEquals.size());
+        Assert.assertEquals(Set.of(firstContact), contactsEquals);
+    }
+
+    /**
+     * Тестирование фильтрации контактов по полу
+     * <ol>
+     *     <li>Фильтрация по полу с некорректным аргументом</li>
+     *     <li>Фильтрация по мужскому полу</li>
+     *     <li>Фильтрация по женскому полу</li>
+     * </ol>
+     */
+    @Test
+    public void filterGenderTest() {
+        // Подготовка
+        StateInfo userStateInfo = new StateInfo();
+        userStateInfo.setState(State.FILTER_GENDER);
+
+        // Действие
+        Mockito.when(contactRepository.findByUsername(user.getUsername()))
+                .thenReturn(Set.of(firstContact, secondContact));
+
+        // Проверка: фильтрация по мужчинам
+        Set<Contact> manSet = contactService.filterByKind(user, userStateInfo, "1");
+        Assert.assertEquals(1, manSet.size());
+        Assert.assertEquals(Set.of(firstContact), manSet);
+
+        // Проверка: фильтрация по женщинам
+        Set<Contact> womanSet = contactService.filterByKind(user, userStateInfo, "2");
+        Assert.assertEquals(1, womanSet.size());
+        Assert.assertEquals(Set.of(secondContact), womanSet);
+    }
+
+    /**
+     * Тестирование фильтрации контактов по блокировке
+     * <ol>
+     *     <li>Фильтрация по полу с некорректным аргументом</li>
+     *     <li>Фильтрация по заблокированным контактам</li>
+     *     <li>Фильтрация по не заблокированным контактам</li>
+     * </ol>
+     */
+    @Test
+    public void filterBlockTest() {
+        // Подготовка
+        StateInfo userStateInfo = new StateInfo();
+        userStateInfo.setState(State.FILTER_BLOCK);
+
+        // Действие
+        Mockito.when(contactRepository.findByUsername(user.getUsername()))
+                .thenReturn(Set.of(firstContact, secondContact));
+
+        // Проверка: фильтрация по заблокированным
+        Set<Contact> blockSet =
+                contactService.filterByKind(user, userStateInfo, "1");
+        Assert.assertEquals(1, blockSet.size());
+        Assert.assertEquals(Set.of(secondContact), blockSet);
+
+        // Проверка: фильтрация по не заблокированным
+        Set<Contact> unblockSet =
+                contactService.filterByKind(user, userStateInfo, "2");
+        Assert.assertEquals(1, unblockSet.size());
+        Assert.assertEquals(Set.of(firstContact), unblockSet);
+    }
+
+    /**
+     * Тестирование сортировки контактов по имени
+     * <ol>
+     *     <li>с некорректным аргументом</li>
+     *     <li>по возрастанию</li>
+     *     <li>по убыванию</li>
+     * </ol>
+     */
+    @Test
+    public void sortContactsByNameTest() {
+        // Подготовка
+        StateInfo userStateInfo = new StateInfo();
+        userStateInfo.setState(State.SORT_NAME);
+
+        // Действие: сортировка при неверном введенном аргументе
+        Mockito.when(contactRepository.findByUsername(user.getUsername()))
+                .thenReturn(Set.of(firstContact, secondContact));
+
+        // Действие: сортировка по возрастанию
+        List<Contact> sortedContacts = new LinkedList<>(
+                contactService.sortByKind(user, userStateInfo, SortDirectionKind.ASCENDING)
+        );
+
+        // Проверка
+        List<Contact> expectedSortedContacts = new LinkedList<>();
+        expectedSortedContacts.add(firstContact);
+        expectedSortedContacts.add(secondContact);
+        Assert.assertEquals(expectedSortedContacts, sortedContacts);
+
+        // Действие: сортировка по убыванию
+        List<Contact> sortedContactsReverse = new LinkedList<>(
+                contactService.sortByKind(user, userStateInfo, SortDirectionKind.DESCENDING)
+        );
+
+        // Проверка
+        List<Contact> expectedSortedContactsReverse = new LinkedList<>();
+        expectedSortedContactsReverse.add(secondContact);
+        expectedSortedContactsReverse.add(firstContact);
+        Assert.assertEquals(expectedSortedContactsReverse, sortedContactsReverse);
+    }
+
+    /**
+     * Тестирование сортировки контактов по возрасту
+     * <ol>
+     *     <li>с некорректным аргументом</li>
+     *     <li>по возрастанию</li>
+     *     <li>по убыванию</li>
+     * </ol>
+     */
+    @Test
+    public void sortContactsByAgeTest() {
+        // Подготовка
+        StateInfo userStateInfo = new StateInfo();
+        userStateInfo.setState(State.SORT_AGE);
+
+        // Действие: сортировка по возрастанию
+        Mockito.when(contactRepository.findByUsername(user.getUsername()))
+                .thenReturn(Set.of(firstContact, secondContact));
+        List<Contact> sortedContacts = new LinkedList<>(
+                contactService.sortByKind(user, userStateInfo, SortDirectionKind.ASCENDING)
+        );
+
+        // Проверка
+        List<Contact> expectedSortedContacts = new LinkedList<>();
+        expectedSortedContacts.add(firstContact);
+        expectedSortedContacts.add(secondContact);
+        Assert.assertEquals(expectedSortedContacts, sortedContacts);
+
+        // Действие: сортировка по убыванию
+        List<Contact> sortedContactsReverse = new LinkedList<>(
+                contactService.sortByKind(user, userStateInfo, SortDirectionKind.DESCENDING)
+        );
+
+        // Проверка
+        List<Contact> expectedSortedContactsReverse = new LinkedList<>();
+        expectedSortedContactsReverse.add(secondContact);
+        expectedSortedContactsReverse.add(firstContact);
+        Assert.assertEquals(expectedSortedContactsReverse, sortedContactsReverse);
     }
 
 }

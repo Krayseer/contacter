@@ -60,11 +60,9 @@ public class FileContactRepository implements ContactRepository {
 
     @Override
     public void delete(Contact contact) {
-        Optional.of(findByUsername(contact.getUsername()))
-                .ifPresent(contacts -> {
-                    contacts.remove(contact);
-                    fileService.saveOrUpdateFile(dbFile, contactsByUsername);
-                });
+        Set<Contact> contacts = findByUsername(contact.getUsername());
+        contacts.remove(contact);
+        fileService.saveOrUpdateFile(dbFile, contactsByUsername);
     }
 
     /**

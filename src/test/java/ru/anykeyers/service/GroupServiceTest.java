@@ -222,4 +222,24 @@ public class GroupServiceTest {
         Mockito.verify(groupRepository, Mockito.times(1)).delete(groupToDelete);
     }
 
+    /**
+     * Тестирование получения контактов в несуществующей группе
+     */
+    @Test
+    public void getAllGroupContactsTest() {
+        // Подготовка
+        User user = new User("testUser");
+        String nonExistsGroupName = "non-exists";
+
+        // Действие
+        Mockito.when(groupRepository.getByUsernameAndName(user.getUsername(), nonExistsGroupName))
+                .thenReturn(Optional.empty());
+
+        // Проверка
+        Exception groupNotExistsException = Assert.assertThrows(
+                GroupNotExistsException.class, () -> groupService.findAllGroupContacts(user, nonExistsGroupName)
+        );
+        Assert.assertEquals("Не удалось найти группу 'non-exists'", groupNotExistsException.getMessage());
+    }
+
 }

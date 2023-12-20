@@ -1,19 +1,23 @@
-package ru.anykeyers.service.impl;
+package ru.anykeyers.service.impl.contact;
 
+import ru.anykeyers.common.Utils;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.domain.Gender;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.exception.BadArgumentException;
+import ru.anykeyers.exception.InvalidUserStateException;
 import ru.anykeyers.exception.contact.ContactAlreadyExistsException;
 import ru.anykeyers.exception.contact.ContactNotExistsException;
 import ru.anykeyers.exception.InvalidNumberFormat;
 import ru.anykeyers.processor.state.domain.kinds.contact.EditContactBlockKind;
 import ru.anykeyers.processor.state.domain.kinds.contact.EditContactGenderKind;
+import ru.anykeyers.processor.state.domain.kinds.sort.SortDirectionKind;
 import ru.anykeyers.repository.ContactRepository;
 import ru.anykeyers.service.ContactService;
 
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Реализация сервиса {@link ContactRepository}
@@ -22,8 +26,26 @@ public class ContactServiceImpl implements ContactService {
 
     private final ContactRepository contactRepository;
 
+    private final SearchContactService searchContactService;
+
+    private final FilterContactService filterContactService;
+
+    private final SortContactService sortContactService;
+
+    private final Utils utils;
+
+
     public ContactServiceImpl(ContactRepository contactRepository) {
         this.contactRepository = contactRepository;
+        searchContactService = new SearchContactService();
+        filterContactService = new FilterContactService();
+        sortContactService = new SortContactService();
+        utils = new Utils();
+    }
+
+    @Override
+    public Set<Contact> findAll(User user) {
+        return contactRepository.findByUsername(user.getUsername());
     }
 
     @Override
@@ -51,29 +73,33 @@ public class ContactServiceImpl implements ContactService {
         switch (userStateInfo.getState()) {
             case EDIT_CONTACT_NAME -> contactToEdit.get().setName(newValue);
             case EDIT_CONTACT_PHONE -> {
-                if (isNotNumber(newValue)) {
+                if (utils.isNotNumber(newValue)) {
                     throw new InvalidNumberFormat();
                 }
                 contactToEdit.get().setPhoneNumber(newValue);
             }
             case EDIT_CONTACT_AGE -> {
-                if (isNotNumber(newValue)) {
+                if (utils.isNotNumber(newValue)) {
                     throw new InvalidNumberFormat();
                 }
                 int newAge = Integer.parseInt(newValue);
                 contactToEdit.get().setAge(newAge);
             }
             case EDIT_CONTACT_GENDER -> {
-                switch (newValue) {
-                    case EditContactGenderKind.MALE -> contactToEdit.get().setGender(Gender.MAN);
-                    case EditContactGenderKind.FEMALE -> contactToEdit.get().setGender(Gender.WOMAN);
+                EditContactGenderKind kind =
+                        (EditContactGenderKind) utils.getEnumKindByField(EditContactGenderKind.values(), newValue);
+                switch (kind) {
+                    case MALE -> contactToEdit.get().setGender(Gender.MAN);
+                    case FEMALE -> contactToEdit.get().setGender(Gender.WOMAN);
                     default -> throw new BadArgumentException();
                 }
             }
             case EDIT_CONTACT_BLOCK -> {
-                switch (newValue) {
-                    case EditContactBlockKind.BLOCK -> contactToEdit.get().setBlocked(true);
-                    case EditContactBlockKind.UNBLOCK -> contactToEdit.get().setBlocked(false);
+                EditContactBlockKind kind =
+                        (EditContactBlockKind) utils.getEnumKindByField(EditContactBlockKind.values(), newValue);
+                switch (kind) {
+                    case BLOCK -> contactToEdit.get().setBlocked(true);
+                    case UNBLOCK -> contactToEdit.get().setBlocked(false);
                     default -> throw new BadArgumentException();
                 }
             }
@@ -91,14 +117,33 @@ public class ContactServiceImpl implements ContactService {
         contactRepository.delete(contactToDelete.get());
     }
 
-    /**
-     * Проверить, что строка не является числом
-     *
-     * @param str строка, которую нужно проверить
-     * @return {@code true}, если не является числом, иначе {@code false}
-     */
-    private boolean isNotNumber(String str) {
-        return !str.matches("\\d+");
+    @Override
+    public Set<Contact> searchByArgument(User user, StateInfo userStateInfo, String substring) {
+        Set<Contact> contacts = contactRepository.findByUsername(user.getUsername());
+        return searchContactService.searchContacts(contacts, userStateInfo.getState(), substring);
+    }
+
+    @Override
+    public Set<Contact> filterByKind(User user, StateInfo userStateInfo, String kind) {
+        Set<Contact> contacts = contactRepository.findByUsername(user.getUsername());
+        switch (userStateInfo.getState()) {
+            case FILTER_AGE_KIND -> {
+                return filterContactService.filterByAgeKind(contacts, userStateInfo.getEditInfo(), kind);
+            }
+            case FILTER_GENDER -> {
+                return filterContactService.filterByGender(contacts, kind);
+            }
+            case FILTER_BLOCK -> {
+                return filterContactService.filterByBlock(contacts, kind);
+            }
+            default -> throw new InvalidUserStateException();
+        }
+    }
+
+    @Override
+    public Set<Contact> sortByKind(User user, StateInfo userStateInfo, SortDirectionKind kind) {
+        Set<Contact> contacts = contactRepository.findByUsername(user.getUsername());
+        return sortContactService.sortContacts(contacts, userStateInfo.getState(), kind);
     }
 
 }

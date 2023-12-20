@@ -14,8 +14,11 @@ import ru.anykeyers.repository.ContactRepository;
 import ru.anykeyers.repository.GroupRepository;
 import ru.anykeyers.service.GroupService;
 
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Реализация сервиса {@link GroupService}
@@ -29,6 +32,28 @@ public class GroupServiceImpl implements GroupService {
                             ContactRepository contactRepository) {
         this.groupRepository = groupRepository;
         this.contactRepository = contactRepository;
+    }
+
+    @Override
+    public Set<Group> findAll(User user) {
+        return groupRepository.findByUsername(user.getUsername());
+    }
+
+    @Override
+    public Set<Contact> findAllGroupContacts(User user, String groupName) {
+        Optional<Group> group = groupRepository.getByUsernameAndName(user.getUsername(), groupName);
+        if (group.isEmpty()) {
+            throw new GroupNotExistsException(groupName);
+        }
+        return group.map(Group::getContacts).orElse(Collections.emptySet());
+    }
+
+    @Override
+    public Set<Contact> findGroupContactsByName(User user, StateInfo userStateInfo, String contactName) {
+        Set<Contact> contacts = findAllGroupContacts(user, userStateInfo.getEditInfo());
+        return contacts.stream()
+                .filter(contact -> contact.getName() != null && contact.getName().contains(contactName))
+                .collect(Collectors.toSet());
     }
 
     @Override

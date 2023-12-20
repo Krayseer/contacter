@@ -7,6 +7,7 @@ import ru.anykeyers.domain.entity.Group;
 import ru.anykeyers.common.Mapper;
 import ru.anykeyers.exception.InvalidNumberFormat;
 import ru.anykeyers.processor.state.domain.kinds.DataGetKind;
+import ru.anykeyers.processor.state.domain.kinds.sort.SortDirectionKind;
 import ru.anykeyers.processor.state.domain.mapper.UiContactMapper;
 import ru.anykeyers.exception.BadArgumentException;
 import ru.anykeyers.processor.state.BaseStateProcessor;
@@ -28,28 +29,20 @@ public class OperationStateProcessor extends BaseStateProcessor {
 
     private final Messages messages = Messages.getInstance();
 
-    private final DataRetrievalService dataRetrievalService;
+    private final ContactService contactService;
 
-    private final SearchService searchService;
-
-    private final FilterContactService filterService;
-
-    private final SortContactService sortService;
+    private final GroupService groupService;
 
     private final Mapper<Contact> contactMapper;
 
     private final Mapper<Group> groupMapper;
 
     public OperationStateProcessor(UserStateService userStateService,
-                                   DataRetrievalService dataRetrievalService,
-                                   SearchService searchService,
-                                   FilterContactService filterService,
-                                   SortContactService sortService) {
+                                   ContactService contactService,
+                                   GroupService groupService) {
         super(userStateService);
-        this.dataRetrievalService = dataRetrievalService;
-        this.searchService = searchService;
-        this.filterService = filterService;
-        this.sortService = sortService;
+        this.contactService = contactService;
+        this.groupService = groupService;
 
         contactMapper = new UiContactMapper();
         groupMapper = new UiGroupMapper();
@@ -65,20 +58,21 @@ public class OperationStateProcessor extends BaseStateProcessor {
      */
     private void registerDataRetrievalService() {
         registerHandler(State.GET_KIND, ((user, field) -> {
-            switch (field) {
-                case DataGetKind.CONTACTS -> {
-                    Set<Contact> contacts = dataRetrievalService.getAllContacts(user);
+            DataGetKind kind = (DataGetKind) utils.getEnumKindByField(DataGetKind.values(), field);
+            switch (kind) {
+                case CONTACTS -> {
+                    Set<Contact> contacts = contactService.findAll(user);
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.clear();
-                    return getUiContactsInfo(contacts);
+                    return formatContacts(contacts);
                 }
-                case DataGetKind.GROUPS -> {
-                    Set<Group> groups = dataRetrievalService.getAllGroups(user);
+                case GROUPS -> {
+                    Set<Group> groups = groupService.findAll(user);
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.clear();
-                    return getUiGroupsInfo(groups);
+                    return formatGroups(groups);
                 }
-                case DataGetKind.GROUP_CONTACTS -> {
+                case GROUP_CONTACTS -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.GET_GROUP_CONTACTS);
                     return messages.getMessageByKey("get.group.contacts");
@@ -89,13 +83,13 @@ public class OperationStateProcessor extends BaseStateProcessor {
         registerHandler(State.GET_GROUP_CONTACTS, ((user, message) -> {
             Set<Contact> contacts;
             try {
-                contacts = dataRetrievalService.getAllGroupContacts(user, message);
+                contacts = groupService.findAllGroupContacts(user, message);
             } catch (Exception ex) {
                 return ex.getMessage();
             }
             StateInfo userStateInfo = userStateService.getUserState(user);
             userStateInfo.clear();
-            return getUiContactsInfo(contacts);
+            return formatContacts(contacts);
         }));
     }
 
@@ -104,18 +98,20 @@ public class OperationStateProcessor extends BaseStateProcessor {
      */
     private void registerSearchStateHandlers() {
         registerHandler(State.SEARCH_KIND, (user, field) -> {
-            switch (field) {
-                case ContactSearchKind.BY_NAME -> {
+            ContactSearchKind kind =
+                    (ContactSearchKind) utils.getEnumKindByField(ContactSearchKind.values(), field);
+            switch (kind) {
+                case BY_NAME -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.SEARCH_NAME);
                     return messages.getMessageByKey("search.contact.name");
                 }
-                case ContactSearchKind.BY_PHONE -> {
+                case BY_PHONE -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.SEARCH_PHONE);
                     return messages.getMessageByKey("search.contact.phone-number");
                 }
-                case ContactSearchKind.GROUP_CONTACTS_BY_NAME -> {
+                case GROUP_CONTACTS_BY_NAME -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.SEARCH_GROUP_CONTACTS);
                     return messages.getMessageByKey("search.group.contacts");
@@ -129,17 +125,28 @@ public class OperationStateProcessor extends BaseStateProcessor {
             userStateInfo.setEditInfo(message);
             return messages.getMessageByKey("search.group.contacts.name");
         }));
-        List<State> searchKinds = List.of(State.SEARCH_NAME, State.SEARCH_PHONE, State.SEARCH_GROUP_CONTACTS_BY_NAME);
-        searchKinds.forEach(state -> registerHandler(state, (user, message) -> {
+        registerHandler(State.SEARCH_GROUP_CONTACTS_BY_NAME, ((user, message) -> {
             StateInfo userStateInfo = userStateService.getUserState(user);
             Set<Contact> contacts;
             try {
-                contacts = searchService.findContactsByArgument(user, userStateInfo, message);
+                contacts = groupService.findGroupContactsByName(user, userStateInfo, message);
             } catch (Exception ex) {
                 return ex.getMessage();
             }
             userStateInfo.clear();
-            return getUiContactsInfo(contacts);
+            return formatContacts(contacts);
+        }));
+        List<State> searchKinds = List.of(State.SEARCH_NAME, State.SEARCH_PHONE);
+        searchKinds.forEach(state -> registerHandler(state, (user, message) -> {
+            StateInfo userStateInfo = userStateService.getUserState(user);
+            Set<Contact> contacts;
+            try {
+                contacts = contactService.searchByArgument(user, userStateInfo, message);
+            } catch (Exception ex) {
+                return ex.getMessage();
+            }
+            userStateInfo.clear();
+            return formatContacts(contacts);
         }));
     }
 
@@ -148,18 +155,20 @@ public class OperationStateProcessor extends BaseStateProcessor {
      */
     private void registerFilterCommands() {
         registerHandler(State.FILTER_KIND, ((user, field) -> {
-            switch (field) {
-                case ContactFilterKind.BY_AGE -> {
+            ContactFilterKind kind =
+                    (ContactFilterKind) utils.getEnumKindByField(ContactFilterKind.values(), field);
+            switch (kind) {
+                case BY_AGE -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.FILTER_AGE);
                     return messages.getMessageByKey("filter.age");
                 }
-                case ContactFilterKind.BY_GENDER -> {
+                case BY_GENDER -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.FILTER_GENDER);
                     return messages.getMessageByKey("filter.gender");
                 }
-                case ContactFilterKind.BY_BLOCK -> {
+                case BY_BLOCK -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.FILTER_BLOCK);
                     return messages.getMessageByKey("filter.block");
@@ -183,12 +192,12 @@ public class OperationStateProcessor extends BaseStateProcessor {
             StateInfo userStateInfo = userStateService.getUserState(user);
             Set<Contact> contacts;
             try {
-                contacts = filterService.filterByUserStateAndKind(user, userStateInfo,  message);
+                contacts = contactService.filterByKind(user, userStateInfo, message);
             } catch (Exception ex) {
                 return ex.getMessage();
             }
             userStateInfo.clear();
-            return getUiContactsInfo(contacts);
+            return formatContacts(contacts);
         })));
     }
 
@@ -197,13 +206,14 @@ public class OperationStateProcessor extends BaseStateProcessor {
      */
     private void registerSortCommands() {
         registerHandler(State.SORT_KIND, ((user, field) -> {
-            switch (field) {
-                case ContactSortKind.BY_NAME -> {
+            ContactSortKind kind = (ContactSortKind) utils.getEnumKindByField(ContactSortKind.values(), field);
+            switch (kind) {
+                case BY_NAME -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.SORT_NAME);
                     return messages.getMessageByKey("sort.kind.type");
                 }
-                case ContactSortKind.BY_AGE -> {
+                case BY_AGE -> {
                     StateInfo userStateInfo = userStateService.getUserState(user);
                     userStateInfo.setState(State.SORT_AGE);
                     return messages.getMessageByKey("sort.kind.type");
@@ -216,12 +226,14 @@ public class OperationStateProcessor extends BaseStateProcessor {
             StateInfo userStateInfo = userStateService.getUserState(user);
             Set<Contact> contacts;
             try {
-                contacts = sortService.sortByUserStateAndKind(user, userStateInfo, message);
+                SortDirectionKind kind =
+                        (SortDirectionKind) utils.getEnumKindByField(SortDirectionKind.values(), message);
+                contacts = contactService.sortByKind(user, userStateInfo, kind);
             } catch (Exception ex) {
                 return ex.getMessage();
             }
             userStateInfo.clear();
-            return getUiContactsInfo(contacts);
+            return formatContacts(contacts);
         })));
     }
 
@@ -230,7 +242,7 @@ public class OperationStateProcessor extends BaseStateProcessor {
      *
      * @param contacts контакты
      */
-    private String getUiContactsInfo(Set<Contact> contacts) {
+    private String formatContacts(Set<Contact> contacts) {
         return contacts.isEmpty()
                 ? messages.getMessageByKey("commons.empty")
                 : contacts.stream()
@@ -243,7 +255,7 @@ public class OperationStateProcessor extends BaseStateProcessor {
      *
      * @param groups группы
      */
-    private String getUiGroupsInfo(Set<Group> groups) {
+    private String formatGroups(Set<Group> groups) {
         return groups.isEmpty()
                 ? messages.getMessageByKey("commons.empty")
                 : groups.stream()

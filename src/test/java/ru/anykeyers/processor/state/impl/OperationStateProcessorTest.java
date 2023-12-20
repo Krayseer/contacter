@@ -14,6 +14,7 @@ import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.domain.entity.Group;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.processor.state.domain.State;
+import ru.anykeyers.processor.state.domain.kinds.sort.SortDirectionKind;
 import ru.anykeyers.service.*;
 
 import java.util.LinkedHashSet;
@@ -29,16 +30,10 @@ public class OperationStateProcessorTest {
     private UserStateService userStateService;
 
     @Mock
-    private DataRetrievalService dataRetrievalService;
+    private ContactService contactService;
 
     @Mock
-    private SearchService searchService;
-
-    @Mock
-    private FilterContactService filterService;
-
-    @Mock
-    private SortContactService sortService;
+    private GroupService groupService;
 
     @InjectMocks
     private OperationStateProcessor operationStateProcessor;
@@ -78,8 +73,7 @@ public class OperationStateProcessorTest {
         userStateInfo.setState(State.GET_KIND);
 
         // Действие: получение всех контактов пользователя
-        Mockito.when(dataRetrievalService.getAllContacts(user))
-                .thenReturn(Set.of(contact));
+        Mockito.when(contactService.findAll(user)).thenReturn(Set.of(contact));
         Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
         String resultContact = operationStateProcessor.processState(user, "1");
 
@@ -95,8 +89,7 @@ public class OperationStateProcessorTest {
 
         // Действие: получение всех групп пользователя
         userStateInfo.setState(State.GET_KIND);
-        Mockito.when(dataRetrievalService.getAllGroups(user))
-                .thenReturn(Set.of(group));
+        Mockito.when(groupService.findAll(user)).thenReturn(Set.of(group));
         String resultGroup = operationStateProcessor.processState(user, "2");
 
         // Проверка
@@ -131,7 +124,7 @@ public class OperationStateProcessorTest {
         userStateInfo.setState(State.GET_GROUP_CONTACTS);
 
         // Действие
-        Mockito.when(dataRetrievalService.getAllGroupContacts(user, group.getName()))
+        Mockito.when(groupService.findAllGroupContacts(user, group.getName()))
                 .thenReturn(Set.of(contact));
         Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
         String resultGroupContacts = operationStateProcessor.processState(user, group.getName());
@@ -236,7 +229,7 @@ public class OperationStateProcessorTest {
         Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
 
         // Действие: найти контакты по имени
-        Mockito.when(searchService.findContactsByArgument(user, userStateInfo, "test"))
+        Mockito.when(contactService.searchByArgument(user, userStateInfo, "test"))
                 .thenReturn(Set.of(contact));
         String searchNameResult = operationStateProcessor.processState(user, "test");
 
@@ -251,7 +244,7 @@ public class OperationStateProcessorTest {
 
         // Действие: найти контакты по номеру телефона
         userStateInfo.setState(State.SEARCH_PHONE);
-        Mockito.when(searchService.findContactsByArgument(user, userStateInfo, "7"))
+        Mockito.when(contactService.searchByArgument(user, userStateInfo, "7"))
                 .thenReturn(Set.of(contact));
         String searchPhoneResult = operationStateProcessor.processState(user, "7");
 
@@ -267,7 +260,7 @@ public class OperationStateProcessorTest {
         // Действие: найти контакты в группе по имени
         userStateInfo.setState(State.SEARCH_GROUP_CONTACTS_BY_NAME);
         userStateInfo.setEditInfo(group.getName());
-        Mockito.when(searchService.findContactsByArgument(user, userStateInfo, "test"))
+        Mockito.when(groupService.findGroupContactsByName(user, userStateInfo, "test"))
                 .thenReturn(Set.of(contact));
         String searchGroupContactsResult = operationStateProcessor.processState(user, "test");
 
@@ -374,7 +367,7 @@ public class OperationStateProcessorTest {
         Mockito.when(userStateService.getUserState(user)).thenReturn(userStateInfo);
 
         // Действие: фильтрация по контактам по возрасту (старше)
-        Mockito.when(filterService.filterByUserStateAndKind(user, userStateInfo, "1"))
+        Mockito.when(contactService.filterByKind(user, userStateInfo, "1"))
                 .thenReturn(Set.of(contact));
         String ageGreaterFilterResult = operationStateProcessor.processState(user, "1");
 
@@ -389,7 +382,7 @@ public class OperationStateProcessorTest {
 
         // Действие: фильтрация по контактам с мужским полом
         userStateInfo.setState(State.FILTER_GENDER);
-        Mockito.when(filterService.filterByUserStateAndKind(user, userStateInfo, "1"))
+        Mockito.when(contactService.filterByKind(user, userStateInfo, "1"))
                 .thenReturn(Set.of(contact));
         String genderFilterResult = operationStateProcessor.processState(user, "1");
 
@@ -404,7 +397,7 @@ public class OperationStateProcessorTest {
 
         // Действие: фильтрация по заблокированным контактам
         userStateInfo.setState(State.FILTER_BLOCK);
-        Mockito.when(filterService.filterByUserStateAndKind(user, userStateInfo, "1"))
+        Mockito.when(contactService.filterByKind(user, userStateInfo, "1"))
                 .thenReturn(Set.of());
         String blockFilterResult = operationStateProcessor.processState(user, "1");
 
@@ -480,7 +473,8 @@ public class OperationStateProcessorTest {
         Set<Contact> nameSortContacts = new LinkedHashSet<>();
         nameSortContacts.add(firstContact);
         nameSortContacts.add(secondContact);
-        Mockito.when(sortService.sortByUserStateAndKind(user, userStateInfo, "1")).thenReturn(nameSortContacts);
+        Mockito.when(contactService.sortByKind(user, userStateInfo, SortDirectionKind.ASCENDING))
+                .thenReturn(nameSortContacts);
         String nameSortResult = operationStateProcessor.processState(user, "1");
 
         // Проверка
@@ -503,7 +497,8 @@ public class OperationStateProcessorTest {
         ageSortContacts.add(secondContact);
         ageSortContacts.add(firstContact);
         userStateInfo.setState(State.SORT_AGE);
-        Mockito.when(sortService.sortByUserStateAndKind(user, userStateInfo, "2")).thenReturn(ageSortContacts);
+        Mockito.when(contactService.sortByKind(user, userStateInfo, SortDirectionKind.DESCENDING))
+                .thenReturn(ageSortContacts);
         String ageSortResult = operationStateProcessor.processState(user, "2");
 
         // Проверка

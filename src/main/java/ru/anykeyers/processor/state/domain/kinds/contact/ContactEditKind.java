@@ -3,31 +3,31 @@ package ru.anykeyers.processor.state.domain.kinds.contact;
 /**
  * Виды изменений для контакта
  */
-public final class ContactEditKind {
+public enum ContactEditKind {
 
     /**
      * Изменение имени
      */
-    public final static String NAME = "1";
+    NAME,
 
     /**
      * Изменение номера телефона
      */
-    public static final String PHONE = "2";
+    PHONE,
 
     /**
      * Изменение возраста
      */
-    public static final String AGE = "3";
+    AGE,
 
     /**
      * Изменение пола
      */
-    public static final String GENDER = "4";
+    GENDER,
 
     /**
      * Изменение блокировки
      */
-    public static final String BLOCK = "5";
+    BLOCK
 
 }

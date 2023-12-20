@@ -3,16 +3,16 @@ package ru.anykeyers.processor.state.domain.kinds.filter;
 /**
  * Типы критериев фильтрации по блокировке
  */
-public final class FilterBlockKind {
+public enum FilterBlockKind {
 
     /**
      * Заблокированные
      */
-    public static final String BLOCKED = "1";
+    BLOCKED,
 
     /**
      * Не заблокированные
      */
-    public static final String NON_BLOCKED = "2";
+    NON_BLOCKED
 
 }

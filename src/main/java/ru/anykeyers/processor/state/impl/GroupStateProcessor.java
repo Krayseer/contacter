@@ -52,14 +52,16 @@ public class GroupStateProcessor extends BaseStateProcessor {
             return messages.getMessageByKey("group.state.edit.todo");
         });
         registerHandler(State.EDIT_GROUP_FIELD, (user, field) -> {
-            switch (field.toLowerCase()) {
-                case GroupEditActionKind.NAME -> {
+            GroupEditActionKind kind =
+                    (GroupEditActionKind) utils.getEnumKindByField(GroupEditActionKind.values(), field);
+            switch (kind) {
+                case NAME -> {
                     return processEditGroup(user, State.EDIT_GROUP_NAME, "group.state.edit.name");
                 }
-                case GroupEditActionKind.ADD_CONTACT -> {
+                case ADD_CONTACT -> {
                     return processEditGroup(user, State.EDIT_GROUP_ADD_CONTACT, "group.state.edit.contact.add");
                 }
-                case GroupEditActionKind.DELETE_CONTACT -> {
+                case DELETE_CONTACT -> {
                     return processEditGroup(user, State.EDIT_GROUP_DELETE_CONTACT, "group.state.edit.contact.delete");
                 }
             }

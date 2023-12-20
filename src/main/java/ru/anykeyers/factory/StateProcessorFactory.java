@@ -10,6 +10,7 @@ import ru.anykeyers.repository.ContactRepository;
 import ru.anykeyers.repository.GroupRepository;
 import ru.anykeyers.service.*;
 import ru.anykeyers.service.impl.*;
+import ru.anykeyers.service.impl.contact.ContactServiceImpl;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,8 +23,6 @@ public class StateProcessorFactory {
 
     private final UserStateService userStateService;
 
-    private final RepositoryFactory repositoryFactory;
-
     /**
      * Карта вида [тип состояния -> его обработчик]
      */
@@ -32,9 +31,12 @@ public class StateProcessorFactory {
     public StateProcessorFactory(UserStateService userStateService,
                                  RepositoryFactory repositoryFactory) {
         this.userStateService = userStateService;
-        this.repositoryFactory = repositoryFactory;
         stateProcessorsByStateType = new HashMap<>();
-        registerStateProcessors();
+        ContactRepository contactRepository = repositoryFactory.createContactRepository();
+        GroupRepository groupRepository = repositoryFactory.createGroupRepository();
+        ContactService contactService = new ContactServiceImpl(contactRepository);
+        GroupService groupService = new GroupServiceImpl(groupRepository, contactRepository);
+        registerStateProcessors(contactService, groupService);
     }
 
     /**
@@ -50,45 +52,33 @@ public class StateProcessorFactory {
     /**
      * Регистрация обработчиков по каждому состоянию
      */
-    private void registerStateProcessors() {
-        ContactRepository contactRepository = repositoryFactory.createContactRepository();
-        GroupRepository groupRepository = repositoryFactory.createGroupRepository();
-
-        stateProcessorsByStateType.put(StateType.CONTACT, createContactStateProcessor(contactRepository));
-        stateProcessorsByStateType.put(StateType.GROUP, createGroupStateProcessor(contactRepository, groupRepository));
-        stateProcessorsByStateType.put(StateType.OPERATION, createOperationStateProcessor(contactRepository, groupRepository));
+    private void registerStateProcessors(ContactService contactService,
+                                         GroupService groupService) {
+        stateProcessorsByStateType.put(StateType.CONTACT, createContactStateProcessor(contactService));
+        stateProcessorsByStateType.put(StateType.GROUP, createGroupStateProcessor(groupService));
+        stateProcessorsByStateType.put(StateType.OPERATION, createOperationStateProcessor(contactService, groupService));
     }
 
     /**
      * Получить обработчик состояния по контактам
      */
-    private StateProcessor createContactStateProcessor(ContactRepository contactRepository) {
-        ContactService contactService = new ContactServiceImpl(contactRepository);
+    private StateProcessor createContactStateProcessor(ContactService contactService) {
         return new ContactStateProcessor(userStateService, contactService);
     }
 
     /**
      * Получить обработчик состояния по группам
      */
-    private StateProcessor createGroupStateProcessor(ContactRepository contactRepository,
-                                                     GroupRepository groupRepository) {
-        GroupService groupService = new GroupServiceImpl(groupRepository, contactRepository);
+    private StateProcessor createGroupStateProcessor(GroupService groupService) {
         return new GroupStateProcessor(userStateService, groupService);
     }
 
     /**
      * Получить обработчик состояния по получении/поиску/фильтрации/сортировке данных
      */
-    private StateProcessor createOperationStateProcessor(ContactRepository contactRepository,
-                                                         GroupRepository groupRepository) {
-        DataRetrievalService dataRetrievalService = new DataRetrievalServiceImpl(contactRepository, groupRepository);
-        SearchService searchService = new SearchServiceImpl(contactRepository, groupRepository);
-        FilterContactService filterService = new FilterContactServiceImpl(contactRepository);
-        SortContactService sortService = new SortContactServiceImpl(contactRepository);
-        return new OperationStateProcessor(
-                userStateService, dataRetrievalService,
-                searchService, filterService, sortService
-        );
+    private StateProcessor createOperationStateProcessor(ContactService contactService,
+                                                         GroupService groupService) {
+        return new OperationStateProcessor(userStateService, contactService, groupService);
     }
 
 }
