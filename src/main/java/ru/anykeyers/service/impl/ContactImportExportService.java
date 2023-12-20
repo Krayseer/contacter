@@ -3,7 +3,7 @@ package ru.anykeyers.service.impl;
 import ru.anykeyers.common.Messages;
 import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.domain.entity.User;
-import ru.anykeyers.repository.file.service.FileService;
+import ru.anykeyers.service.FileService;
 import ru.anykeyers.domain.FileFormat;
 import ru.anykeyers.factory.ImportExportMapperFactory;
 import ru.anykeyers.repository.ContactRepository;

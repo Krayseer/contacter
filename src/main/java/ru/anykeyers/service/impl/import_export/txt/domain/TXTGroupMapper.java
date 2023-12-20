@@ -1,4 +1,4 @@
-package ru.anykeyers.repository.file.mapper;
+package ru.anykeyers.service.impl.import_export.txt.domain;
 
 import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.domain.entity.Group;
@@ -11,11 +11,11 @@ import java.util.stream.Collectors;
 /**
  * Маппер для группы
  */
-public class FileGroupMapper implements Mapper<Group> {
+public class TXTGroupMapper implements Mapper<Group> {
 
     private final ContactRepository contactRepository;
 
-    public FileGroupMapper(ContactRepository contactRepository) {
+    public TXTGroupMapper(ContactRepository contactRepository) {
         this.contactRepository = contactRepository;
     }
 

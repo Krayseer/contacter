@@ -3,12 +3,12 @@ package ru.anykeyers.repository.file;
 import ru.anykeyers.bot.BotType;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.common.Mapper;
-import ru.anykeyers.repository.file.service.FileService;
-import ru.anykeyers.repository.file.mapper.FileUserMapper;
+import ru.anykeyers.service.FileService;
 import ru.anykeyers.repository.UserRepository;
-import ru.anykeyers.repository.file.service.impl.FileServiceImpl;
 import ru.anykeyers.repository.file.service.FileRepositoryService;
 import ru.anykeyers.repository.file.service.impl.FileRepositoryServiceImpl;
+import ru.anykeyers.service.impl.import_export.txt.TXTFileService;
+import ru.anykeyers.service.impl.import_export.txt.domain.TXTUserMapper;
 
 import java.io.File;
 import java.util.*;
@@ -28,8 +28,8 @@ public class FileUserRepository implements UserRepository {
 
     public FileUserRepository(String userFilePath) {
         dbFile = new File(userFilePath);
-        Mapper<User> userMapper = new FileUserMapper();
-        fileService = new FileServiceImpl<>(userMapper);
+        Mapper<User> userMapper = new TXTUserMapper();
+        fileService = new TXTFileService<>(userMapper);
         repositoryService = new FileRepositoryServiceImpl<>();
         Collection<User> users = fileService.initDataFromFile(dbFile);
         usersByUsername = repositoryService.getMapFromCollection(users, User::getUsername);

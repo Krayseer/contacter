@@ -1,14 +1,14 @@
 package ru.anykeyers.repository.file;
 
 import ru.anykeyers.domain.entity.Group;
-import ru.anykeyers.repository.file.service.FileService;
+import ru.anykeyers.service.FileService;
 import ru.anykeyers.repository.ContactRepository;
-import ru.anykeyers.repository.file.mapper.FileGroupMapper;
 import ru.anykeyers.repository.GroupRepository;
 import ru.anykeyers.common.Mapper;
-import ru.anykeyers.repository.file.service.impl.FileServiceImpl;
 import ru.anykeyers.repository.file.service.FileRepositoryService;
 import ru.anykeyers.repository.file.service.impl.FileRepositoryServiceImpl;
+import ru.anykeyers.service.impl.import_export.txt.TXTFileService;
+import ru.anykeyers.service.impl.import_export.txt.domain.TXTGroupMapper;
 
 import java.io.File;
 import java.util.*;
@@ -29,8 +29,8 @@ public class FileGroupRepository implements GroupRepository {
     public FileGroupRepository(String groupFilePath,
                                ContactRepository contactRepository) {
         dbFile = new File(groupFilePath);
-        Mapper<Group> groupMapper = new FileGroupMapper(contactRepository);
-        fileService = new FileServiceImpl<>(groupMapper);
+        Mapper<Group> groupMapper = new TXTGroupMapper(contactRepository);
+        fileService = new TXTFileService<>(groupMapper);
         repositoryService = new FileRepositoryServiceImpl<>();
         Collection<Group> groups = fileService.initDataFromFile(dbFile);
         groupsByUsername = repositoryService.getMapFromCollection(groups, Group::getUsername);

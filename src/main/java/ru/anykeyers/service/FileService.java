@@ -1,4 +1,4 @@
-package ru.anykeyers.repository.file.service;
+package ru.anykeyers.service;
 
 import java.io.File;
 import java.util.Collection;

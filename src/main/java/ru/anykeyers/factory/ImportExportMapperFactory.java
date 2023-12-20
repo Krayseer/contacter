@@ -1,8 +1,13 @@
 package ru.anykeyers.factory;
 
-import ru.anykeyers.repository.file.service.FileService;
+import ru.anykeyers.service.FileService;
 import ru.anykeyers.domain.FileFormat;
 import ru.anykeyers.domain.entity.Contact;
+import ru.anykeyers.service.impl.import_export.CSVFileService;
+import ru.anykeyers.service.impl.import_export.JSONFileService;
+import ru.anykeyers.service.impl.import_export.txt.TXTFileService;
+import ru.anykeyers.service.impl.import_export.txt.domain.TXTContactMapper;
+import ru.anykeyers.service.impl.import_export.xml.XMLFileService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,10 +40,10 @@ public class ImportExportMapperFactory {
      */
     private Map<FileFormat, FileService<Contact>> initServicesByFormat() {
         Map<FileFormat, FileService<Contact>> resultMap = new HashMap<>();
-//        resultMap.put(FileFormat.TXT, ...); //todo Реализация
-//        resultMap.put(FileFormat.XML, ...); //todo Реализация
-//        resultMap.put(FileFormat.CSV, ...); //todo Реализация
-//        resultMap.put(FileFormat.JSON, ...); //todo Реализация
+        resultMap.put(FileFormat.TXT, new TXTFileService<>(new TXTContactMapper()));
+        resultMap.put(FileFormat.XML, new XMLFileService());
+        resultMap.put(FileFormat.CSV, new CSVFileService());
+        resultMap.put(FileFormat.JSON, new JSONFileService());
         return resultMap;
     }
 

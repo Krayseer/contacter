@@ -14,11 +14,10 @@ import ru.anykeyers.domain.Gender;
 import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.factory.ImportExportMapperFactory;
-import ru.anykeyers.repository.file.service.FileService;
-import ru.anykeyers.repository.file.service.impl.FileServiceImpl;
 import ru.anykeyers.repository.ContactRepository;
-import ru.anykeyers.repository.file.mapper.FileContactMapper;
 import ru.anykeyers.service.impl.ContactImportExportService;
+import ru.anykeyers.service.impl.import_export.txt.TXTFileService;
+import ru.anykeyers.service.impl.import_export.txt.domain.TXTContactMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,7 +75,7 @@ public class ContactImportExportServiceTest {
     @Test
     public void importDataTest() {
         // Подготовка
-        File file = new File("src/test/resources/contacts.txt"); //todo Доделать
+        File file = new File("src/test/resources/contacts.txt");
 
         // Действие
         Mockito.when(importExportMapperFactory.getServiceByFormat(Mockito.any(FileFormat.class))).thenReturn(fileService);
@@ -96,8 +95,8 @@ public class ContactImportExportServiceTest {
         File actualFile = Files.createTempFile("contacts", ".txt").toFile();
 
         // Действие
-        Mockito.when(importExportMapperFactory.getServiceByFormat(Mockito.any()))
-                .thenReturn(new FileServiceImpl<>(new FileContactMapper()));
+        FileService<Contact> fileService = new TXTFileService<>(new TXTContactMapper());
+        Mockito.when(importExportMapperFactory.getServiceByFormat(Mockito.any())).thenReturn(fileService);
         Mockito.when(contactRepository.findByUsername(user.getUsername()))
                 .thenReturn(contacts);
         contactImportExportService.exportData(user, actualFile);
