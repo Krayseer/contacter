@@ -162,7 +162,7 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public void importContacts(User user, File importFile) {
-        FileFormat fileFormat = utils.getFileFormat(importFile.getName());
+        FileFormat fileFormat = stringUtils.getFileFormat(importFile.getName());
         FileService<Contact> service = fileServiceFactory.getServiceByFormat(fileFormat);
         Collection<Contact> contacts = service.initDataFromFile(importFile);
         contacts.forEach(contact -> {
@@ -173,7 +173,7 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public void exportContacts(User user, File exportFile) {
-        FileFormat fileFormat = utils.getFileFormat(exportFile.getName());
+        FileFormat fileFormat = stringUtils.getFileFormat(exportFile.getName());
         FileService<Contact> mapper = fileServiceFactory.getServiceByFormat(fileFormat);
         Set<Contact> contacts = contactRepository.findByUsername(user.getUsername());
         mapper.saveOrUpdateFile(exportFile, contacts);
