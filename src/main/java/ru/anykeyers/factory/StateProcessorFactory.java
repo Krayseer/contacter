@@ -37,7 +37,7 @@ public class StateProcessorFactory {
         GroupRepository groupRepository = repositoryFactory.createGroupRepository();
         ContactService contactService = new ContactServiceImpl(contactRepository);
         GroupService groupService = new GroupServiceImpl(groupRepository, contactRepository);
-        registerStateProcessors(contactService, groupService, contactRepository);
+        registerStateProcessors(contactService, groupService);
     }
 
     /**
@@ -54,12 +54,11 @@ public class StateProcessorFactory {
      * Регистрация обработчиков по каждому состоянию
      */
     private void registerStateProcessors(ContactService contactService,
-                                         GroupService groupService,
-                                         ContactRepository contactRepository) {
+                                         GroupService groupService) {
         stateProcessorsByStateType.put(StateType.CONTACT, createContactStateProcessor(contactService));
         stateProcessorsByStateType.put(StateType.GROUP, createGroupStateProcessor(groupService));
         stateProcessorsByStateType.put(StateType.OPERATION, createOperationStateProcessor(contactService, groupService));
-        stateProcessorsByStateType.put(StateType.IMPORT_EXPORT, createImportExportStateProcessor(contactRepository));
+        stateProcessorsByStateType.put(StateType.IMPORT_EXPORT, createImportExportStateProcessor(contactService));
     }
 
     /**
@@ -87,12 +86,8 @@ public class StateProcessorFactory {
     /**
      * Получить обработчик состояния по импорту/экспорту контактов
      */
-    private StateProcessor createImportExportStateProcessor(ContactRepository contactRepository) {
-        ImportExportMapperFactory importExportMapperFactory = new ImportExportMapperFactory();
-        ImportExportService importExportService = new ContactImportExportService(
-                importExportMapperFactory, contactRepository
-        );
-        return new ImportExportStateProcessor(userStateService, importExportService);
+    private StateProcessor createImportExportStateProcessor(ContactService contactService) {
+        return new ImportExportStateProcessor(userStateService, contactService);
     }
 
 }

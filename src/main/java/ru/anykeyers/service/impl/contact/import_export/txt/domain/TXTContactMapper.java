@@ -1,4 +1,4 @@
-package ru.anykeyers.service.impl.import_export.txt.domain;
+package ru.anykeyers.service.impl.contact.import_export.txt.domain;
 
 import org.apache.commons.lang3.StringUtils;
 import ru.anykeyers.domain.entity.Contact;

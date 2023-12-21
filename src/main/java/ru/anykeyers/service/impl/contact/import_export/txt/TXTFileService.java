@@ -1,4 +1,4 @@
-package ru.anykeyers.service.impl.import_export.txt;
+package ru.anykeyers.service.impl.contact.import_export.txt;
 
 import org.apache.commons.io.FileUtils;
 import ru.anykeyers.common.Mapper;

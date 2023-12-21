@@ -1,11 +1,11 @@
-package ru.anykeyers.service.import_export.txt.domain;
+package ru.anykeyers.service.contact.domain;
 
 import org.junit.Assert;
 import org.junit.Test;
 import ru.anykeyers.common.Mapper;
 import ru.anykeyers.bot.BotType;
 import ru.anykeyers.domain.entity.User;
-import ru.anykeyers.service.impl.import_export.txt.domain.TXTUserMapper;
+import ru.anykeyers.service.impl.contact.import_export.txt.domain.TXTUserMapper;
 
 /**
  * Тестирование класса {@link TXTUserMapper}

@@ -7,8 +7,8 @@ import ru.anykeyers.service.FileService;
 import ru.anykeyers.repository.UserRepository;
 import ru.anykeyers.repository.file.service.FileRepositoryService;
 import ru.anykeyers.repository.file.service.impl.FileRepositoryServiceImpl;
-import ru.anykeyers.service.impl.import_export.txt.TXTFileService;
-import ru.anykeyers.service.impl.import_export.txt.domain.TXTUserMapper;
+import ru.anykeyers.service.impl.contact.import_export.txt.TXTFileService;
+import ru.anykeyers.service.impl.contact.import_export.txt.domain.TXTUserMapper;
 
 import java.io.File;
 import java.util.*;

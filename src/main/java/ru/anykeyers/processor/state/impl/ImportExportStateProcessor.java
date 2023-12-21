@@ -5,7 +5,7 @@ import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.exception.BadArgumentException;
 import ru.anykeyers.domain.FileFormat;
-import ru.anykeyers.service.ImportExportService;
+import ru.anykeyers.service.ContactService;
 import ru.anykeyers.processor.state.BaseStateProcessor;
 import ru.anykeyers.processor.state.domain.State;
 import ru.anykeyers.processor.state.domain.kinds.ExportKind;
@@ -21,12 +21,12 @@ public class ImportExportStateProcessor extends BaseStateProcessor {
 
     private final Messages messages = Messages.getInstance();
 
-    private final ImportExportService importExportService;
+    private final ContactService contactService;
 
     public ImportExportStateProcessor(UserStateService userStateService,
-                                      ImportExportService importExportService) {
+                                      ContactService contactService) {
         super(userStateService);
-        this.importExportService = importExportService;
+        this.contactService = contactService;
         registerStateHandlers();
     }
 
@@ -35,7 +35,7 @@ public class ImportExportStateProcessor extends BaseStateProcessor {
             File importFile;
             try {
                 importFile = new File(path);
-                importExportService.importData(user, importFile);
+                contactService.importContacts(user, importFile);
             } catch (Exception ex) {
                 return new Message(ex.getMessage());
             }
@@ -54,7 +54,7 @@ public class ImportExportStateProcessor extends BaseStateProcessor {
             File exportFile;
             try {
                 exportFile = Files.createTempFile("contacts", format.getName()).toFile();
-                importExportService.exportData(user, exportFile);
+                contactService.exportContacts(user, exportFile);
             } catch (Exception ex) {
                 return new Message(ex.getMessage());
             }

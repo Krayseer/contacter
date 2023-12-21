@@ -1,4 +1,4 @@
-package ru.anykeyers.service.impl.import_export;
+package ru.anykeyers.service.impl.contact.import_export;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

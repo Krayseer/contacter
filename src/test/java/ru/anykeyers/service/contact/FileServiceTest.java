@@ -1,4 +1,4 @@
-package ru.anykeyers.service;
+package ru.anykeyers.service.contact;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
@@ -6,11 +6,12 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.anykeyers.domain.Gender;
 import ru.anykeyers.domain.entity.Contact;
-import ru.anykeyers.service.impl.import_export.CSVFileService;
-import ru.anykeyers.service.impl.import_export.JSONFileService;
-import ru.anykeyers.service.impl.import_export.txt.TXTFileService;
-import ru.anykeyers.service.impl.import_export.txt.domain.TXTContactMapper;
-import ru.anykeyers.service.impl.import_export.xml.XMLFileService;
+import ru.anykeyers.service.FileService;
+import ru.anykeyers.service.impl.contact.import_export.CSVFileService;
+import ru.anykeyers.service.impl.contact.import_export.JSONFileService;
+import ru.anykeyers.service.impl.contact.import_export.txt.TXTFileService;
+import ru.anykeyers.service.impl.contact.import_export.txt.domain.TXTContactMapper;
+import ru.anykeyers.service.impl.contact.import_export.xml.XMLFileService;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +22,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Тестирование реализаций сервиса {@link FileService}
+ * Тестирование реализаций сервиса {@link FileService} для контактов
  * <ol>
  *     <li>{@link CSVFileService}</li>
  *     <li>{@link JSONFileService}</li>

@@ -1,6 +1,7 @@
 package ru.anykeyers.service.impl.contact;
 
 import ru.anykeyers.utils.EnumUtils;
+import ru.anykeyers.domain.FileFormat;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.domain.Gender;
@@ -10,13 +11,17 @@ import ru.anykeyers.exception.InvalidUserStateException;
 import ru.anykeyers.exception.contact.ContactAlreadyExistsException;
 import ru.anykeyers.exception.contact.ContactNotExistsException;
 import ru.anykeyers.exception.InvalidNumberFormat;
+import ru.anykeyers.service.impl.contact.import_export.FileServiceFactory;
 import ru.anykeyers.processor.state.domain.kinds.contact.EditContactBlockKind;
 import ru.anykeyers.processor.state.domain.kinds.contact.EditContactGenderKind;
 import ru.anykeyers.processor.state.domain.kinds.sort.SortDirectionKind;
 import ru.anykeyers.repository.ContactRepository;
 import ru.anykeyers.service.ContactService;
 import ru.anykeyers.utils.StringUtils;
+import ru.anykeyers.service.FileService;
 
+import java.io.File;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 
@@ -149,6 +154,25 @@ public class ContactServiceImpl implements ContactService {
     public Set<Contact> sortByKind(User user, StateInfo userStateInfo, Enum<SortDirectionKind> kind) {
         Set<Contact> contacts = contactRepository.findByUsername(user.getUsername());
         return sortContactService.sortContacts(contacts, userStateInfo.getState(), kind);
+    }
+
+    @Override
+    public void importContacts(User user, File importFile) {
+        FileFormat fileFormat = utils.getFileFormat(importFile.getName());
+        FileService<Contact> service = fileServiceFactory.getServiceByFormat(fileFormat);
+        Collection<Contact> contacts = service.initDataFromFile(importFile);
+        contacts.forEach(contact -> {
+            contact.setUsername(user.getUsername());
+            contactRepository.saveOrUpdate(contact);
+        });
+    }
+
+    @Override
+    public void exportContacts(User user, File exportFile) {
+        FileFormat fileFormat = utils.getFileFormat(exportFile.getName());
+        FileService<Contact> mapper = fileServiceFactory.getServiceByFormat(fileFormat);
+        Set<Contact> contacts = contactRepository.findByUsername(user.getUsername());
+        mapper.saveOrUpdateFile(exportFile, contacts);
     }
 
 }
