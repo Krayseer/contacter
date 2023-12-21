@@ -5,6 +5,7 @@ import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.processor.state.domain.kinds.sort.SortDirectionKind;
 
+import java.io.File;
 import java.util.Set;
 
 /**
@@ -94,5 +95,21 @@ public interface ContactService {
      * @return список отсортированных контактов
      */
     Set<Contact> sortByKind(User user, StateInfo userStateInfo, Enum<SortDirectionKind> kind);
+
+    /**
+     * Импортировать контакты из файла
+     *
+     * @param user       пользователь
+     * @param importFile файл с контактами для импорта
+     */
+    void importContacts(User user, File importFile);
+
+    /**
+     * Экспортировать контакты в файл
+     *
+     * @param user       пользователь
+     * @param exportFile файл экспорта
+     */
+    void exportContacts(User user, File exportFile);
 
 }

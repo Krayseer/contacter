@@ -1,7 +1,6 @@
 package ru.anykeyers.utils;
 
 import ru.anykeyers.exception.BadArgumentException;
-import ru.anykeyers.exception.InvalidNumberFormat;
 
 /**
  * Утилитарный класс для перечислений

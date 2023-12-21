@@ -1,0 +1,4 @@
+testUser:id=1;name=testContact;phone_number=79999;age=21;gender=MAN;block=false
+testUser:id=2;name=testContact2;phone_number=79998;age=22;gender=WOMAN;block=true
+testUser2:id=3;name=testContact3;phone_number=1122;age=11;gender=MAN;block=false
+testUser2:id=4;name=testContact4;phone_number=2211;age=55;gender=WOMAN;block=true

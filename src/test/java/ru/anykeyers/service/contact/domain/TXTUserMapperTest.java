@@ -1,17 +1,18 @@
-package ru.anykeyers.repository.file.mapper;
+package ru.anykeyers.service.contact.domain;
 
 import org.junit.Assert;
 import org.junit.Test;
 import ru.anykeyers.common.Mapper;
 import ru.anykeyers.bot.BotType;
 import ru.anykeyers.domain.entity.User;
+import ru.anykeyers.service.impl.contact.import_export.txt.domain.TXTUserMapper;
 
 /**
- * Тестирование класса {@link FileUserMapper}
+ * Тестирование класса {@link TXTUserMapper}
  */
-public class FileUserMapperTest {
+public class TXTUserMapperTest {
 
-    private final Mapper<User> mapper = new FileUserMapper();
+    private final Mapper<User> mapper = new TXTUserMapper();
 
     /**
      * Тестирование форматирования пользователя в строку

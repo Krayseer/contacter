@@ -1,4 +1,4 @@
-package ru.anykeyers.repository.file.mapper;
+package ru.anykeyers.service.impl.contact.import_export.txt.domain;
 
 import org.apache.commons.lang3.StringUtils;
 import ru.anykeyers.domain.entity.Contact;
@@ -8,7 +8,7 @@ import ru.anykeyers.common.Mapper;
 /**
  * Маппер для контакта
  */
-public class FileContactMapper implements Mapper<Contact> {
+public class TXTContactMapper implements Mapper<Contact> {
 
     @Override
     public String format(Contact object) {

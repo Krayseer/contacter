@@ -1,4 +1,4 @@
-package ru.anykeyers.service;
+package ru.anykeyers.service.contact;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import ru.anykeyers.domain.FileFormat;
 import ru.anykeyers.domain.Gender;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.Contact;
@@ -16,11 +17,15 @@ import ru.anykeyers.exception.BadArgumentException;
 import ru.anykeyers.exception.InvalidNumberFormat;
 import ru.anykeyers.exception.contact.ContactAlreadyExistsException;
 import ru.anykeyers.exception.contact.ContactNotExistsException;
+import ru.anykeyers.service.impl.contact.import_export.FileServiceFactory;
 import ru.anykeyers.processor.state.domain.State;
 import ru.anykeyers.processor.state.domain.kinds.sort.SortDirectionKind;
 import ru.anykeyers.repository.ContactRepository;
+import ru.anykeyers.service.ContactService;
+import ru.anykeyers.service.FileService;
 import ru.anykeyers.service.impl.contact.ContactServiceImpl;
 
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +39,12 @@ public class ContactServiceTest {
 
     @Mock
     private ContactRepository contactRepository;
+
+    @Mock
+    private FileService<Contact> fileService;
+
+    @Mock
+    private FileServiceFactory fileServiceFactory;
 
     @InjectMocks
     private ContactServiceImpl contactService;
@@ -556,6 +567,24 @@ public class ContactServiceTest {
         expectedSortedContactsReverse.add(secondContact);
         expectedSortedContactsReverse.add(firstContact);
         Assert.assertEquals(expectedSortedContactsReverse, sortedContactsReverse);
+    }
+
+    /**
+     * Тестирование импорта контактов из файла
+     */
+    @Test
+    public void importDataTest() {
+        // Подготовка
+        File file = new File("src/test/resources/contacts.txt");
+
+        // Действие
+        Mockito.lenient()
+                .when(fileServiceFactory.getServiceByFormat(Mockito.any(FileFormat.class)))
+                .thenReturn(fileService);
+        contactService.importContacts(user, file);
+
+        // Проверка
+        Mockito.verify(contactRepository, Mockito.times(4)).saveOrUpdate(Mockito.any());
     }
 
 }

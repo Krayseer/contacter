@@ -45,6 +45,8 @@ public class Contact {
      */
     private boolean blocked;
 
+    public Contact() { }
+
     public Contact(String username) {
         this.username = username;
     }
@@ -53,6 +55,15 @@ public class Contact {
         this(username);
         this.id = UUID.randomUUID().toString();
         this.name = name;
+    }
+
+    public Contact(String id, String username, String name, String phoneNumber, Integer age, Gender gender, boolean blocked) {
+        this(username, name);
+        this.id = id;
+        this.phoneNumber = phoneNumber;
+        this.age = age;
+        this.gender = gender;
+        this.blocked = blocked;
     }
 
     public String getId() {

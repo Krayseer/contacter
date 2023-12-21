@@ -1,15 +1,17 @@
 package ru.anykeyers.repository.file;
 
+import ru.anykeyers.common.Mapper;
 import ru.anykeyers.domain.entity.Contact;
-import ru.anykeyers.repository.file.mapper.FileContactMapper;
+import ru.anykeyers.service.FileService;
 import ru.anykeyers.repository.ContactRepository;
-import ru.anykeyers.repository.file.service.FileService;
-import ru.anykeyers.repository.file.service.impl.FileServiceImpl;
+import ru.anykeyers.repository.file.service.FileRepositoryService;
+import ru.anykeyers.repository.file.service.impl.FileRepositoryServiceImpl;
+import ru.anykeyers.service.impl.contact.import_export.txt.TXTFileService;
+import ru.anykeyers.service.impl.contact.import_export.txt.domain.TXTContactMapper;
 
 import java.io.File;
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Реализация файловой базы данных для контактов
@@ -22,12 +24,15 @@ public class FileContactRepository implements ContactRepository {
 
     private final FileService<Contact> fileService;
 
+    private final FileRepositoryService<Contact> repositoryService;
+
     public FileContactRepository(String contactFilePath) {
         dbFile = new File(contactFilePath);
-        this.fileService = new FileServiceImpl<>(new FileContactMapper());
+        Mapper<Contact> contactMapper = new TXTContactMapper();
+        fileService = new TXTFileService<>(contactMapper);
+        repositoryService = new FileRepositoryServiceImpl<>();
         Collection<Contact> contacts = fileService.initDataFromFile(dbFile);
-        contactsByUsername = contacts.stream()
-                .collect(Collectors.groupingBy(Contact::getUsername, Collectors.toSet()));
+        contactsByUsername = repositoryService.getMapFromCollection(contacts, Contact::getUsername);
     }
 
     @Override
@@ -55,14 +60,14 @@ public class FileContactRepository implements ContactRepository {
     @Override
     public void saveOrUpdate(Contact contact) {
         contactsByUsername.computeIfAbsent(contact.getUsername(), k -> new HashSet<>()).add(contact);
-        fileService.saveOrUpdateFile(dbFile, contactsByUsername);
+        fileService.saveOrUpdateFile(dbFile, repositoryService.getCollectionFromMap(contactsByUsername));
     }
 
     @Override
     public void delete(Contact contact) {
         Set<Contact> contacts = findByUsername(contact.getUsername());
         contacts.remove(contact);
-        fileService.saveOrUpdateFile(dbFile, contactsByUsername);
+        fileService.saveOrUpdateFile(dbFile, repositoryService.getCollectionFromMap(contactsByUsername));
     }
 
     /**

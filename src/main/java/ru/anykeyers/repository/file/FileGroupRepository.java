@@ -1,16 +1,17 @@
 package ru.anykeyers.repository.file;
 
 import ru.anykeyers.domain.entity.Group;
+import ru.anykeyers.service.FileService;
 import ru.anykeyers.repository.ContactRepository;
-import ru.anykeyers.repository.file.mapper.FileGroupMapper;
 import ru.anykeyers.repository.GroupRepository;
 import ru.anykeyers.common.Mapper;
-import ru.anykeyers.repository.file.service.FileService;
-import ru.anykeyers.repository.file.service.impl.FileServiceImpl;
+import ru.anykeyers.repository.file.service.FileRepositoryService;
+import ru.anykeyers.repository.file.service.impl.FileRepositoryServiceImpl;
+import ru.anykeyers.service.impl.contact.import_export.txt.TXTFileService;
+import ru.anykeyers.service.impl.contact.import_export.txt.domain.TXTGroupMapper;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Реализация файловой базы данных для групп
@@ -23,14 +24,16 @@ public class FileGroupRepository implements GroupRepository {
 
     private final FileService<Group> fileService;
 
+    private final FileRepositoryService<Group> repositoryService;
+
     public FileGroupRepository(String groupFilePath,
                                ContactRepository contactRepository) {
         dbFile = new File(groupFilePath);
-        Mapper<Group> groupMapper = new FileGroupMapper(contactRepository);
-        fileService = new FileServiceImpl<>(groupMapper);
+        Mapper<Group> groupMapper = new TXTGroupMapper(contactRepository);
+        fileService = new TXTFileService<>(groupMapper);
+        repositoryService = new FileRepositoryServiceImpl<>();
         Collection<Group> groups = fileService.initDataFromFile(dbFile);
-        groupsByUsername = groups.stream()
-                .collect(Collectors.groupingBy(Group::getUsername, Collectors.toSet()));
+        groupsByUsername = repositoryService.getMapFromCollection(groups, Group::getUsername);
     }
 
     @Override
@@ -58,16 +61,14 @@ public class FileGroupRepository implements GroupRepository {
     @Override
     public void saveOrUpdate(Group group) {
         groupsByUsername.computeIfAbsent(group.getUsername(), k -> new HashSet<>()).add(group);
-        fileService.saveOrUpdateFile(dbFile, groupsByUsername);
+        fileService.saveOrUpdateFile(dbFile, repositoryService.getCollectionFromMap(groupsByUsername));
     }
 
     @Override
     public void delete(Group group) {
-        Optional.ofNullable(groupsByUsername.get(group.getUsername()))
-                .ifPresent(groups -> {
-                    groups.remove(group);
-                    fileService.saveOrUpdateFile(dbFile, groupsByUsername);
-                });
+        Set<Group> groups = groupsByUsername.get(group.getUsername());
+        groups.remove(group);
+        fileService.saveOrUpdateFile(dbFile, repositoryService.getCollectionFromMap(groupsByUsername));
     }
 
 }

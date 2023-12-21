@@ -2,6 +2,7 @@ package ru.anykeyers.factory;
 
 import ru.anykeyers.exception.state.StateTypeNotExistsException;
 import ru.anykeyers.processor.state.impl.ContactStateProcessor;
+import ru.anykeyers.processor.state.impl.ImportExportStateProcessor;
 import ru.anykeyers.processor.state.impl.OperationStateProcessor;
 import ru.anykeyers.processor.state.StateProcessor;
 import ru.anykeyers.processor.state.domain.StateType;
@@ -57,6 +58,7 @@ public class StateProcessorFactory {
         stateProcessorsByStateType.put(StateType.CONTACT, createContactStateProcessor(contactService));
         stateProcessorsByStateType.put(StateType.GROUP, createGroupStateProcessor(groupService));
         stateProcessorsByStateType.put(StateType.OPERATION, createOperationStateProcessor(contactService, groupService));
+        stateProcessorsByStateType.put(StateType.IMPORT_EXPORT, createImportExportStateProcessor(contactService));
     }
 
     /**
@@ -79,6 +81,13 @@ public class StateProcessorFactory {
     private StateProcessor createOperationStateProcessor(ContactService contactService,
                                                          GroupService groupService) {
         return new OperationStateProcessor(userStateService, contactService, groupService);
+    }
+
+    /**
+     * Получить обработчик состояния по импорту/экспорту контактов
+     */
+    private StateProcessor createImportExportStateProcessor(ContactService contactService) {
+        return new ImportExportStateProcessor(userStateService, contactService);
     }
 
 }
