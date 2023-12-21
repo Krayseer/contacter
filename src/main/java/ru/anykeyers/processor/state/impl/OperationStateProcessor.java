@@ -119,7 +119,7 @@ public class OperationStateProcessor extends BaseStateProcessor {
             try {
                 contacts = groupService.findGroupContactsByName(user, userStateInfo, message);
             } catch (Exception ex) {
-                return ex.getMessage();
+                return new Message(ex.getMessage());
             }
             userStateInfo.clear();
             return formatContacts(contacts);

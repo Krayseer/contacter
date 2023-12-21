@@ -1,8 +1,6 @@
 package ru.anykeyers.factory;
 
 import ru.anykeyers.exception.state.StateTypeNotExistsException;
-import ru.anykeyers.service.ImportExportService;
-import ru.anykeyers.service.impl.ContactImportExportService;
 import ru.anykeyers.processor.state.impl.ContactStateProcessor;
 import ru.anykeyers.processor.state.impl.ImportExportStateProcessor;
 import ru.anykeyers.processor.state.impl.OperationStateProcessor;
@@ -39,7 +37,7 @@ public class StateProcessorFactory {
         GroupRepository groupRepository = repositoryFactory.createGroupRepository();
         ContactService contactService = new ContactServiceImpl(contactRepository);
         GroupService groupService = new GroupServiceImpl(groupRepository, contactRepository);
-        registerStateProcessors(contactService, groupService);
+        registerStateProcessors(contactService, groupService, contactRepository);
     }
 
     /**
@@ -56,7 +54,8 @@ public class StateProcessorFactory {
      * Регистрация обработчиков по каждому состоянию
      */
     private void registerStateProcessors(ContactService contactService,
-                                         GroupService groupService) {
+                                         GroupService groupService,
+                                         ContactRepository contactRepository) {
         stateProcessorsByStateType.put(StateType.CONTACT, createContactStateProcessor(contactService));
         stateProcessorsByStateType.put(StateType.GROUP, createGroupStateProcessor(groupService));
         stateProcessorsByStateType.put(StateType.OPERATION, createOperationStateProcessor(contactService, groupService));
