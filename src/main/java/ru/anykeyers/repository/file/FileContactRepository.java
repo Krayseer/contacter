@@ -67,7 +67,7 @@ public class FileContactRepository implements ContactRepository {
     public void delete(Contact contact) {
         Set<Contact> contacts = findByUsername(contact.getUsername());
         contacts.remove(contact);
-        fileService.saveOrUpdateFile(dbFile, contactsByUsername);
+        fileService.saveOrUpdateFile(dbFile, repositoryService.getCollectionFromMap(contactsByUsername));
     }
 
     /**
