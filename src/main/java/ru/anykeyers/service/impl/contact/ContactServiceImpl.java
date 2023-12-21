@@ -173,9 +173,9 @@ public class ContactServiceImpl implements ContactService {
     @Override
     public void exportContacts(User user, File exportFile) {
         FileFormat fileFormat = stringUtils.getFileFormat(exportFile.getName());
-        FileService<Contact> mapper = fileServiceFactory.getServiceByFormat(fileFormat);
+        FileService<Contact> service = fileServiceFactory.getServiceByFormat(fileFormat);
         Set<Contact> contacts = contactRepository.findByUsername(user.getUsername());
-        mapper.saveOrUpdateFile(exportFile, contacts);
+        service.saveOrUpdateFile(exportFile, contacts);
     }
 
 }
