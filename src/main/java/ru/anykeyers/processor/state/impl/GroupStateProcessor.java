@@ -52,18 +52,13 @@ public class GroupStateProcessor extends BaseStateProcessor {
             return messages.getMessageByKey("group.state.edit.todo");
         });
         registerHandler(State.EDIT_GROUP_FIELD, (user, field) -> {
-            GroupEditActionKind kind =
-                    (GroupEditActionKind) utils.getEnumKindByField(GroupEditActionKind.values(), field);
-            switch (kind) {
-                case NAME -> {
-                    return processEditGroup(user, State.EDIT_GROUP_NAME, "group.state.edit.name");
-                }
-                case ADD_CONTACT -> {
-                    return processEditGroup(user, State.EDIT_GROUP_ADD_CONTACT, "group.state.edit.contact.add");
-                }
-                case DELETE_CONTACT -> {
-                    return processEditGroup(user, State.EDIT_GROUP_DELETE_CONTACT, "group.state.edit.contact.delete");
-                }
+            Enum<GroupEditActionKind> kind = enumUtils.getEnumKindByField(GroupEditActionKind.values(), field);
+            if (kind.equals(GroupEditActionKind.NAME)) {
+                return processEditGroup(user, State.EDIT_GROUP_NAME, "group.state.edit.name");
+            } else if (kind.equals(GroupEditActionKind.ADD_CONTACT)) {
+                return processEditGroup(user, State.EDIT_GROUP_ADD_CONTACT, "group.state.edit.contact.add");
+            } else if (kind.equals(GroupEditActionKind.DELETE_CONTACT)) {
+                return processEditGroup(user, State.EDIT_GROUP_DELETE_CONTACT, "group.state.edit.contact.delete");
             }
             return messages.getMessageByKey("exception.argument.invalid");
         });

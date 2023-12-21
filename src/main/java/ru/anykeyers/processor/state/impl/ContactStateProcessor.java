@@ -52,23 +52,17 @@ public class ContactStateProcessor extends BaseStateProcessor {
             return messages.getMessageByKey("contact.state.edit.field");
         });
         registerHandler(State.EDIT_CONTACT_FIELD, (user, field) -> {
-            ContactEditKind kind = (ContactEditKind) utils.getEnumKindByField(ContactEditKind.values(), field);
-            switch (kind) {
-                case NAME -> {
-                    return processEditContact(user, State.EDIT_CONTACT_NAME, "contact.state.edit.name");
-                }
-                case PHONE -> {
-                    return processEditContact(user, State.EDIT_CONTACT_PHONE, "contact.state.edit.phone");
-                }
-                case AGE -> {
-                    return processEditContact(user, State.EDIT_CONTACT_AGE, "contact.state.edit.age");
-                }
-                case GENDER -> {
-                    return processEditContact(user, State.EDIT_CONTACT_GENDER, "contact.state.edit.gender");
-                }
-                case BLOCK -> {
-                    return processEditContact(user, State.EDIT_CONTACT_BLOCK, "contact.state.edit.block");
-                }
+            Enum<ContactEditKind> kind = enumUtils.getEnumKindByField(ContactEditKind.values(), field);
+            if (kind.equals(ContactEditKind.NAME)) {
+                return processEditContact(user, State.EDIT_CONTACT_NAME, "contact.state.edit.name");
+            } else if (kind.equals(ContactEditKind.PHONE)) {
+                return processEditContact(user, State.EDIT_CONTACT_PHONE, "contact.state.edit.phone");
+            } else if (kind.equals(ContactEditKind.AGE)) {
+                return processEditContact(user, State.EDIT_CONTACT_AGE, "contact.state.edit.age");
+            } else if (kind.equals(ContactEditKind.GENDER)) {
+                return processEditContact(user, State.EDIT_CONTACT_GENDER, "contact.state.edit.gender");
+            } else if (kind.equals(ContactEditKind.BLOCK)) {
+                return processEditContact(user, State.EDIT_CONTACT_BLOCK, "contact.state.edit.block");
             }
             throw new BadArgumentException();
         });

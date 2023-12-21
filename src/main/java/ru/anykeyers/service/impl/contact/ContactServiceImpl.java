@@ -1,6 +1,6 @@
 package ru.anykeyers.service.impl.contact;
 
-import ru.anykeyers.common.Utils;
+import ru.anykeyers.utils.EnumUtils;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.domain.Gender;
@@ -15,6 +15,7 @@ import ru.anykeyers.processor.state.domain.kinds.contact.EditContactGenderKind;
 import ru.anykeyers.processor.state.domain.kinds.sort.SortDirectionKind;
 import ru.anykeyers.repository.ContactRepository;
 import ru.anykeyers.service.ContactService;
+import ru.anykeyers.utils.StringUtils;
 
 import java.util.Optional;
 import java.util.Set;
@@ -32,15 +33,17 @@ public class ContactServiceImpl implements ContactService {
 
     private final SortContactService sortContactService;
 
-    private final Utils utils;
+    private final EnumUtils enumUtils;
 
+    private final StringUtils stringUtils;
 
     public ContactServiceImpl(ContactRepository contactRepository) {
         this.contactRepository = contactRepository;
         searchContactService = new SearchContactService();
         filterContactService = new FilterContactService();
         sortContactService = new SortContactService();
-        utils = new Utils();
+        enumUtils = new EnumUtils();
+        stringUtils = new StringUtils();
     }
 
     @Override
@@ -73,34 +76,36 @@ public class ContactServiceImpl implements ContactService {
         switch (userStateInfo.getState()) {
             case EDIT_CONTACT_NAME -> contactToEdit.get().setName(newValue);
             case EDIT_CONTACT_PHONE -> {
-                if (utils.isNotNumber(newValue)) {
+                if (stringUtils.isNotNumber(newValue)) {
                     throw new InvalidNumberFormat();
                 }
                 contactToEdit.get().setPhoneNumber(newValue);
             }
             case EDIT_CONTACT_AGE -> {
-                if (utils.isNotNumber(newValue)) {
+                if (stringUtils.isNotNumber(newValue)) {
                     throw new InvalidNumberFormat();
                 }
                 int newAge = Integer.parseInt(newValue);
                 contactToEdit.get().setAge(newAge);
             }
             case EDIT_CONTACT_GENDER -> {
-                EditContactGenderKind kind =
-                        (EditContactGenderKind) utils.getEnumKindByField(EditContactGenderKind.values(), newValue);
-                switch (kind) {
-                    case MALE -> contactToEdit.get().setGender(Gender.MAN);
-                    case FEMALE -> contactToEdit.get().setGender(Gender.WOMAN);
-                    default -> throw new BadArgumentException();
+                Enum<EditContactGenderKind> kind = enumUtils.getEnumKindByField(EditContactGenderKind.values(), newValue);
+                if (kind.equals(EditContactGenderKind.MALE)) {
+                    contactToEdit.get().setGender(Gender.MAN);
+                } else if (kind.equals(EditContactGenderKind.FEMALE)) {
+                    contactToEdit.get().setGender(Gender.WOMAN);
+                } else {
+                    throw new BadArgumentException();
                 }
             }
             case EDIT_CONTACT_BLOCK -> {
-                EditContactBlockKind kind =
-                        (EditContactBlockKind) utils.getEnumKindByField(EditContactBlockKind.values(), newValue);
-                switch (kind) {
-                    case BLOCK -> contactToEdit.get().setBlocked(true);
-                    case UNBLOCK -> contactToEdit.get().setBlocked(false);
-                    default -> throw new BadArgumentException();
+                Enum<EditContactBlockKind> kind = enumUtils.getEnumKindByField(EditContactBlockKind.values(), newValue);
+                if (kind.equals(EditContactBlockKind.BLOCK)) {
+                    contactToEdit.get().setBlocked(true);
+                } else if (kind.equals(EditContactBlockKind.UNBLOCK)) {
+                    contactToEdit.get().setBlocked(false);
+                } else {
+                    throw new BadArgumentException();
                 }
             }
             default -> throw new BadArgumentException();
@@ -141,7 +146,7 @@ public class ContactServiceImpl implements ContactService {
     }
 
     @Override
-    public Set<Contact> sortByKind(User user, StateInfo userStateInfo, SortDirectionKind kind) {
+    public Set<Contact> sortByKind(User user, StateInfo userStateInfo, Enum<SortDirectionKind> kind) {
         Set<Contact> contacts = contactRepository.findByUsername(user.getUsername());
         return sortContactService.sortContacts(contacts, userStateInfo.getState(), kind);
     }

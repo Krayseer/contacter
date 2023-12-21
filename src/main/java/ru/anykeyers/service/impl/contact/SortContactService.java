@@ -1,6 +1,7 @@
 package ru.anykeyers.service.impl.contact;
 
 import ru.anykeyers.domain.entity.Contact;
+import ru.anykeyers.exception.BadArgumentException;
 import ru.anykeyers.exception.InvalidUserStateException;
 import ru.anykeyers.processor.state.domain.State;
 import ru.anykeyers.processor.state.domain.kinds.sort.SortDirectionKind;
@@ -23,7 +24,7 @@ class SortContactService {
      * @param kind     тип сортировки
      * @return список контактов
      */
-    Set<Contact> sortContacts(Set<Contact> contacts, State state, SortDirectionKind kind) {
+    Set<Contact> sortContacts(Set<Contact> contacts, State state, Enum<SortDirectionKind> kind) {
         Comparator<Contact> comparator = getSortingComparator(state, getSortingOrder(kind));
         return contacts.stream()
                 .sorted(comparator)
@@ -36,11 +37,13 @@ class SortContactService {
      * @param value тип аргумента
      * @return {@code true}, если нужно по убыванию и {@code false} если по возрастанию
      */
-    private boolean getSortingOrder(SortDirectionKind value) {
-        return switch (value) {
-            case ASCENDING -> false;
-            case DESCENDING -> true;
-        };
+    private boolean getSortingOrder(Enum<SortDirectionKind> value) {
+        if (value.equals(SortDirectionKind.ASCENDING)) {
+            return false;
+        } else if (value.equals(SortDirectionKind.DESCENDING)) {
+            return true;
+        }
+        throw new BadArgumentException();
     }
 
     /**

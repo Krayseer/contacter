@@ -1,6 +1,6 @@
 package ru.anykeyers.service.impl.contact;
 
-import ru.anykeyers.common.Utils;
+import ru.anykeyers.utils.EnumUtils;
 import ru.anykeyers.domain.Gender;
 import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.exception.BadArgumentException;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  */
 class FilterContactService {
 
-    private final Utils utils = new Utils();
+    private final EnumUtils enumUtils = new EnumUtils();
 
     /**
      * Отфильтровать контакты пользователя по возрасту
@@ -40,18 +40,15 @@ class FilterContactService {
      * @param kind       тип фильтрации
      */
     private Predicate<Contact> getAgePredicate(int contactAge, String kind) {
-        switch ((FilterAgeKind) utils.getEnumKindByField(FilterAgeKind.values(), kind)) {
-            case GREATER_THAN -> {
-                return contact -> contact.getAge() != null && contact.getAge() > contactAge;
-            }
-            case LESS_THAN -> {
-                return contact -> contact.getAge() != null && contact.getAge() < contactAge;
-            }
-            case EQUALS -> {
-                return contact -> contact.getAge() != null && contact.getAge() == contactAge;
-            }
-            default -> throw new BadArgumentException();
+        Enum<FilterAgeKind> enumKindByField = enumUtils.getEnumKindByField(FilterAgeKind.values(), kind);
+        if (enumKindByField.equals(FilterAgeKind.GREATER_THAN)) {
+            return contact -> contact.getAge() != null && contact.getAge() > contactAge;
+        } else if (enumKindByField.equals(FilterAgeKind.LESS_THAN)) {
+            return contact -> contact.getAge() != null && contact.getAge() < contactAge;
+        } else if (enumKindByField.equals(FilterAgeKind.EQUALS)) {
+            return contact -> contact.getAge() != null && contact.getAge() == contactAge;
         }
+        throw new BadArgumentException();
     }
 
     /**
@@ -68,17 +65,15 @@ class FilterContactService {
      * @param kind тип фильтра по полу
      */
     private Predicate<Contact> getGenderPredicate(String kind) {
-        switch ((FilterGenderKind) utils.getEnumKindByField(FilterGenderKind.values(), kind)) {
-            case MALE -> {
-                return contact -> contact.getGender() != null
-                        && contact.getGender().equals(Gender.MAN);
-            }
-            case FEMALE -> {
-                return contact -> contact.getGender() != null
-                        && contact.getGender().equals(Gender.WOMAN);
-            }
-            default -> throw new BadArgumentException();
+        Enum<FilterGenderKind> enumKindByField = enumUtils.getEnumKindByField(FilterGenderKind.values(), kind);
+        if (enumKindByField.equals(FilterGenderKind.MALE)) {
+            return contact -> contact.getGender() != null
+                    && contact.getGender().equals(Gender.MAN);
+        } else if (enumKindByField.equals(FilterGenderKind.FEMALE)) {
+            return contact -> contact.getGender() != null
+                    && contact.getGender().equals(Gender.WOMAN);
         }
+        throw new BadArgumentException();
     }
 
     /**
@@ -97,15 +92,13 @@ class FilterContactService {
      * @param kind тип фильтра по блокировке
      */
     private Predicate<Contact> getBlockPredicate(String kind) {
-        switch ((FilterBlockKind) utils.getEnumKindByField(FilterBlockKind.values(), kind)) {
-            case BLOCKED -> {
-                return Contact::isBlocked;
-            }
-            case NON_BLOCKED -> {
-                return contact -> !contact.isBlocked();
-            }
-            default -> throw new BadArgumentException();
+        Enum<FilterBlockKind> enumKindByField = enumUtils.getEnumKindByField(FilterBlockKind.values(), kind);
+        if (enumKindByField.equals(FilterBlockKind.BLOCKED)) {
+            return Contact::isBlocked;
+        } else if (enumKindByField.equals(FilterBlockKind.NON_BLOCKED)) {
+            return contact -> !contact.isBlocked();
         }
+        throw new BadArgumentException();
     }
 
     /**

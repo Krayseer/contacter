@@ -19,8 +19,7 @@ public class UserStateServiceImpl implements UserStateService {
 
     @Override
     public StateInfo getUserState(User user) {
-        stateInfoByUsername.computeIfAbsent(user.getUsername(), s -> new StateInfo());
-        return stateInfoByUsername.get(user.getUsername());
+        return stateInfoByUsername.computeIfAbsent(user.getUsername(), s -> new StateInfo());
     }
 
 }

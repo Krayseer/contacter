@@ -93,6 +93,6 @@ public interface ContactService {
      * @param kind          тип сортировки
      * @return список отсортированных контактов
      */
-    Set<Contact> sortByKind(User user, StateInfo userStateInfo, SortDirectionKind kind);
+    Set<Contact> sortByKind(User user, StateInfo userStateInfo, Enum<SortDirectionKind> kind);
 
 }

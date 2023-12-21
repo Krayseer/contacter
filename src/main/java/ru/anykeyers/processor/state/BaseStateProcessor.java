@@ -1,6 +1,6 @@
 package ru.anykeyers.processor.state;
 
-import ru.anykeyers.common.Utils;
+import ru.anykeyers.utils.EnumUtils;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.exception.state.StateHandlerNotExistsException;
@@ -23,11 +23,11 @@ public abstract class BaseStateProcessor implements StateProcessor {
 
     protected final UserStateService userStateService;
 
-    protected final Utils utils;
+    protected final EnumUtils enumUtils;
 
     public BaseStateProcessor(UserStateService userStateService) {
         this.userStateService = userStateService;
-        utils = new Utils();
+        enumUtils = new EnumUtils();
     }
 
     @Override
