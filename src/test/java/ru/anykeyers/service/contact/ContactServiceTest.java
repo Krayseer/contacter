@@ -578,7 +578,9 @@ public class ContactServiceTest {
         File file = new File("src/test/resources/contacts.txt");
 
         // Действие
-        Mockito.when(fileServiceFactory.getServiceByFormat(Mockito.any(FileFormat.class))).thenReturn(fileService);
+        Mockito.lenient()
+                .when(fileServiceFactory.getServiceByFormat(Mockito.any(FileFormat.class)))
+                .thenReturn(fileService);
         contactService.importContacts(user, file);
 
         // Проверка

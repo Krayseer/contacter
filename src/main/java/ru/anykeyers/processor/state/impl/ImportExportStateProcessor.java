@@ -44,14 +44,9 @@ public class ImportExportStateProcessor extends BaseStateProcessor {
             return new Message(messages.getMessageByKey("import_export.import.successful"));
         }));
         registerHandler(State.EXPORT, ((user, field) -> {
-            FileFormat format = switch (field) {
-                case ExportKind.TXT -> FileFormat.TXT;
-                case ExportKind.JSON -> FileFormat.JSON;
-                case ExportKind.XML -> FileFormat.XML;
-                case ExportKind.CSV -> FileFormat.CSV;
-                default -> throw new BadArgumentException();
-            };
             File exportFile;
+            Enum<ExportKind> kind = enumUtils.getEnumKindByField(ExportKind.values(), field);
+            FileFormat format = getFormatFromKind(kind);
             try {
                 exportFile = Files.createTempFile("contacts", format.getName()).toFile();
                 contactService.exportContacts(user, exportFile);
@@ -62,6 +57,25 @@ public class ImportExportStateProcessor extends BaseStateProcessor {
             userStateInfo.clear();
             return new Message(exportFile);
         }));
+    }
+
+    /**
+     * Получить формат файла по типу
+     *
+     * @param kind тип формата
+     */
+    private FileFormat getFormatFromKind(Enum<ExportKind> kind) {
+        if (kind.equals(ExportKind.TXT)) {
+            return FileFormat.TXT;
+        } else if (kind.equals(ExportKind.JSON)) {
+            return FileFormat.JSON;
+        } else if (kind.equals(ExportKind.XML)) {
+            return FileFormat.XML;
+        } else if (kind.equals(ExportKind.CSV)) {
+            return FileFormat.CSV;
+        } else {
+            throw new BadArgumentException();
+        }
     }
 
 }

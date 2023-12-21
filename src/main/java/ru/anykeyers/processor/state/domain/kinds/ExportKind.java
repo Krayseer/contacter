@@ -3,26 +3,26 @@ package ru.anykeyers.processor.state.domain.kinds;
 /**
  * Типы критериев форматов файла
  */
-public final class ExportKind {
+public enum ExportKind {
 
     /**
      * Выбор .txt формата
      */
-    public static final String TXT = "1";
+    TXT,
 
     /**
      * Выбор .json формата
      */
-    public static final String JSON = "2";
+    JSON,
 
     /**
      * Выбор .xml формата
      */
-    public static final String XML = "3";
+    XML,
 
     /**
      * Выбор .csv формата
      */
-    public static final String CSV = "4";
+    CSV
 
 }

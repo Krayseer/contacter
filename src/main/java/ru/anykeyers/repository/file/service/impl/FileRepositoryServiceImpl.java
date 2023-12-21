@@ -20,7 +20,7 @@ public class FileRepositoryServiceImpl<T> implements FileRepositoryService<T> {
 
     @Override
     public Map<String, Set<T>> getMapFromCollection(Collection<T> data,
-                                                                     Function<T, String> generateKeyFunction) {
+                                                    Function<T, String> generateKeyFunction) {
         return data.stream()
                 .collect(Collectors.groupingBy(generateKeyFunction, Collectors.toSet()));
     }

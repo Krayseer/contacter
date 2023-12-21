@@ -66,8 +66,9 @@ public class FileGroupRepository implements GroupRepository {
 
     @Override
     public void delete(Group group) {
-        Optional.ofNullable(groupsByUsername.get(group.getUsername()))
-                .ifPresent(groups -> groups.remove(group));
+        Set<Group> groups = groupsByUsername.get(group.getUsername());
+        groups.remove(group);
+        fileService.saveOrUpdateFile(dbFile, repositoryService.getCollectionFromMap(groupsByUsername));
     }
 
 }
