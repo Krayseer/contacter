@@ -112,4 +112,20 @@ public interface ContactService {
      */
     void exportContacts(User user, File exportFile);
 
+    /**
+     * Импортировать контакты из файла
+     *
+     * @param user       пользователь
+     * @param importFile файл с контактами для импорта
+     */
+    void importContacts(User user, File importFile);
+
+    /**
+     * Экспортировать контакты в файл
+     *
+     * @param user       пользователь
+     * @param exportFile файл экспорта
+     */
+    void exportContacts(User user, File exportFile);
+
 }

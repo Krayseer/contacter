@@ -17,6 +17,7 @@ import ru.anykeyers.processor.state.domain.kinds.contact.EditContactGenderKind;
 import ru.anykeyers.processor.state.domain.kinds.sort.SortDirectionKind;
 import ru.anykeyers.repository.ContactRepository;
 import ru.anykeyers.service.ContactService;
+import ru.anykeyers.service.FileService;
 import ru.anykeyers.utils.StringUtils;
 import ru.anykeyers.service.FileService;
 
@@ -40,6 +41,8 @@ public class ContactServiceImpl implements ContactService {
 
     private final EnumUtils enumUtils;
 
+    private final FileServiceFactory fileServiceFactory;
+
     private final StringUtils stringUtils;
 
     public ContactServiceImpl(ContactRepository contactRepository) {
@@ -49,6 +52,7 @@ public class ContactServiceImpl implements ContactService {
         sortContactService = new SortContactService();
         enumUtils = new EnumUtils();
         stringUtils = new StringUtils();
+        fileServiceFactory = new FileServiceFactory();
     }
 
     @Override
