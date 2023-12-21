@@ -1,4 +1,4 @@
-package ru.anykeyers.service.impl.import_export.txt.domain;
+package ru.anykeyers.service.impl.contact.import_export.txt.domain;
 
 import ru.anykeyers.common.Mapper;
 import ru.anykeyers.domain.entity.User;

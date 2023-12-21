@@ -1,4 +1,4 @@
-package ru.anykeyers.service.impl.import_export.xml;
+package ru.anykeyers.service.impl.contact.import_export.xml;
 
 import ru.anykeyers.domain.entity.Contact;
 

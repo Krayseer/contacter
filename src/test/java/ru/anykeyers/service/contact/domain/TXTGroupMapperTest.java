@@ -1,4 +1,4 @@
-package ru.anykeyers.service.import_export.txt.domain;
+package ru.anykeyers.service.contact.domain;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -10,7 +10,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import ru.anykeyers.domain.entity.Contact;
 import ru.anykeyers.domain.entity.Group;
 import ru.anykeyers.repository.ContactRepository;
-import ru.anykeyers.service.impl.import_export.txt.domain.TXTGroupMapper;
+import ru.anykeyers.service.impl.contact.import_export.txt.domain.TXTGroupMapper;
 
 import java.util.Optional;
 

@@ -11,7 +11,7 @@ import ru.anykeyers.domain.Message;
 import ru.anykeyers.domain.StateInfo;
 import ru.anykeyers.domain.entity.User;
 import ru.anykeyers.processor.state.domain.State;
-import ru.anykeyers.service.ImportExportService;
+import ru.anykeyers.service.ContactService;
 import ru.anykeyers.service.UserStateService;
 
 import java.io.File;
@@ -23,7 +23,7 @@ import java.io.File;
 public class ImportExportStateProcessorTest {
 
     @Mock
-    private ImportExportService importExportService;
+    private ContactService contactService;
 
     @Mock
     private UserStateService userStateService;
@@ -48,7 +48,7 @@ public class ImportExportStateProcessorTest {
         // Проверка
         Assert.assertEquals(State.NONE, userStateInfo.getState());
         Assert.assertEquals("Импорт контактов успешно выполнен", message.getText());
-        Mockito.verify(importExportService, Mockito.times(1)).importData(user, new File("/nothing"));
+        Mockito.verify(contactService, Mockito.times(1)).importContacts(user, new File("/nothing"));
     }
 
     /**
